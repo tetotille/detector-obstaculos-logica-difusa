@@ -5,7 +5,7 @@ import os
 
 # Cargar la imagen
 #image_orig = cv2.imread('/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/atardecer.jpg')
-image_path = os.path.abspath('/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/normal2.webp')
+image_path = os.path.abspath('/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/brillo.jpg')
 image_orig = cv2.imread(image_path)
 image = image_orig[1010:,:]
 print(image.shape)

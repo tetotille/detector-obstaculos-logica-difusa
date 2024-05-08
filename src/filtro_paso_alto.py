@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Cargar la imagen desde tu archivo
-nombre_archivo = '/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/normal2.webp'
+nombre_archivo = '/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/brillo.jpg'
 imagen = cv2.imread(nombre_archivo)
 
 # Convertir la imagen a escala de grises

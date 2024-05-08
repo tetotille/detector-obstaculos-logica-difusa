@@ -1,16 +1,34 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 # Cargar la imagen
-image_orig = cv2.imread('/home/tille/Desktop/Tesis/code/img/barco.jpg')
-
+#image_orig = cv2.imread('/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/atardecer.jpg')
+image_path = os.path.abspath('/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/normal2.webp')
+image_orig = cv2.imread(image_path)
 image = image_orig[1010:,:]
-
+print(image.shape)
 # cv2.imshow('RGB Image',image )
 # cv2.waitKey(0)
 # Separar los canales de color
-b, g, r = cv2.split(image)
+if image is None:
+    print("No se pudo leer la imagen")
+else:
+    # Comprueba si la imagen es en escala de grises o tiene solo un canal
+    if len(image.shape) == 2 or image.shape[2] == 1:
+        # Si la imagen es en escala de grises o tiene solo un canal,
+        # no es necesario dividirla en canales de color
+        print("La imagen es en escala de grises o tiene un solo canal")
+    # Verifica si la imagen es a color
+    if len(image.shape) == 3 and image.shape[2] == 3:
+        # Accede a los canales de color directamente
+        b = image[:,:,0]  # Canal azul
+        g = image[:,:,1]  # Canal verde
+        r = image[:,:,2]  # Canal rojo
+        print(b, g, r)
+    else:
+        print("La imagen no es a color")
 
 # Calcular los histogramas de cada canal de color
 hist_b, bins_b = np.histogram(b.flatten(), 256, [0, 256])

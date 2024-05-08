@@ -22,5 +22,5 @@ def detectar_formas(imagen):
     cv2.destroyAllWindows()
 
 # Ejemplo de uso
-imagen_ejemplo = cv2.imread('/home/tille/Desktop/Tesis/code/img/barco.jpg')
+imagen_ejemplo = cv2.imread('/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg')
 detectar_formas(imagen_ejemplo)

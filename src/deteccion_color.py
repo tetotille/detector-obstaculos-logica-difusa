@@ -20,7 +20,8 @@ def detectar_color(imagen, rango_color):
 
 if __name__ == "__main__":
     # Capturar imagen de la cámara (reemplazar con tu propia lógica para obtener imágenes)
-    imagen_camara = cv2.imread('/home/tille/Desktop/Tesis/code/img/barco.jpg')
+    #imagen_camara = cv2.imread('/home/tille/Desktop/Tesis/code/img/barco.jpg')
+    imagen_camara = cv2.imread('/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg')
     scale_percent = 40 # percent of original size
     width = int(imagen_camara.shape[1] * scale_percent / 100)
     height = int(imagen_camara.shape[0] * scale_percent / 100)

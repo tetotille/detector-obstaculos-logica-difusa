@@ -25,5 +25,5 @@ def analizar_textura(imagen):
     plt.show()
 
 # Ejemplo de uso
-imagen_ejemplo = cv2.imread('/home/tille/Desktop/Tesis/code/img/atardecer.jpg')
+imagen_ejemplo = cv2.imread('/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/atardecer.jpg')
 analizar_textura(imagen_ejemplo)

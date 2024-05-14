@@ -4,9 +4,9 @@ import os
 
 for archivo in os.listdir("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img"):
     # Leer la imagen
-    image = cv2.imread(f'img/{archivo}')
+    image = cv2.imread(f'C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/{archivo}')
 
-    # Leer la imagen en escala de grises
+    # Leer la imagen en escala de grisesq
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Detectar bordes en la imagen usando Canny edge detector

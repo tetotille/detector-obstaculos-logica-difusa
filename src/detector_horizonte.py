@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 
-for archivo in os.listdir("img"):
+for archivo in os.listdir("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img"):
     # Leer la imagen
     image = cv2.imread(f'img/{archivo}')
 

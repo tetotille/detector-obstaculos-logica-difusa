@@ -21,7 +21,7 @@ def comparar_uniformidad(pixel_1,pixel_2):
     return abs(pixel_1 - pixel_2) <= UNIFORMIDAD
 
 # Carga la imagen
-ruta = "/home/tille/Desktop/Tesis/code/img/atardecer.jpg"
+ruta = "/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg"
 imagen = cv2.imread(ruta)
 
 resized_image = cv2.resize(imagen, (300, 300))
@@ -110,3 +110,4 @@ ax1.imshow(resultado)
 ax2.imshow(blurred_image)
 plt.show()
 print("HOLA")
+cv2.imwrite("imagen_modificada.jpg", resultado)

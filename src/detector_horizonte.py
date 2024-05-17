@@ -5,13 +5,12 @@ import os
 for archivo in os.listdir("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img"):
     # Leer la imagen
     image = cv2.imread(f'C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/{archivo}')
-
     # Leer la imagen en escala de grisesq
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Detectar bordes en la imagen usando Canny edge detector
     edges = cv2.Canny(gray, 170, 400)
-
+#170
     # Definir el kernel para la operación de dilatación horizontal
     horizontal_kernel = np.ones((2, 3), np.uint8)
 
@@ -19,8 +18,8 @@ for archivo in os.listdir("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logi
     dilated_edges_horizontal = cv2.dilate(edges, horizontal_kernel, iterations=3)
 
     height, width = image.shape[:2]
-    min_line_length = int(height * 0.4)  # Longitud mínima relativa
-    max_line_gap = int(height * 0.03)   # Espacio máximo entre líneas relativo
+    min_line_length = int(height * 0.5)  # Longitud mínima relativa 0.5
+    max_line_gap = int(height * 0.03)   # Espacio máximo entre líneas relativo 0.03
 
     # Hough Transform para detectar líneas
     lines = cv2.HoughLinesP(dilated_edges_horizontal, 1, np.pi/90, 100, minLineLength=min_line_length, maxLineGap=max_line_gap)
@@ -66,8 +65,9 @@ for archivo in os.listdir("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logi
 
     # Dibujar la línea horizontal en el punto medio
     cv2.line(image, (0, midpoint_y), (image.shape[1]-1, midpoint_y), (0, 255, 0), 1)
+    resized_image = cv2.resize(image, (300, 300))
 
     # Mostrar la imagen con la línea horizontal
-    cv2.imshow('Horizontal Line', image)
+    cv2.imshow('Horizontal Line', resized_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

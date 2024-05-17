@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Cargar la imagen desde tu archivo
-nombre_archivo = "/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/mojado.jpg"
+nombre_archivo = "/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg"
 imagen = cv2.imread(nombre_archivo, cv2.IMREAD_GRAYSCALE)
 
 # Calcular el histograma
@@ -24,3 +24,4 @@ plt.subplot(1, 2, 2)
 plt.imshow(imagen_atenuada, cmap='gray')
 plt.title('Imagen Atenuada')
 plt.show()
+cv2.imwrite('imagen atenuada.jpg', imagen_atenuada)

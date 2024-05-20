@@ -5,7 +5,7 @@ import os
 for archivo in os.listdir("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img"):
     # Leer la imagen
     image = cv2.imread(f'C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/{archivo}')
-    # Leer la imagen en escala de grisesq
+    # Leer la imagen en escala de grisesqq
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Detectar bordes en la imagen usando Canny edge detector
@@ -44,7 +44,7 @@ for archivo in os.listdir("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logi
                 elif len(current_line) == max_length:
                     longest_lines.append(current_line)
                 current_line = None
-
+#1 
     # Encontrar coordenadas del pixel superior e inferior para cada línea más larga
     top_pixels = []
     bottom_pixels = []

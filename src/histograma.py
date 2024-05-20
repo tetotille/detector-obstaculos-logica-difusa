@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Cargar la imagen desde tu archivo
-nombre_archivo = "/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg"
+nombre_archivo = "/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/brillo.jpg"
 imagen = cv2.imread(nombre_archivo, cv2.IMREAD_GRAYSCALE)
 
 # Calcular el histograma

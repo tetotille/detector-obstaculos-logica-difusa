@@ -1,6 +1,7 @@
 #image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg"
 import cv2
 import numpy as np
+import os
 
 def detect_horizon(image_path):
     # Cargar la imagen
@@ -41,6 +42,7 @@ def detect_horizon(image_path):
     cv2.destroyAllWindows()
 
 
-# Ruta a la imagen
-image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg"
-detect_horizon(image_path)
+    # Leer la imagen
+for archivo in os.listdir("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img"):
+    image= os.path.join("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/", archivo)
+    detect_horizon(image)

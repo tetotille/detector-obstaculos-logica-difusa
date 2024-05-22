@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg"
+image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/sintitulo.jpg"
 image = cv2.imread(image_path)
 
 def detect_horizon(image_path):

@@ -2,10 +2,6 @@ import cv2
 import numpy as np
 import os
 
-import cv2
-import numpy as np
-from matplotlib import pyplot as plt
-
 def detectar_y_reducir_brillo(imagen_path, umbral_brillo=200, porcentaje_umbral=50):
     # Cargar la imagen en escala de grises
     imagen = cv2.imread(imagen_path, cv2.IMREAD_GRAYSCALE)

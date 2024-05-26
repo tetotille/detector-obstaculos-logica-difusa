@@ -41,7 +41,7 @@ def detect_horizon(image_path):
     cv2.destroyAllWindows()
 
 # Ruta a la imagen
-image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/sintitulo.jpg"
+image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/ruta-vista-inclinada-que-cruza-horizonte.jpg"
 detect_horizon(image_path)
 
 

@@ -19,7 +19,7 @@ def encontrar_linea_mas_larga(contornos):
     return best_line
 
 # Cargar la imagen
-image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg"
+image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/normal2.webp"
 image = cv2.imread(image_path)
 
 # Convertir la imagen a escala de grises

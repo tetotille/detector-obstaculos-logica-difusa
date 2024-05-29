@@ -9,7 +9,8 @@ for archivo in [x for x in os.listdir("/home/tille/Desktop/Tesis/code/img/") if 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Detectar bordes en la imagen usando Canny edge detector
-    edges = cv2.Canny(gray, 170, 400)
+    #edges = cv2.Canny(gray, 170, 400)
+    edges = cv2.Canny(gray, 170, 220)
 #170
     # Definir el kernel para la operación de dilatación horizontal
     horizontal_kernel = np.ones((2, 3), np.uint8)

@@ -1,4 +1,5 @@
 import cv2
+import json
 import numpy as np
 
 def detect_objects(image):
@@ -104,7 +105,7 @@ cv2.waitKey(0)
 cv2.destroyAllWindows()
 
 # Ru+ta de la imagen
-image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg"
+image_path = json.load(open("config.json"))["img_path"] + "barco.jpg"
 
 # Cargar la imagen
 image = cv2.imread(image_path)
@@ -121,25 +122,5 @@ else:
     cv2.imshow("Detección de Objetos en el Agua", resized_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-   
-
 
 

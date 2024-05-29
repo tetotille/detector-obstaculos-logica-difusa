@@ -1,16 +1,26 @@
 import cv2
+import json
 import numpy as np
 
 # Función para procesar la imagen y detectar un rango de colores
 def detectar_color(imagen, rango_color):
-    # Convertir la imagen de BGR a HSV
+    """Busca obstáculos verificando que los colores en la imagen no están en un rango
+    conocido que corresponde al paisaje.
+    Para la búsqueda se utilizaron paisajes con brillo, con atardeceres, normales.
+    Se buscó el histograma de colores de cada uno y se comparó.
+
+    Args:
+        imagen (cv2.Image): Imagen que se desea analizar
+        rango_color (): Rango de colores correspondiente a los obstáculos
+
+    Returns:
+        resultado: Retorna la imagen del color
+    """
     hsv = cv2.cvtColor(imagen, cv2.COLOR_BGR2HSV)
     
     # Definir un rango de colores en formato HSV
     rango_bajo = np.array(rango_color[0])
     rango_alto = np.array(rango_color[1])
-
-    # Crear una máscara utilizando el rango de colores
     mascara = cv2.inRange(hsv, rango_bajo, rango_alto)
 
     # Aplicar la máscara a la imagen original
@@ -20,8 +30,8 @@ def detectar_color(imagen, rango_color):
 
 if __name__ == "__main__":
     # Capturar imagen de la cámara (reemplazar con tu propia lógica para obtener imágenes)
-    #imagen_camara = cv2.imread('/home/tille/Desktop/Tesis/code/img/barco.jpg')
-    imagen_camara = cv2.imread('/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/barco.jpg')
+    image_path = json.load(open("config.json"))["img_path"] + "barco.jpg"
+    imagen_camara = cv2.imread(image_path)
     scale_percent = 40 # percent of original size
     width = int(imagen_camara.shape[1] * scale_percent / 100)
     height = int(imagen_camara.shape[0] * scale_percent / 100)

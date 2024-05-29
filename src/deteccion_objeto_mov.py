@@ -1,14 +1,13 @@
 import cv2
-# Inicializar el objeto de captura de video
-cap = cv2.VideoCapture("C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/videos/LANCHA_RC.mp4")
+import json
+
+
+cap = cv2.VideoCapture(f"{json.load(open('config.json'))['video_path']}LANCHA_RC.mp4")
 
 # Leer el primer fotograma
 ret, prev_frame = cap.read()
-
-# Convertir el primer fotograma a escala de grises
 prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
 
-# Iterar sobre los fotogramas del video
 while cap.isOpened():
     # Leer el fotograma actual
     ret, frame = cap.read()

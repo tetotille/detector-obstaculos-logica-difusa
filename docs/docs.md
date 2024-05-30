@@ -3,7 +3,12 @@
 ## Detección de Línea del horizonte
 
 ### Horizonte mar rojo cielo azul
-
+#### Referencias
+- https://docs.opencv.org/3.4/d8/d01/group__imgproc__color__conversions.html
+- https://docs.opencv.org/4.x/d4/d13/tutorial_py_filtering.html
+- https://numpy.org/doc/stable/reference/generated/numpy.gradient.html
+- https://docs.opencv.org/4.x/dc/da5/tutorial_py_drawing_functions.html
+- https://docs.python.org/3/library/json.html
 #### Status
 
 Funcionó para todas las imágenes menos para la inclinada
@@ -46,6 +51,17 @@ def detectar_horizonte(image):
 ---
 
 ### Imagen Inclinada
+#### Referencias
+- https://docs.opencv.org/4.x/
+- https://numpy.org/doc/
+- https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html
+- https://docs.opencv.org/4.x/d3/dc0/group__imgproc__shape.html
+- https://www.geeksforgeeks.org/python-opencv-cv2-imread-method/
+- https://www.geeksforgeeks.org/python-opencv-cv2-imshow-method/
+- https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html
+- https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
+- https://docs.opencv.org/4.x/d4/d73/tutorial_py_contours_begin.html
+- https://www.geeksforgeeks.org/image-resizing-using-opencv-python/
 
 #### Status
 
@@ -67,6 +83,15 @@ Funcionó para alguna que otra imagen, no es muy preciso.
 
 ### Rotación Imagen
 
+#### Referencias
+- https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html
+- https://omes-va.com/operadores-bitwise/
+- https://note.nkmk.me/en/python-opencv-hconcat-vconcat-np-tile/
+- https://numpy.org/doc/
+- https://www.geeksforgeeks.org/python-opencv-cv2-imread-method/
+- https://www.geeksforgeeks.org/python-opencv-cv2-imshow-method/
+
+
 #### Status
 
 Aun no funciona del todo
@@ -85,6 +110,15 @@ Aun no funciona del todo
 
 ### Detección de Color
 
+#### Referencias
+
+- https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html
+- https://omes-va.com/operadores-bitwise/
+- https://note.nkmk.me/en/python-opencv-hconcat-vconcat-np-tile/
+- https://numpy.org/doc/
+- https://www.geeksforgeeks.org/python-opencv-cv2-imread-method/
+- https://www.geeksforgeeks.org/python-opencv-cv2-imshow-method/
+
 #### Status
 
 Funciona súper bien.
@@ -100,6 +134,15 @@ Funciona súper bien.
 ---
 
 ### Detección Objeto Mov
+
+#### Referencia
+
+- https://docs.opencv.org/3.4/d8/dfe/classcv_1_1VideoCapture.html
+- https://stackoverflow.com/questions/71358885/correct-if-absdiff-the-same-image-just-slightly-shifted-vertically-the-diffe
+- https://www.geeksforgeeks.org/python-opencv-cv2-rectangle-method/
+- https://www.geeksforgeeks.org/python-opencv-waitkey-function/
+- https://stackoverflow.com/questions/48213499/whats-the-meaning-of-cv2-videocapture-release
+- https://www.geeksforgeeks.org/python-opencv-destroyallwindows-function/
 
 #### Status
 
@@ -117,6 +160,21 @@ Funciona a medias
 
 ### Detección Objeto Tex
 
+#### Referencia
+
+- https://www.geeksforgeeks.org/python-opencv-cv2-cvtcolor-method/
+- https://docs.opencv.org/4.x/d5/daf/tutorial_py_histogram_equalization.html
+- https://www.geeksforgeeks.org/erosion-dilation-images-using-opencv-python/
+- https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html
+- https://www.geeksforgeeks.org/python-opencv-distancetransform-function/
+- https://www.tutorialspoint.com/how-to-normalize-an-image-in-opencv-python
+- https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html
+- https://numpy.org/doc/stable/user/basics.types.html
+- https://www.geeksforgeeks.org/how-to-subtract-two-images-using-python-opencv/
+- https://pyimagesearch.com/2021/02/22/opencv-connected-component-labeling-and-analysis/
+- https://www.simplilearn.com/image-processing-article
+- https://docs.opencv.org/4.x/d3/db4/tutorial_py_watershed.html
+|
 #### Status
 
 Funciona

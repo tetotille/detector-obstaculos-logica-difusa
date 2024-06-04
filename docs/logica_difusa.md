@@ -13,19 +13,20 @@ Cada una de estas categorías se representa mediante funciones de pertenencia, q
 2. Funciones de Pertenencia Triangulares y Sigmoides
     Funciones de Pertenencia Triangulares: Estas funciones tienen la forma de un triángulo y se utilizan para determinar la pertenencia de un valor a una categoría en función de su proximidad a un punto medio. Ejemplo:
     ```python
-    pos_x.left = Set.triangle(0, 0, ancho/3)
-    pos_x.center = Set.triangle(ancho/3, ancho/2, 2*ancho/3)
-    pos_x.right = Set.triangle(2*ancho/3, ancho, ancho)
+    pos_x.left = S(0, ancho/2)
+    pos_x.center = triangular(ancho/3, ancho/2, 2*ancho/3)
+    pos_x.right = R(ancho/2,  ancho)
     Funciones de Pertenencia Sigmoides: Estas funciones tienen la forma de una S y se utilizan para suavizar las transiciones entre categorías. Ejemplo:
     ```python
-    pixeles.pocos = Set.sigmoid(pocos_umbral / 2, -10)
-    pixeles.muchos = Set.sigmoid(muchos_umbral * 1.5, 10)
+    pixeles.pocos = bounded_sigmoid(0, muchos_umbral, inverse=True)
+    pixeles.muchos = bounded_sigmoid(pocos_umbral, total_pixeles, inverse=True)
 3. Evaluación de Grados de Pertenencia
     Para determinar la pertenencia de un valor (como una coordenada o el número de píxeles) a una categoría, se calcula su grado de pertenencia utilizando la función de pertenencia correspondiente. Ejemplo:
 ```python
     grado_izq = pos_x.left(x)
     grado_centro = pos_x.center(x)
     grado_der = pos_x.right(x)
+```
 4. Toma de Decisiones Difusas
 La toma de decisiones difusas se basa en los grados de pertenencia calculados. Se selecciona la categoría con el mayor grado de pertenencia como el resultado final. Ejemplo:
 ```python

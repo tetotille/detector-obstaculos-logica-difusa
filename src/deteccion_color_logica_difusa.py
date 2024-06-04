@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from fuzzylogic.classes import Domain, Set
-from fuzzylogic.functions import bounded_sigmoid, triangular
+from fuzzylogic.functions import bounded_sigmoid, triangular, R, S
 import json
 
 def detectar_color(imagen, rango_color):
@@ -29,9 +29,9 @@ def aplicar_logica_difusa_posicion(centroide, dimensiones, mostrar_grafica=False
     pos_x = Domain("x", 0, ancho)
     pos_y = Domain("y", 0, alto)
 
-    pos_x.left = triangular(0, ancho/2)
+    pos_x.left = S(0, ancho/2)
     pos_x.center = triangular(ancho/4, (3*ancho)/4)
-    pos_x.right = triangular(ancho/2,  ancho)
+    pos_x.right = R(ancho/2,  ancho)
 
     pos_y.top = triangular(0, alto/2)
     pos_y.bottom = triangular(alto/2, alto)

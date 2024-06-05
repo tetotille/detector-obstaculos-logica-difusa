@@ -26,7 +26,7 @@ def encontrar_linea_mas_larga(contornos):
 
 if __name__ == "__main__":
     # Cargar la imagen
-    img_path = json.load(open("config.json"))["img_path"] + "ruta-vista-inclinada-que-cruza-horizonte.jpg"
+    img_path = json.load(open("config.json"))["img_path"] + "amanecer1.jpeg"
     image = cv2.imread(img_path)
     cv2.imshow('Imagen', image)
 

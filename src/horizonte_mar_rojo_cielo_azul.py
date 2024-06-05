@@ -44,7 +44,7 @@ def detect_horizon(image_path):
 
 if __name__ == "__main__":
     # Ruta a la imagen
-    img_path = json.load(open("config.json"))["img_path"] + "ruta-vista-inclinada-que-cruza-horizonte.jpg"
+    img_path = json.load(open("config.json"))["img_path"] + "horizonte.webp"
     # image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/ruta-vista-inclinada-que-cruza-horizonte.jpg"
     detect_horizon(img_path)
 

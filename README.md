@@ -1,6 +1,6 @@
 # Detector de Obstáculos con Lógica Difusa
 
-Este es un proyecto de trabajo final de grado (TFG) de la Facultad de Ingeniería de la Universidad Nacional de Asunción que busca realizar un detector de obstáculos utilizando algoritmos de lógica difusa para aplicarlo en barcos autotripulados que navegarán en el lago Ypakaraí y realizarán estudios de las aguas de forma automática.
+Este es un proyecto de trabajo final de grado (TFG) de la Facultad de Ingeniería de la Universidad Nacional de Asunción que busca realizar un detector de obstáculos utilizando algoritmos de lógica difusa para aplicarlo en barcos autotripulados que navegarán en el lago Ypacarai y realizarán estudios de las aguas de forma automática.
 
 ## Instalación
 

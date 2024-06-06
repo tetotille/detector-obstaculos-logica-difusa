@@ -1,16 +1,24 @@
 import cv2
 import numpy as np
 import os
+import json
 
-for archivo in [x for x in os.listdir("/home/tille/Desktop/Tesis/code/img/") if x == "normal.jpeg"]:
+# Cargar el archivo config.json
+with open('config.json', 'r') as f:
+    config = json.load(f)
+
+# Obtener la ruta del directorio de imágenes
+path = config['img_path']
+
+for archivo in os.listdir(path):
     # Leer la imagen
-    image = cv2.imread(f'/home/tille/Desktop/Tesis/code/img/{archivo}')
+    image = cv2.imread(os.path.join(path, archivo))
     # Leer la imagen en escala de grisesqq
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Detectar bordes en la imagen usando Canny edge detector
     #edges = cv2.Canny(gray, 170, 400)
-    edges = cv2.Canny(gray, 170, 220)
+    edges = cv2.Canny(gray, 170, 400)
 #170
     # Definir el kernel para la operación de dilatación horizontal
     horizontal_kernel = np.ones((2, 3), np.uint8)

@@ -14,7 +14,7 @@ Cada una de estas categorías se representa mediante funciones de pertenencia, q
     Funciones de Pertenencia Triangulares: Estas funciones tienen la forma de un triángulo y se utilizan para determinar la pertenencia de un valor a una categoría en función de su proximidad a un punto medio. Ejemplo:
     ```python
     pos_x.left = S(0, ancho/2)
-    pos_x.center = triangular(ancho/3, ancho/2, 2*ancho/3)
+    pos_x.center = triangular(ancho/4, (3*ancho)/4)
     pos_x.right = R(ancho/2,  ancho)
     Funciones de Pertenencia Sigmoides: Estas funciones tienen la forma de una S y se utilizan para suavizar las transiciones entre categorías. Ejemplo:
     ```python

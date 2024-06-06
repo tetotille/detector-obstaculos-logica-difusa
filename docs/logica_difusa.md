@@ -12,14 +12,16 @@ Posición Vertical (Y):
 Cada una de estas categorías se representa mediante funciones de pertenencia, que pueden ser de diferentes formas, como triangulares o sigmoides. Las funciones de pertenencia asignan un grado de pertenencia (un valor entre 0 y 1) a cada punto en el dominio.
 2. Funciones de Pertenencia Triangulares y Sigmoides
     Funciones de Pertenencia Triangulares: Estas funciones tienen la forma de un triángulo y se utilizan para determinar la pertenencia de un valor a una categoría en función de su proximidad a un punto medio. Ejemplo:
-    ```python
-    pos_x.left = S(0, ancho/2)
+```python
+    pos_x.left = triangular(0, ancho/2)
     pos_x.center = triangular(ancho/4, (3*ancho)/4)
-    pos_x.right = R(ancho/2,  ancho)
+    pos_x.right = triangular(ancho/2,  ancho)
+```
     Funciones de Pertenencia Sigmoides: Estas funciones tienen la forma de una S y se utilizan para suavizar las transiciones entre categorías. Ejemplo:
-    ```python
+```python
     pixeles.pocos = bounded_sigmoid(0, muchos_umbral, inverse=True)
     pixeles.muchos = bounded_sigmoid(pocos_umbral, total_pixeles, inverse=True)
+```
 3. Evaluación de Grados de Pertenencia
     Para determinar la pertenencia de un valor (como una coordenada o el número de píxeles) a una categoría, se calcula su grado de pertenencia utilizando la función de pertenencia correspondiente. Ejemplo:
 ```python

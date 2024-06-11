@@ -30,7 +30,7 @@ def detectar_color(imagen, rango_color):
 
 if __name__ == "__main__":
     # Capturar imagen de la cámara (reemplazar con tu propia lógica para obtener imágenes)
-    image_path = json.load(open("config.json"))["img_path"] + "barco.jpg"
+    image_path = json.load(open("config.json"))["img_path"] + "amanecer1.jpeg"
     imagen_camara = cv2.imread(image_path)
     scale_percent = 40 # percent of original size
     width = int(imagen_camara.shape[1] * scale_percent / 100)

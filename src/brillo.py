@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import os
+import json
 
 def detectar_y_reducir_brillo(imagen_path, umbral_brillo=200, porcentaje_umbral=50):
     # Cargar la imagen en escala de grises
@@ -32,7 +33,9 @@ def detectar_y_reducir_brillo(imagen_path, umbral_brillo=200, porcentaje_umbral=
     else:
         print("La imagen no tiene un brillo excesivo.")
 
-ruta_imagen="C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/normal.webp"
+# Ru+ta de la imagen
+ruta_imagen = json.load(open("config.json"))["img_path"] + "sintitulo.jpg"
+
 detectar_y_reducir_brillo(ruta_imagen)
 
 def reducir_brillo_localmente(imagen, umbral_brillo=200, factor_reduccion=0.5):

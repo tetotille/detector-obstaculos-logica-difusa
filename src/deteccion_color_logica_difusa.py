@@ -122,7 +122,7 @@ def aplicar_logica_difusa_pixeles(num_pixeles, total_pixeles, mostrar_grafica=Fa
         return "No es un objeto"
 
 if __name__ == "__main__":
-    image_path = json.load(open("config.json"))["img_path"] + "barco.jpg"
+    image_path = json.load(open("config.json"))["img_path"] + "amanecer1.jpeg"
     imagen_camara = cv2.imread(image_path)
     scale_percent = 40
     width = int(imagen_camara.shape[1] * scale_percent / 100)

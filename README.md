@@ -1,33 +1,120 @@
-# Lógica Difusa
+# Detector de Obstáculos con Lógica Difusa
 
-## Primer intento
+Este es un proyecto de trabajo final de grado (TFG) de la Facultad de Ingeniería de la Universidad Nacional de Asunción que busca realizar un detector de obstáculos utilizando algoritmos de lógica difusa para aplicarlo en barcos autotripulados que navegarán en el lago Ypacarai y realizarán estudios de las aguas de forma automática.
 
-### Variables de entrada
+![Object Detector Diagram](docs/assets/object_detector.png)
 
-Primero se definen variables de entrada:
+## Instalación
 
-`color`, `textura`, `forma`, `tamaño`, `movimiento`, `distancia`, `velocidad`, `iluminacion`, y `reflectividad`.
+La instalación se puede hacer de varias formas, las más fáciles son utilizando los scripts de instalación desarrollados para hacerlo en un paso. Sin embargo, en caso de tener dificultades en la utilización de dichos scripts también se especificará cómo hacerlo sin ellos.
 
-### Funciones de membresía
+### Powershell
 
-Se debe de crear funciones de membresía. Estas funciones describen cómo los valores de las características se distribuyen en conjuntos difusos como "cerca", "media" o "lejos".
+Desde powershell ubicarse en la carpeta del proyecto y ejecutar el siguiente comando.
 
-### Reglas difusas
+```powershell
+powershell .\install.ps1
+```
 
-Por ejemplo, podrías tener reglas del tipo "Si la distancia es cerca Y la velocidad es alta, entonces la detección de obstáculos es alta".
+> Para poder ejecutar scripts de powershell es necesario habilitarlo siguiendo las indicaciones que aparecen al tratar de ejecutar el script.
 
-### Variables de salida
+### Fish
 
-Detección de obstáculos
+Desde el terminal Fish, podemos instalar ejecutando el siguiente comando una vez ubicados en la carpeta del proyecto.
 
-### Función de membresía de salida
+```bash
+fish ./install.fish
+```
 
-Cuál es el grado del obstáculo
+### Sin scripts automáticos
 
-# Ideas aparte
+#### Creación del entorno virtual
 
-**Detección de obstáculos:** Se puede verificar la línea en el horizonte para ver si hay una interrupción.
+Primeramente hay que crear un entorno virtual de python, para ello se puede utilizar el python venv que viene instalado por defecto en el software de python o también se puede utilizar algún gestor de entornos como Anaconda.
 
-**Detección de color:** Se puede tener una imagen de referencia y comparar las diferencias de color
+##### Python venv
 
-**Se puede tener cierta memoria:** con la memoria se pueden tener varias detecciones anteriores de referencia y hacer la comparación entre estas para saber si un objeto se agranda o forma parte del fondo.
+Para crear un entorno virtual con venv podemos ejecutar el siguiente comando:
+
+```bash
+python -m venv .tesis
+```
+
+> En algunos casos si utilizas Windows podrías necesitar usar el comando py en lugar de python.
+
+##### Anaconda
+
+En caso de querer utilizar anaconda se puede usar el comando
+
+```bash
+conda create -n "tesis"
+```
+
+#### Activación del entorno virtual
+
+Una vez creado el entorno virtual debemos de activarlo.
+
+##### Python venv
+
+Para activarlo depende del terminal que estés utilizando, puedes listar los scripts de activación con el siguiente comando:
+
+```bash
+ls .tesis/bin
+# activate  activate.csh  activate.fish  Activate.ps1  f2py  pip  pip3  pip3.10  python  python3  python3.10
+```
+
+Según el terminal que usemos tendríamos que activar uno, en el caso de fish se utiliza `activate.fish` y en el caso de powershell se utiliza `Activate.ps1`. Con el siguiente comando.
+
+```bash
+source .tesis/bin/activate.fish # fish
+```
+
+```powershell
+source .tesis\bin\Activate.ps1 # powershell
+```
+
+Una vez activato el entorno nos tiene que aparecer entre paréntesis el nombre de dicho entorno en nuestro terminal.
+
+`(.tesis) tille@tille-82h8 ~/D/T/code (main)>`
+
+##### Conda
+
+Con el siguiente comando:
+
+```bash
+conda activate tesis
+```
+
+#### Instalación de requerimientos
+
+Una vez activado el entorno podemos instalar las bibliotecas de python dependientes, esto se puede realizar en un comando.
+
+Desde el terminal en la carpeta del proyecto ejecuta el siguiente comando.
+
+```bash
+pip install -r ./requirements.txt
+```
+
+De esta forma se instalarán todos los requisitos.
+
+## Documentación
+
+[Link a la Documentación](https://github.com/tetotille/detector-obstaculos-logica-difusa/blob/main/docs/docs.md)
+
+## Roadmap
+
+- Refactorizar el código para hacerlo escalable
+
+- Implementar otros Detectores de obstáculos
+
+- Implementar lógica difusa a los detectores más prometedores
+
+- Implementar una lógica difusa general que se alimente de los demás algoritmos
+
+## Autores
+
+- [Liz Ozorio](https://github.com/liznoelia97)
+
+- [Jorge Tillería](https://github.com/tetotille)
+
+- Laboratorio de Sistemas Distribuidos de la Facultad de Ingeniería de la Universidad Nacional de Asunción

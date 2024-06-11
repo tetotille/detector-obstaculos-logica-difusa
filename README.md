@@ -2,6 +2,8 @@
 
 Este es un proyecto de trabajo final de grado (TFG) de la Facultad de Ingeniería de la Universidad Nacional de Asunción que busca realizar un detector de obstáculos utilizando algoritmos de lógica difusa para aplicarlo en barcos autotripulados que navegarán en el lago Ypacarai y realizarán estudios de las aguas de forma automática.
 
+![Object Detector Diagram](docs/assets/object_detector.png)
+
 ## Instalación
 
 La instalación se puede hacer de varias formas, las más fáciles son utilizando los scripts de instalación desarrollados para hacerlo en un paso. Sin embargo, en caso de tener dificultades en la utilización de dichos scripts también se especificará cómo hacerlo sin ellos.
@@ -112,7 +114,7 @@ De esta forma se instalarán todos los requisitos.
 ## Autores
 
 - [Liz Ozorio](https://github.com/liznoelia97)
-  
+
 - [Jorge Tillería](https://github.com/tetotille)
 
 - Laboratorio de Sistemas Distribuidos de la Facultad de Ingeniería de la Universidad Nacional de Asunción

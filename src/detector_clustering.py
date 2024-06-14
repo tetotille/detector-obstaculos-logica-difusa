@@ -8,9 +8,9 @@ def adjust_contrast_brightness(image, alpha=1.0, beta=0):
     return cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
 #k=5 para el amanecer
 #K=2 por defecto
-def detect_objects(image, k=2):
+def detect_objects(image, k=5):
     # Ajustar el contraste y brillo de la imagen
-    adjusted_image = adjust_contrast_brightness(image, alpha=4, beta=20)
+    adjusted_image = adjust_contrast_brightness(image, alpha=2, beta=20)
     #alfa = 2 para el amanecer
 
     # Convertir la imagen de BGR a espacio de color LAB
@@ -43,10 +43,6 @@ def detect_objects(image, k=2):
     
     # Umbralizar la imagen de textura para obtener una máscara binaria
     _, binary_mask = cv2.threshold(texture, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    kernel = np.ones((5, 5), np.uint8)
-    binary_mask = cv2.morphologyEx(binary_mask, cv2.MORPH_CLOSE, kernel)
-    binary_mask = cv2.morphologyEx(binary_mask, cv2.MORPH_OPEN, kernel)
     
     # Encontrar contornos en la máscara binaria
     contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -56,14 +52,14 @@ def detect_objects(image, k=2):
     
     # Dibujar rectángulos alrededor de los objetos detectados
     for contour in contours:
-        if cv2.contourArea(contour) > 10000:  # Filtrar contornos pequeños
+        if cv2.contourArea(contour) > 1000:  # Filtrar contornos pequeños
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(result_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
     
     return result_image
 
 # Ru+ta de la imagen
-image_path = json.load(open("config.json"))["img_path"] + "amanecer1.jpeg"
+image_path = json.load(open("config.json"))["img_path"] + "sintitulo.jpg"
 
 # Cargar la imagen
 image = cv2.imread(image_path)
@@ -75,7 +71,6 @@ else:
     # Detectar objetos en el agua
     result = detect_objects(image)
     
-    # Mostrar la imagen con los objetos detectados
     # Mostrar la imagen con los objetos detectados
     resized_image = cv2.resize(result, (300,300))
     cv2.imshow("Detección de Objetos en el Agua", resized_image)

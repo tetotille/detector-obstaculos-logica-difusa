@@ -38,7 +38,7 @@ def detect_objects(image):
     return result_image            
 
 # Ruta de la imagen
-image_path = json.load(open("config.json"))["img_path"] + "barco.jpg"
+image_path = json.load(open("config.json"))["img_path"] + "sintitulo.jpg"
 
 # Cargar la imagen
 image = cv2.imread(image_path)

@@ -126,20 +126,10 @@ class ColorDetector(ObjectDetector):
         return result, mask
     
 if __name__ == "__main__":
-<<<<<<< HEAD
-    image_path = json.load(open("config.json"))["img_path"] + "amanecer1.jpeg"
-    imagen_camara = cv2.imread(image_path)
-    scale_percent = 40
-    width = int(imagen_camara.shape[1] * scale_percent / 100)
-    height = int(imagen_camara.shape[0] * scale_percent / 100)
-    dim = (width, height)
-    imagen_camara = cv2.resize(imagen_camara, dim, interpolation=cv2.INTER_AREA)
-=======
     import asyncio
     import os
     from sys import argv
     from os.path import abspath,dirname,join
->>>>>>> d34f8827d340a8c0e72db58e9b84fd6fb160eb1f
 
     async def main():
         if len(argv) <= 1: raise(NameError("You have to enter a file name as an argument"))

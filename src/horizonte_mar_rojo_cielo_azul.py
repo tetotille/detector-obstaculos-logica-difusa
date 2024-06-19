@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-import json
+from os.path import abspath,dirname,join
+from sys import argv
 
 def detectar_horizonte(image):
     """ Halla la línea del horizonte a través de las colisiones de dos gradientes de color.
@@ -44,9 +45,13 @@ def detect_horizon(image_path):
 
 if __name__ == "__main__":
     # Ruta a la imagen
-    img_path = json.load(open("config.json"))["img_path"] + "horizonte.webp"
+    if len(argv)>1:
+        filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
+    else:
+        filename = join(dirname(dirname(abspath(__file__))),"img/tardecita.webp")
+
     # image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/ruta-vista-inclinada-que-cruza-horizonte.jpg"
-    detect_horizon(img_path)
+    detect_horizon(filename)
 
 
 

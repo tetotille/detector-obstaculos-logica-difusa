@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-import json
+from os.path import abspath,dirname,join
+from sys import argv
 
 def calcular_angulo_rotacion(imagen_path):
     # Cargar la imagen
@@ -49,10 +50,15 @@ def calcular_angulo_rotacion(imagen_path):
     return angulo_rotacion
 
 # Ruta de la imagen
-imagen_path = json.load(open("config.json"))["img_path"] + "ruta-vista-inclinada-que-cruza-horizonte.jpg"
+if len(argv)>1:
+    filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
+else:
+    filename = join(dirname(dirname(abspath(__file__))),"img/barco.jpg")
+
+##############################################################################
 
 # Calcular el ángulo de rotación
-angulo_rotacion = calcular_angulo_rotacion(imagen_path)
+angulo_rotacion = calcular_angulo_rotacion(filename)
 
 if angulo_rotacion is not None:
     if abs(angulo_rotacion) > 5:  # Umbral para considerar la imagen rotada

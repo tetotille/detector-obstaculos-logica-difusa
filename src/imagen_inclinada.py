@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-import json
+from os.path import abspath,dirname,join
+from sys import argv
 
 
 def encontrar_linea_mas_larga(contornos):
@@ -26,8 +27,11 @@ def encontrar_linea_mas_larga(contornos):
 
 if __name__ == "__main__":
     # Cargar la imagen
-    img_path = json.load(open("config.json"))["img_path"] + "amanecer1.jpeg"
-    image = cv2.imread(img_path)
+    if len(argv)>1:
+        filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
+    else:
+        filename = join(dirname(dirname(abspath(__file__))),"img/tardecita.webp")
+    image = cv2.imread(filename)
     cv2.imshow('Imagen', image)
 
     # Convertir la imagen a escala de grises

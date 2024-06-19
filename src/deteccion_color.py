@@ -1,5 +1,6 @@
 import cv2
-import json
+from os.path import abspath,dirname,join
+from sys import argv
 import numpy as np
 
 # Función para procesar la imagen y detectar un rango de colores
@@ -30,8 +31,12 @@ def detectar_color(imagen, rango_color):
 
 if __name__ == "__main__":
     # Capturar imagen de la cámara (reemplazar con tu propia lógica para obtener imágenes)
-    image_path = json.load(open("config.json"))["img_path"] + "amanecer1.jpeg"
-    imagen_camara = cv2.imread(image_path)
+    if len(argv)>1:
+        filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
+    else:
+        filename = join(dirname(dirname(abspath(__file__))),"img/barco.jpg")
+
+    imagen_camara = cv2.imread(filename)
     scale_percent = 40 # percent of original size
     width = int(imagen_camara.shape[1] * scale_percent / 100)
     height = int(imagen_camara.shape[0] * scale_percent / 100)

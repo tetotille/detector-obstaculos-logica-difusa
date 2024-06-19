@@ -1,18 +1,15 @@
 import cv2
 import numpy as np
-import os
-import json
+from os.path import abspath,dirname,join
+from sys import argv
 
-# Cargar el archivo config.json
-with open('config.json', 'r') as f:
-    config = json.load(f)
+if len(argv)>1:
+    filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
+else:
+    filename = join(dirname(dirname(abspath(__file__))),"img/tardecita.webp")
 
-# Obtener la ruta del directorio de imágenes
-path = config['img_path']
-
-for archivo in os.listdir(path):
     # Leer la imagen
-    image = cv2.imread(os.path.join(path, archivo))
+    image = cv2.imread(filename)
     # Leer la imagen en escala de grisesqq
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 

@@ -1,6 +1,7 @@
-import json
+from sys import argv
 import cv2
 import numpy as np
+from os.path import abspath,dirname,join
 
 def adjust_contrast_brightness(image, alpha=1.0, beta=0):
     return cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
@@ -38,10 +39,13 @@ def detect_objects(image):
     return result_image            
 
 # Ruta de la imagen
-image_path = json.load(open("config.json"))["img_path"] + "amanecer1.jpeg"
+if len(argv)>1:
+    filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
+else:
+    filename = join(dirname(dirname(abspath(__file__))),"img/barco.jpg")
 
 # Cargar la imagen
-image = cv2.imread(image_path)
+image = cv2.imread(filename)
 
 # Verificar si la imagen se cargó correctamente
 if image is None:

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-import json
+from sys import argv
+from os.path import abspath,dirname,join
 # De algunos se tiene que reducir el factor k, de algunos se tiene que aumentar el brillo, o sea los factores
 # alfa y beta.
 
@@ -59,11 +60,12 @@ def detect_objects(image, k=5):
     return result_image
 
 # Ru+ta de la imagen
-image_path = json.load(open("config.json"))["img_path"] + "sintitulo.jpg"
+if len(argv)>1:
+    filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
+else:
+    filename = join(dirname(dirname(abspath(__file__))),"img/barco.jpg")
 
-# Cargar la imagen
-image = cv2.imread(image_path)
-
+image=cv2.imread(filename)
 # Verificar si la imagen se cargó correctamente
 if image is None:
     print("No se pudo cargar la imagen.")

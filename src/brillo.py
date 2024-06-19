@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-import os
-import json
+from os.path import abspath,dirname,join
+from sys import argv
 
 def detectar_y_reducir_brillo(imagen_path, umbral_brillo=200, porcentaje_umbral=50):
     # Cargar la imagen en escala de grises
@@ -34,9 +34,13 @@ def detectar_y_reducir_brillo(imagen_path, umbral_brillo=200, porcentaje_umbral=
         print("La imagen no tiene un brillo excesivo.")
 
 # Ru+ta de la imagen
-ruta_imagen = json.load(open("config.json"))["img_path"] + "sintitulo.jpg"
+if len(argv)>1:
+    filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
+else:
+    filename = join(dirname(dirname(abspath(__file__))),"img/barco.jpg")
 
-detectar_y_reducir_brillo(ruta_imagen)
+
+detectar_y_reducir_brillo(filename)
 
 def reducir_brillo_localmente(imagen, umbral_brillo=200, factor_reduccion=0.5):
     # Convertir la imagen a espacio de color HSV

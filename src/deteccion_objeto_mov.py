@@ -1,20 +1,16 @@
 import cv2
-import os
 from sys import argv
 from os.path import abspath,dirname,join
 
 #cap = cv2.VideoCapture(f"{json.load(open.('config.json'))['video_path']}LANCHA_RC.mp4")
-if len(argv) <= 1: raise(NameError("You have to enter a file name as an argument"))
-if os.path.dirname(argv[1]):
-    image = cv2.imread(argv[1])
+
+if len(argv)>1:
+    filename = join(dirname(dirname(abspath(__file__))),f"videos/{argv[1]}")
 else:
-    img_path = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
-    image = cv2.imread(img_path)
+    filename = join(dirname(dirname(abspath(__file__))),"videos/Video2.mp4")
 
 
-# Especificar el nombre del archivo de video dentro de la ruta seleccionada
-
-cap=cv2.VideoCapture(os.path.join(ruta_seleccionada, "video1.mp4"))
+cap=cv2.VideoCapture(filename)
 # Leer el primer fotograma
 ret, prev_frame = cap.read()
 prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)

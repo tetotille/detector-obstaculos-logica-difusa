@@ -1,4 +1,5 @@
-import json
+from os.path import abspath,dirname,join
+from sys import argv
 import cv2
 import numpy as np
 
@@ -41,10 +42,17 @@ def detect_objects(image):
     return result_image
 
 # Ruta de la imagen
-image_path = json.load(open("config.json"))["img_path"] + "sintitulo.jpg"
+if len(argv) > 1:
+    filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
+else:
+    filename = join(dirname(dirname(abspath(__file__))),"img/barco.jpg")
+
+##############################################################################
+
+print(filename)
 
 # Cargar la imagen
-image = cv2.imread(image_path)
+image = cv2.imread(filename)
 
 # Verificar si la imagen se cargó correctamente
 if image is None:

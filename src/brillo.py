@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from os.path import abspath,dirname,join
 from sys import argv
+import os
 
 def detectar_y_reducir_brillo(imagen_path, umbral_brillo=200, porcentaje_umbral=50):
     # Cargar la imagen en escala de grises
@@ -37,7 +38,7 @@ def detectar_y_reducir_brillo(imagen_path, umbral_brillo=200, porcentaje_umbral=
 if len(argv)>1:
     filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
 else:
-    filename = join(dirname(dirname(abspath(__file__))),"img/barco.jpg")
+    filename = join(dirname(dirname(abspath(__file__))),"img/sintitulo.jpg")
 
 
 detectar_y_reducir_brillo(filename)

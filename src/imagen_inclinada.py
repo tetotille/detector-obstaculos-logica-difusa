@@ -30,7 +30,7 @@ if __name__ == "__main__":
     if len(argv)>1:
         filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))),"img/tardecita.webp")
+        filename = join(dirname(dirname(abspath(__file__))),"img/atardecer (3).jpg")
     image = cv2.imread(filename)
     cv2.imshow('Imagen', image)
 

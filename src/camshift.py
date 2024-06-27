@@ -2,6 +2,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import skfuzzy as fuzz
+from os.path import dirname, abspath, join
+from sys import argv
+import cv2
 
 def threshold_image(I, Th):
     """
@@ -126,10 +129,14 @@ def main(I, gmin, gmax):
     return membership_matrix, best_mk, best_RBEMk, fuzzy_membership_functions, high_memberships, low_memberships
 
 # Supongamos que 'I' es la imagen de entrada y gmin, gmax son conocidos
-I = np.random.randint(0, 256, (100, 100))  # Ejemplo de imagen
-gmin = 0
-gmax = 255
+if len(argv) > 1:
+    filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
+else:
+    filename = join(dirname(dirname(abspath(__file__))), "img/IMG_6830.jpeg")
 
+I = cv2.imread(filename)
+gmin=
+gmax=
 membership_matrix, best_mk, best_RBEMk, fuzzy_membership_functions, high_memberships, low_memberships = main(I, gmin, gmax)
 
 # membership_matrix contiene las filas de parámetros de funciones de membresía difusa

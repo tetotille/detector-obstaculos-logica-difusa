@@ -208,7 +208,7 @@ def detectar_objetos_en_el_mar(image, sea_mask):
     rezides2=cv2.resize(image, (300, 300))
     contour_image = rezides2.copy()
     #blended = cv2.addWeighted(contours, 0.5, contour_image, 0.5, 0)
-    cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 2)
+    cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 2)   #preguntar al Profe
     # Mostrar la imagen con los contornos detectados
     #cv2.imshow('contours', blended)
     cv2.imshow('contours2', contour_image)

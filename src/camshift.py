@@ -135,8 +135,7 @@ else:
     filename = join(dirname(dirname(abspath(__file__))), "img/IMG_6830.jpeg")
 
 I = cv2.imread(filename)
-gmin=
-gmax=
+(gmin, gmax, min_loc, max_loc) = cv2.minMaxLoc(I)
 membership_matrix, best_mk, best_RBEMk, fuzzy_membership_functions, high_memberships, low_memberships = main(I, gmin, gmax)
 
 # membership_matrix contiene las filas de parámetros de funciones de membresía difusa

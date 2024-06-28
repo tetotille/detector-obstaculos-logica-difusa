@@ -18,9 +18,7 @@ def define_membership_functions(filename):
     min_pixel = np.min(x_pixel)
     max_pixel = np.max(x_pixel)
     universe = (np.arange(min_pixel, max_pixel ) / 256)  # Normalización entre 0 y 1
-    print(universe)
     universe2= (np.arange(0, 256)/256)
-
     # Crear las variables difusas usando ctrl.Antecedent y ctrl.Consequent
     C1 = ctrl.Antecedent(universe, 'C1')
     C2 = ctrl.Antecedent(universe, 'C2')
@@ -108,7 +106,47 @@ def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
                        C2['low'] & C3['low'] & C4['low'] & 
                        C6['low'] & C7['low'] & C8['low'], edge['yes'])
     
-    rules = [rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10, rule11, rule12]
+    rule_default = ctrl.Rule(~(C1['high'] & C3['high'] & C5['high'] & 
+                           C2['low'] & C4['low'] & C6['low'] & 
+                           C7['low'] & C8['low'] & C9['low']) &
+                         ~(C5['high'] & C7['high'] & C9['high'] & 
+                           C1['low'] & C2['low'] & C3['low'] & 
+                           C4['low'] & C6['low'] & C8['low']) &
+                         ~(C5['high'] & C3['high'] & C9['high'] & 
+                           C1['low'] & C2['low'] & C7['low'] & 
+                           C4['low'] & C6['low'] & C8['low']) &
+                         ~(C5['high'] & C2['high'] & C6['high'] & 
+                           C1['low'] & C7['low'] & C3['low'] & 
+                           C4['low'] & C9['low'] & C8['low']) &
+                         ~(C1['high'] & C5['high'] & C7['high'] & 
+                           C2['low'] & C6['low'] & C3['low'] & 
+                           C4['low'] & C9['low'] & C8['low']) &
+                         ~(C2['high'] & C5['high'] & C8['high'] & 
+                           C1['low'] & C6['low'] & C3['low'] & 
+                           C4['low'] & C9['low'] & C7['low']) &
+                         ~(C4['high'] & C5['high'] & C8['high'] & 
+                           C1['low'] & C6['low'] & C3['low'] & 
+                           C2['low'] & C9['low'] & C7['low']) &
+                         ~(C6['high'] & C5['high'] & C8['high'] & 
+                           C1['low'] & C4['low'] & C3['low'] & 
+                           C2['low'] & C9['low'] & C7['low']) &
+                         ~(C4['high'] & C5['high'] & C6['high'] & 
+                           C1['low'] & C8['low'] & C3['low'] & 
+                           C2['low'] & C9['low'] & C7['low']) &
+                         ~(C2['high'] & C5['high'] & C8['high'] & 
+                           C1['low'] & C6['low'] & C3['low'] & 
+                           C4['low'] & C9['low'] & C7['low']) &
+                         ~(C3['high'] & C5['high'] & C7['high'] & 
+                           C1['low'] & C6['low'] & C3['low'] & 
+                           C2['low'] & C9['low'] & C7['low']) &
+                         ~(C1['high'] & C5['high'] & C9['high'] & 
+                           C2['low'] & C3['low'] & C4['low'] & 
+                           C6['low'] & C7['low'] & C8['low']), 
+                         edge['no'])
+    
+
+    
+    rules = [rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10, rule11, rule12, rule_default]
     return rules
 
 # Crear el sistema de control difuso
@@ -137,6 +175,7 @@ def apply_fuzzy_rules_to_image(fuzzy_image, edge_detect):
             neighbor_values = [fuzzy_image[i+di, j+dj] for di, dj in neighbors]
             
             edge_detect.input['C1'] = neighbor_values[0]
+            print(neighbor_values[0])
             edge_detect.input['C2'] = neighbor_values[1]
             edge_detect.input['C3'] = neighbor_values[2]
             edge_detect.input['C4'] = neighbor_values[3]
@@ -145,10 +184,11 @@ def apply_fuzzy_rules_to_image(fuzzy_image, edge_detect):
             edge_detect.input['C7'] = neighbor_values[6]
             edge_detect.input['C8'] = neighbor_values[7]
             edge_detect.input['C9'] = neighbor_values[8]
-            
+            print(neighbor_values[8])
             edge_detect.compute()
             
             edge_image[i, j] = 1 if edge_detect.output['edge'] >= 0.5 else 0
+            #edge_image[i, j] = edge_detect.output['edge']
             print(edge_image)
             
     return edge_image

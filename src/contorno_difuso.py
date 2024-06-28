@@ -18,10 +18,11 @@ universe = np.linspace(-800, 800, 100)
 
 # Definir las funciones de pertenencia
 for var in [P1, P2, P3, P4, P4_out]:
-    var['low'] = fuzz.zmf(var.universe, 0, 255)
+    #var['low'] = fuzz.zmf(var.universe, 0, 255)
+    var['low'] = fuzz.gaussmf(var.universe, 0, 43)
     var['medium'] = fuzz.gaussmf(var.universe, 127, 43)
-    var['high'] = fuzz.smf(var.universe, 0, 255)
-
+    #var['high'] = fuzz.smf(var.universe, 0, 255)
+    var['high'] = fuzz.gaussmf(var.universe, 255, 43)
 
 #Define the gaussmf function
 def gaussmf(x, mean, sigma):
@@ -155,7 +156,7 @@ def detectar_objetos_en_el_mar(image, sea_mask):
 
     # Aplicar un filtro Gaussiano para reducir el ruido
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    rezides=cv2.resize(blurred, (300,300))
+    rezides=cv2.resize(gray, (300,300))
         # Convertir la imagen a escala de grises
     
     # Aplicar la máscara del mar
@@ -207,7 +208,7 @@ def detectar_objetos_en_el_mar(image, sea_mask):
     rezides2=cv2.resize(image, (300, 300))
     contour_image = rezides2.copy()
     #blended = cv2.addWeighted(contours, 0.5, contour_image, 0.5, 0)
-    cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 2)
+    cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 2)   #preguntar al Profe
     # Mostrar la imagen con los contornos detectados
     #cv2.imshow('contours', blended)
     cv2.imshow('contours2', contour_image)

@@ -11,12 +11,13 @@ from skfuzzy import control as ctrl
 # Definir las funciones de membresía para los píxeles vecinos y el píxel central
 def define_membership_functions(filename):
     # Leer la imagen
-    imagen = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)  # Lee la imagen en escala de grises
-    print(imagen)
-    print(np.max(imagen))
+    image = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+    imagen=cv2.resize(image, (300, 300))  # Lee la imagen en escala de grises
+    #print(imagen)
+    #print(np.max(imagen))
     x_pixel = imagen.flatten()  # Obtener todos los píxeles de la imagen como un array 1D
-    min_pixel = np.min(x_pixel)
-    max_pixel = np.max(x_pixel)
+    min_pixel = np.min(image)
+    max_pixel = np.max(image)
     universe = (np.arange(min_pixel, max_pixel ) / 256)  # Normalización entre 0 y 1
     universe2= (np.arange(0, 256)/256)
     # Crear las variables difusas usando ctrl.Antecedent y ctrl.Consequent
@@ -175,7 +176,7 @@ def apply_fuzzy_rules_to_image(fuzzy_image, edge_detect):
             neighbor_values = [fuzzy_image[i+di, j+dj] for di, dj in neighbors]
             
             edge_detect.input['C1'] = neighbor_values[0]
-            print(neighbor_values[0])
+            print(i)
             edge_detect.input['C2'] = neighbor_values[1]
             edge_detect.input['C3'] = neighbor_values[2]
             edge_detect.input['C4'] = neighbor_values[3]
@@ -189,7 +190,6 @@ def apply_fuzzy_rules_to_image(fuzzy_image, edge_detect):
             
             edge_image[i, j] = 1 if edge_detect.output['edge'] >= 0.5 else 0
             #edge_image[i, j] = edge_detect.output['edge']
-            print(edge_image)
             
     return edge_image
 
@@ -203,8 +203,9 @@ def main():
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
+        filename = join(dirname(dirname(abspath(__file__))), "img/Black_and_White.jpg")
     image=cv2.imread(filename)
+    imagen=cv2.resize(image, (300, 300))
     gray=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
@@ -212,10 +213,11 @@ def main():
     fuzzy_image = gray.astype(float) / 256.00  # Normalizar la imagen entre 0 y 1
     edge_detect = create_fuzzy_system (filename)
     edge_image = apply_fuzzy_rules_to_image (fuzzy_image, edge_detect)
-    print(edge_image)
+    #print(edge_image)
+    edge_image_uint8 = (edge_image * 255).astype(np.uint8)
     # Mostrar resultados
     cv2.imshow('Original Image', image)
-    cv2.imshow('Fuzzy Edge Detected Image', edge_image * 255)  # Escalar a 0-255 para visualizar
+    cv2.imshow('Fuzzy Edge Detected Image', edge_image_uint8)  # Escalar a 0-255 para visualizar
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 

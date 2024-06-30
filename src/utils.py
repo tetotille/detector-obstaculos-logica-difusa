@@ -100,3 +100,17 @@ def aplicar_logica_difusa_pixeles(num_pixeles, total_pixeles, mostrar_grafica=Fa
 
     return grado_muchos > grado_pocos
         
+def crop_horizontal(imagen, indice_vertical):
+    """
+    Recorta una imagen a color horizontalmente en un índice dado.
+    Args:
+        imagen: Una imagen a color en formato NumPy.
+        indice_vertical: El índice vertical donde se realizará el recorte.
+    Returns:
+        Una tupla que contiene dos imágenes: la parte superior y la parte inferior.
+    """
+    if indice_vertical < 0 or indice_vertical >= imagen.shape[0]:
+        raise ValueError("El índice vertical está fuera de los límites de la imagen.")
+    parte_superior = imagen[:indice_vertical, :]
+    parte_inferior = imagen[indice_vertical:, :]
+    return parte_superior, parte_inferior

@@ -5,7 +5,7 @@ from skfuzzy import control as ctrl
 from os.path import dirname, abspath, join
 from sys import argv
 import matplotlib.pyplot as plt
-
+from utils import crop_horizontal
 # Crear variables difusas
 P1 = ctrl.Antecedent(np.arange(0, 256, 1), 'P1')
 P2 = ctrl.Antecedent(np.arange(0, 256, 1), 'P2')
@@ -70,7 +70,7 @@ plt.show()
 
 # Definir las reglas difusas
 rule1 = ctrl.Rule(P1['low'] & P2['low'], P4_out['low'])
-rule2 = ctrl.Rule(P1['medium'] & P2['medium'], P4_out['medium'])
+rule2 = ctrl.Rule(P1['medium'] & P2['medium'], P4_out['low'])
 rule3 = ctrl.Rule(P1['high'] & P2['high'], P4_out['high'])
 rule4 = ctrl.Rule(P1['medium'] & P3['low'], P4_out['low'])
 rule5 = ctrl.Rule(P2['medium'] & P3['low'], P4_out['low'])
@@ -97,6 +97,7 @@ def detectar_horizonte(image):
     smoothed_gradient = np.convolve(np.mean(gradient, axis=1), np.ones(15)/15, mode='same')
 
     transition_index = np.argmax(np.abs(smoothed_gradient))
+    print(transition_index)
     horizon_mask = np.zeros(image.shape[:2], dtype=np.uint8)
     if transition_index is not None:
         cv2.line(image, (0, transition_index), (image.shape[1], transition_index), (0, 255, 0), thickness=2)
@@ -104,7 +105,7 @@ def detectar_horizonte(image):
     cv2.imshow('horizontada', image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    return image, horizon_mask
+    return image, horizon_mask, transition_index
 
 def segment_image(image, horizon_mask):
     rows, cols = image.shape[:2]
@@ -125,20 +126,20 @@ def detect_horizon(image_path):
     # Cargar la imagen
     print(f"Cargando imagen desde: {image_path}")  # Imprimir la ruta de la imagen para verificación
     image = cv2.imread(image_path)
-
     # Verificar si la imagen se ha cargado correctamente
     if image is None:
         raise ValueError("La imagen no se pudo cargar. Verifica la ruta del archivo y asegúrate de que el archivo exista.")
     image=cv2.resize(image, (300, 300))
 
     # Detectar el horizonte
-    horizonte_image, horizon_mask = detectar_horizonte(image)
+    horizonte_image, horizon_mask, trans = detectar_horizonte(image)
 
     # Segmentar la imagen en mar, horizonte y cielo
-    sea_mask, horizon_mask, sky_mask = segment_image(image, horizon_mask)
+    #sea_mask, horizon_mask, sky_mask = segment_image(image, horizon_mask)
+    _,imagen=crop_horizontal(image, trans)
 
     # Detectar objetos en el mar usando la lógica difusa
-    objetos_detectados = detectar_objetos_en_el_mar(image, sea_mask)
+    objetos_detectados = detectar_objetos_en_el_mar(imagen)
 
     # Mostrar la imagen con el horizonte detectado y los objetos
     resized_image = cv2.resize(image, (300, 300))  # Ajustar el tamaño para mejor visualización
@@ -146,40 +147,40 @@ def detect_horizon(image_path):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def detectar_objetos_en_el_mar(image, sea_mask):
+def detectar_objetos_en_el_mar(sea_mask):
 
-    if image is None:
-        print("Error: Image not loaded properly.")
+    if sea_mask is None:
+         print("Error: Image not loaded properly.")
     else:
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+         gray = cv2.cvtColor(sea_mask, cv2.COLOR_BGR2GRAY)
     
 
     # Aplicar un filtro Gaussiano para reducir el ruido
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    rezides=cv2.resize(gray, (300,300))
+    #rezides=cv2.resize(gray, (300,300))
         # Convertir la imagen a escala de grises
     
     # Aplicar la máscara del mar
-    sea_region = cv2.bitwise_and(rezides, rezides, mask=sea_mask)
-    cv2.imshow('mascara mar', sea_region)
+    # sea_region = cv2.bitwise_and(sea_mask, sea_mask, mask=sea_mask)
+    cv2.imshow('mascara mar', gray)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
     # Crear una imagen para guardar los bordes difusos
-    fuzzy_edge_image = np.zeros_like(sea_region, dtype=np.uint8)
+    fuzzy_edge_image = np.zeros_like(gray, dtype=np.uint8)
     
 
     # Obtener las dimensiones de la imagen
-    height, width = rezides.shape
+    height, width = gray.shape
 
     # Recorrer cada píxel de la imagen
     for y in range(0, height - 1):
         for x in range(0, width - 1):
             # Obtener los valores de los píxeles vecinos
-            pixel_P1 = sea_region[y, x]
-            pixel_P2 = sea_region[y, x + 1]
-            pixel_P3 = sea_region[y + 1, x]
-            pixel_P4 = sea_region[y + 1, x + 1]
+            pixel_P1 = gray[y, x]
+            pixel_P2 = gray[y, x + 1]
+            pixel_P3 = gray[y + 1, x]
+            pixel_P4 = gray[y + 1, x + 1]
 
             # Asignar los valores a las variables difusas
             edge_detection.input['P1'] = pixel_P1
@@ -205,8 +206,8 @@ def detectar_objetos_en_el_mar(image, sea_mask):
     cv2.imshow('contours', fuzzy_edge_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    rezides2=cv2.resize(image, (300, 300))
-    contour_image = rezides2.copy()
+    rezides2=cv2.resize(sea_mask, (300, 300))
+    contour_image = sea_mask.copy()
     #blended = cv2.addWeighted(contours, 0.5, contour_image, 0.5, 0)
     cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 2)   #preguntar al Profe
     # Mostrar la imagen con los contornos detectados

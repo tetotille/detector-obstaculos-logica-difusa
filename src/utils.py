@@ -1,8 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from fuzzylogic.classes import Domain
-from fuzzylogic.functions import triangular, S, R,bounded_sigmoid
+#from fuzzylogic.classes import Domain
+#from fuzzylogic.functions import triangular, S, R,bounded_sigmoid
 
 async def aplicar_logica_difusa_posicion(centroide, dimensiones, mostrar_grafica=False):
     x, y = centroide
@@ -109,8 +109,9 @@ def crop_horizontal(imagen, indice_vertical):
     Returns:
         Una tupla que contiene dos imágenes: la parte superior y la parte inferior.
     """
+
     if indice_vertical < 0 or indice_vertical >= imagen.shape[0]:
         raise ValueError("El índice vertical está fuera de los límites de la imagen.")
-    parte_superior = imagen[:indice_vertical, :]
-    parte_inferior = imagen[indice_vertical:, :]
+    parte_superior = imagen[:indice_vertical, :,:]
+    parte_inferior = imagen[indice_vertical:, :,:]
     return parte_superior, parte_inferior

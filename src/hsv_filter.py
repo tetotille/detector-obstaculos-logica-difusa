@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def filter_h(img_path):
-    img = cv2.imread(img_path,cv2.IMREAD_COLOR)
+def filter_h(img):
+    #img = cv2.imread(img_path,cv2.IMREAD_COLOR)
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     
     h,_,_ = cv2.split(img_hsv)
     
     h = 255 - h
 
-    hist, bins = np.histogram(h_filtrada.ravel(), 256, [0, 256])
+    hist, bins = np.histogram(h.ravel(), 256, [0, 256])
 
     max_index = np.argmax(hist)
     most_frequent_intensity = bins[max_index]

@@ -10,20 +10,14 @@ from skfuzzy import control as ctrl
 
 
 # Definir las funciones de membresía para los píxeles vecinos y el píxel central
-def define_membership_functions(filename):
-    # Leer la imagen
-    image = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-    #image2=filter_h(filename)
-    imagen=cv2.resize(image, (100, 100))  # Lee la imagen en escala de grises
-    #print(imagen)
-    #print(np.max(imagen))
-    x_pixel = imagen.flatten()  # Obtener todos los píxeles de la imagen como un array 1D
+def define_membership_functions(image):
     min_pixel = np.min(image)
     max_pixel = np.max(image)
-    universe = (np.arange(min_pixel, max_pixel ) / 256)  # Normalización entre 0 y 1
-    print(image[192, 1918], image[192, 1919], image[192, 1917], image[191, 1918], image[191, 1917], image[191, 1919], image[193, 1917], image[193, 1918], image[193, 1919])
+    universe = np.arange(min_pixel, max_pixel)/256  # Normalización entre 0 y 1
+    # print(image[192, 1918], image[192, 1919], image[192, 1917], image[191, 1918], image[191, 1917], image[191, 1919], image[193, 1917], image[193, 1918], image[193, 1919])
     universe2= (np.arange(0, 256)/256)
     # Crear las variables difusas usando ctrl.Antecedent y ctrl.Consequent
+    # Estas 9 variables indican los 9 pixeles que existen alrededor del elegido son las 9 variables de pixeles difusos
     C1 = ctrl.Antecedent(universe, 'C1')
     C2 = ctrl.Antecedent(universe, 'C2')
     C3 = ctrl.Antecedent(universe, 'C3')
@@ -34,6 +28,7 @@ def define_membership_functions(filename):
     C8 = ctrl.Antecedent(universe, 'C8')
     C9 = ctrl.Antecedent(universe, 'C9')
 
+    # Esto sería la inicialización de las funciones de pertenencia
     for C in [C1, C2, C3, C4, C5, C6, C7, C8, C9]:
         C.automf(2, names=['low', 'high']) # Dividir en 2 funciones de membresía
 
@@ -57,19 +52,20 @@ def define_membership_functions(filename):
     
     edge['low'] = fuzz.trimf(universe2, [0, 0, 0.5])
     edge['high']= fuzz.trimf(universe2, [0.5, 1, 1])
-    edge['yes'] = fuzz.trimf(universe2, [0.5, 0.5, 0.5])
+    edge['yes'] = fuzz.trimf(universe2, [0, 0.5, 1])
     
         # Definir el universo de discurso
     universe = np.arange(0, 1.01, 0.01)
     universe2 = np.arange(0, 1.01, 0.01)
 
+    ##### Se hace una copia exclusivamente para dibujar y ver las funciones de membresía #####
     # Definir las funciones de membresía
     C_low = fuzz.trimf(universe, [0, 0, 1])
     C_high = fuzz.trimf(universe, [0, 1, 1])
 
     edge_low = fuzz.trimf(universe2, [0, 0, 0.5])
     edge_high= fuzz.trimf(universe2, [0.5, 1, 1])
-    edge_yes = fuzz.trimf(universe2, [0.5, 0.5, 0.5])
+    edge_yes = fuzz.trimf(universe2, [0, 0.5, 1])
 
     # Graficar las funciones de membresía
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
@@ -391,8 +387,8 @@ def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
     return rules
 
 # Crear el sistema de control difuso
-def create_fuzzy_system(filename):
-    C1, C2, C3, C4, C5, C6, C7, C8, C9, edge = define_membership_functions(filename)
+def create_fuzzy_system(image):
+    C1, C2, C3, C4, C5, C6, C7, C8, C9, edge = define_membership_functions(image)
     rules = define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge)
     
     edge_ctrl = ctrl.ControlSystem(rules)
@@ -403,7 +399,7 @@ def create_fuzzy_system(filename):
 # Aplicar las reglas difusas a la imagen
 def apply_fuzzy_rules_to_image(fuzzy_image, edge_detect):
     rows, cols = fuzzy_image.shape
-    edge_image = np.zeros((rows, cols), dtype=int)
+    edge_image = np.zeros((rows, cols), dtype=float)
     
     neighbors = [
         (-1, -1), (-1, 0), (-1, 1), 
@@ -427,19 +423,21 @@ def apply_fuzzy_rules_to_image(fuzzy_image, edge_detect):
             edge_detect.input['C9'] = neighbor_values[8]
             #print(neighbor_values[8])
 
-        try:
-            edge_detect.compute()          
-        except AssertionError as e:
-            print(f"Error en la posición ({i}, {j}): {e}")
-            edge_image[i, j] =  fuzzy_image[i, j]
-            continue
+            try:
+                edge_detect.compute()          
+            except AssertionError as e:
+                print(f"Error en la posición ({i}, {j}): {e}")
+                edge_image[i, j] =  fuzzy_image[i, j]
+                continue
 
-        if edge_detect.output['edge'] == 0.5:  # Si es 'yes'
-            edge_image[i, j] = 0.5 
-        elif edge_detect.output['edge'] > 0.5: 
-            edge_image[i, j] = 1
-        elif edge_detect.output['edge'] < 0.5:
-            edge_image[i, j] = 0
+            edge_image[i,j] = edge_detect.output["edge"]
+
+        # if edge_detect.output['edge'] == 0.5:  # Si es 'yes'
+        #     edge_image[i, j] = 0.5 
+        # elif edge_detect.output['edge'] > 0.5: 
+        #     edge_image[i, j] = 1
+        # elif edge_detect.output['edge'] < 0.5:
+        #     edge_image[i, j] = 0
                   
     return edge_image
 
@@ -455,22 +453,25 @@ def main():
     else:
         filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
     image=cv2.imread(filename)
-    imagen=cv2.resize(image, (100, 100))
-    gray=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    x,y,a = image.shape
+    imagen=cv2.resize(image, (300, int(x*300/y)))
+    gray=cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
     #image2=filter_h(filename)
-
+    cv2.imshow('Original Image', gray)
+    cv2.waitKey(0)
 
     # Aplicar detección de bordes difusa
     fuzzy_image = gray.astype(float) / 256.00000000  # Normalizar la imagen entre 0 y 1
-    edge_detect = create_fuzzy_system (filename)
+    edge_detect = create_fuzzy_system (gray)
     edge_image = apply_fuzzy_rules_to_image (fuzzy_image, edge_detect)
     #print(edge_image)
     edge_image_uint8 = (edge_image * 255).astype(np.uint8)
     print(edge_image_uint8)
     # Mostrar resultados
-    cv2.imshow('Original Image', image)
+    # cv2.imshow('Original Image', image)
     cv2.imshow('Fuzzy Edge Detected Image', edge_image_uint8)  # Escalar a 0-255 para visualizar
     cv2.waitKey(0)
+    cv2.imwrite("test.jpeg",edge_image_uint8)
     cv2.destroyAllWindows()
 
 # Ruta a la imagen

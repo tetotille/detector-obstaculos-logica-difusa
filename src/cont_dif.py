@@ -809,6 +809,205 @@ def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
                C5['low'] & C7['high'] & C8['low'], edge['high'])
     rule259 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['low'] & C3['low'] & C4['low'] & 
                C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule260 = ctrl.Rule(C6['high'] & C9['high'] & C1['low'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['high'])    
+    rule261 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['low'] & C3['low'] & C4['high'] &
+               C5['high'] & C7['low'] & C8['high'], edge['high'])  
+    rule262 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['high'])   
+    rule263 = ctrl.Rule(C6['low'] & C9['high'] & C1['low'] & C2['high'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['yes'])
+    rule264 = ctrl.Rule(C6['low'] & C9['high'] & C1['low'] & C2['high'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule265 = ctrl.Rule(C6['low'] & C9['high'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['high'], edge['high'])
+    rule266 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['yes'])
+    rule267 = ctrl.Rule(C6['high'] & C9['high'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['high'], edge['yes'])
+    rule268 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['low'] & C8['low'], edge['high'])
+    rule269 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['yes'])
+    rule270 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule271 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule272 = ctrl.Rule(C6['low'] & C9['high'] & C1['low'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule273 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['high'])
+    rule274 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['yes'])
+    rule275 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['high'], edge['high'])
+    rule276 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule277 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['high'])
+    rule278 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['low'])
+    rule279 = ctrl.Rule(C6['high'] & C9['high'] & C1['low'] & C2['high'] & C3['high'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule280 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule281 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule282 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['low'] & C8['low'], edge['high'])
+    rule283 = ctrl.Rule(C6['low'] & C9['high'] & C1['low'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['low'])
+    rule284 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['low'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['high'])
+    rule285 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule286 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['high'])
+    rule287 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule288 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule289 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['yes'])
+    rule290 = ctrl.Rule(C6['low'] & C9['high'] & C1['low'] & C2['high'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['high'])
+    rule291 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['yes'])
+    rule292 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['low'])
+    rule293 = ctrl.Rule(C6['high'] & C9['high'] & C1['low'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['yes'])
+    rule294 = ctrl.Rule(C6['low'] & C9['high'] & C1['low'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule295 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule296 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['high'] & C4['low'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['high'])
+    rule297 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['yes'])
+    rule298 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['yes'])
+    rule299 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['yes'])
+    rule300 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['high'])
+    rule301 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule302 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['yes'])
+    rule303 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule304 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule305 = ctrl.Rule(C6['high'] & C9['high'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['high'])
+    rule306 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule307 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['yes'])
+    rule308 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['high'], edge['high'])
+    rule309 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['high'], edge['yes'])
+    rule310 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['yes'])
+    rule311 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule312 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['high'])
+    rule313 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['yes'])
+    rule314 = ctrl.Rule(C6['low'] & C9['high'] & C1['low'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['low'])
+    rule315 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['low'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['yes'])
+    rule316 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['low'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['yes'])
+    rule317 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['yes'])
+    rule318 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['high'])
+    rule319 = ctrl.Rule(C6['high'] & C9['high'] & C1['low'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['yes'])
+    rule320 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['high'], edge['yes'])
+    rule321 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule322 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule323 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule324 = ctrl.Rule(C6['low'] & C9['high'] & C1['low'] & C2['high'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['high'])
+    rule325 = ctrl.Rule(C6['high'] & C9['high'] & C1['low'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['yes'])
+    rule326 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule327 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['yes'])
+    rule328 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule329 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['yes'])
+    rule330 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['low'] & C8['low'], edge['yes'])
+    rule331 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['high'] & C4['low'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['high'])
+    rule332 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['high'])
+    rule333 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['high'])
+    rule334 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['low'])
+    rule335 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['yes'])
+    rule336 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['yes'])
+    rule337 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['yes'])
+    rule338 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['yes'])
+    rule339 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['high'] & C8['low'], edge['low'])
+    rule340 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['low'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['high'], edge['yes'])
+    rule341 = ctrl.Rule(C6['high'] & C9['high'] & C1['low'] & C2['high'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['yes'])
+    rule342 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['high'])
+    rule343 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['low'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['yes'])
+    rule344 = ctrl.Rule(C6['high'] & C9['high'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['low'] & C7['low'] & C8['low'], edge['yes'])
+    rule345 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['yes'])
+    rule346 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['low'])
+    rule347 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['high'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule348 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['yes'])
+    rule349 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['low'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['yes']) 
+    rule350 = ctrl.Rule(C6['high'] & C9['low'] & C1['high'] & C2['high'] & C3['high'] & C4['high'] & 
+               C5['low'] & C7['low'] & C8['high'], edge['yes'])
+    rule351 = ctrl.Rule(C6['high'] & C9['high'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['yes'])
+    rule352 = ctrl.Rule(C6['low'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['high'])
+    rule353 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['high'], edge['high'])
+    rule354 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['low'], edge['high'])
+    rule355 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['low'] & C7['high'] & C8['high'], edge['high'])
+    rule356 = ctrl.Rule(C6['low'] & C9['high'] & C1['high'] & C2['low'] & C3['high'] & C4['low'] & 
+               C5['high'] & C7['high'] & C8['high'], edge['yes'])
+    rule357 = ctrl.Rule(C6['high'] & C9['low'] & C1['low'] & C2['high'] & C3['low'] & C4['high'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['yes'])
+    rule358 = ctrl.Rule(C6['low'] & C9['low'] & C1['high'] & C2['high'] & C3['low'] & C4['low'] & 
+               C5['high'] & C7['low'] & C8['low'], edge['yes'])
+    
 
     rules = [rule1, rule2, rule3, rule4, rule5, rule6, rule7,rule8, rule9, rule10, rule11, rule12,
         rule13, rule14, rule15, rule16, rule17, rule18, rule19, rule20, rule21, rule22, rule23, rule24, 
@@ -832,7 +1031,16 @@ def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
         rule218, rule219, rule220, rule221, rule222, rule223, rule224, rule225, rule226, rule227, rule228,
         rule229, rule230, rule231, rule232, rule233, rule234, rule235, rule236, rule237, rule238, rule239,
         rule240, rule241, rule242, rule243, rule244, rule245, rule246, rule247, rule248, rule249, rule250,
-        rule251, rule252, rule253, rule254, rule255, rule256, rule257, rule258, rule259]
+        rule251, rule252, rule253, rule254, rule255, rule256, rule257, rule258, rule259, rule260, rule261, 
+        rule262, rule263, rule264, rule265, rule266, rule267, rule268, rule269, rule270, rule271, rule272,
+        rule273, rule274, rule275, rule276, rule277, rule278, rule279, rule280, rule281, rule282, rule283,
+        rule284, rule285, rule286, rule287, rule288, rule289, rule290, rule291, rule292, rule293, rule294,
+        rule295, rule296, rule297, rule298, rule299, rule300, rule301, rule302, rule303, rule304, rule305,
+        rule306, rule307, rule308, rule309, rule310, rule311, rule312, rule313, rule314, rule315, rule316,
+        rule317, rule318, rule319, rule320, rule321, rule322, rule323, rule324, rule325, rule326, rule327,
+        rule328, rule329, rule330, rule331, rule332, rule333, rule334, rule335, rule336, rule337, rule338,
+        rule339, rule340, rule341, rule342, rule343, rule344, rule345, rule346, rule347, rule348, rule349,
+        rule350, rule351, rule352, rule353, rule354, rule355, rule356, rule357, rule358]
     return rules
 
 

@@ -13,7 +13,7 @@ P3 = ctrl.Antecedent(np.arange(0, 256, 1), 'P3')
 P4 = ctrl.Antecedent(np.arange(0, 256, 1), 'P4')
 P4_out = ctrl.Consequent(np.arange(0, 256, 1), 'P4_out')
 
-    # Define the adjusted universe of discourse
+# Define the adjusted universe of discourse
 universe = np.linspace(-800, 800, 100)
 
 # Definir las funciones de pertenencia
@@ -56,7 +56,6 @@ plt.plot(universe, P1_mfs['high'], label='P1 High', linestyle='-')
 plt.plot(universe, P2_mfs['low'], label='P2 Low', linestyle='--')
 plt.plot(universe, P2_mfs['medium'], label='P2 Medium', linestyle='-.')
 plt.plot(universe, P2_mfs['high'], label='P2 High', linestyle='-')
-
 plt.plot(universe, P3_mfs['low'], label='P3 Low', linestyle='--')
 plt.plot(universe, P3_mfs['medium'], label='P3 Medium', linestyle='-.')
 plt.plot(universe, P3_mfs['high'], label='P3 High', linestyle='-')
@@ -209,7 +208,7 @@ def detectar_objetos_en_el_mar(sea_mask):
     rezides2=cv2.resize(sea_mask, (300, 300))
     contour_image = sea_mask.copy()
     #blended = cv2.addWeighted(contours, 0.5, contour_image, 0.5, 0)
-    cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 2)   #preguntar al Profe
+    #cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 2)   #no
     # Mostrar la imagen con los contornos detectados
     #cv2.imshow('contours', blended)
     cv2.imshow('contours2', contour_image)

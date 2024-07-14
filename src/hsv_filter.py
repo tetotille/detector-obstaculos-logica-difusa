@@ -2,7 +2,8 @@ import skfuzzy as fuzz
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-
+from os.path import dirname, abspath, join
+from sys import argv
 
 def filter_h(img):
     #img = cv2.imread(img_path,cv2.IMREAD_COLOR)
@@ -31,7 +32,7 @@ def filter_s(img_path):
     
     s = 255 - s
 
-    hist, bins = np.histogram(s_filtrada.ravel(), 256, [0, 256])
+    hist, bins = np.histogram(s.ravel(), 256, [0, 256])
 
     max_index = np.argmax(hist)
     most_frequent_intensity = bins[max_index]
@@ -41,3 +42,15 @@ def filter_s(img_path):
     s_filtrada[(s >= most_frequent_intensity-10) & (s <= most_frequent_intensity+10)] = 0
 
     return s_filtrada
+if __name__ == "__main__":
+
+    # Ruta a la imagen
+    if len(argv) > 1:
+        filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
+    else:
+        filename = join(dirname(dirname(abspath(__file__))), "img/amanecer.jpeg")
+imagen = cv2.resize(filter_s(filename), (300, 300))
+cv2.imshow('s filter', imagen)
+cv2.waitKey(0)
+    #cv2.imwrite("test.jpeg",edge_image_uint8)
+cv2.destroyAllWindows()

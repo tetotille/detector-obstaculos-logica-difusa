@@ -11,11 +11,11 @@ from hsv_filter import filter_h
 
 # Definir las funciones de membresía para los píxeles vecinos y el píxel central
 def define_membership_functions(image):
-    x,y, a = image.shape
+    x,y = image.shape
     imagen=cv2.resize(image, (200, int(x*200/y)))
-    gray=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    min_pixel = np.min(gray)
-    max_pixel = np.max(gray)
+    #gray=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    min_pixel = np.min(imagen)
+    max_pixel = np.max(imagen)
     universe = np.arange(min_pixel, max_pixel)/256  # Normalización entre 0 y 1
     #print(gray[2, 100], gray[2, 99], gray[2, 101], gray[1, 99], gray[1, 100], gray[1, 101], gray[3, 99], gray[3, 100], gray[3,101])
     universe2= (np.arange(0, 256)/256)
@@ -1066,35 +1066,36 @@ def apply_fuzzy_rules_to_image(fuzzy_image, edge_detect):
     ]
     
     for i in range(1, rows-1):
+        print(f"Procesando: {(i*cols)/(cols*rows)*100}%     ",end="\r")
         for j in range(1, cols-1):
             neighbor_values = [fuzzy_image[i+di, j+dj] for di, dj in neighbors]   
             edge_detect.input['C1'] = neighbor_values[0]
-            print(i)
-            print(j)
-            print(neighbor_values[0])
+            # print(i)
+            # print(j)
+            # print(neighbor_values[0])
             edge_detect.input['C2'] = neighbor_values[1]
-            print(neighbor_values[1])
+            # print(neighbor_values[1])
             edge_detect.input['C3'] = neighbor_values[2]
-            print(neighbor_values[2])
+            # print(neighbor_values[2])
             edge_detect.input['C4'] = neighbor_values[3]
-            print(neighbor_values[3])
+            # print(neighbor_values[3])
             edge_detect.input['C5'] = neighbor_values[4 ]
-            print(neighbor_values[4])
+            # print(neighbor_values[4])
             edge_detect.input['C6'] = neighbor_values[5]
-            print(neighbor_values[5])
+            # print(neighbor_values[5])
             edge_detect.input['C7'] = neighbor_values[6]
-            print(neighbor_values[6])
+            # print(neighbor_values[6])
             edge_detect.input['C8'] = neighbor_values[7]
-            print(neighbor_values[7])
+            # print(neighbor_values[7])
             edge_detect.input['C9'] = neighbor_values[8]
-            print(neighbor_values[8])
+            # print(neighbor_values[8])
 
             try:
                 edge_detect.compute()            
-            except AssertionError as e:
-                print(f"Error en la posición ({i}, {j}): {e}")
-                edge_image[i, j] =  fuzzy_image[i, j]
-                #edge_image[i, j] =  1
+            except Exception as e:
+                print(f"Error en la posición ({i}, {j}): {e}\n\n")
+                #edge_image[i, j] =  fuzzy_image[i, j]
+                edge_image[i, j] =  0
                 continue
             edge_image[i,j] = edge_detect.output["edge"] 
 
@@ -1117,18 +1118,19 @@ def main():
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/amanecer.jpeg")
+        filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
     image=cv2.imread(filename)
     x,y,a = image.shape
-    imagen=cv2.resize(image, (200, int(x*200/y)))
-    gray=cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
     image2=filter_h(imagen)
+    imagen=cv2.resize(image2, (200, int(x*200/y)))
+    gray=cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+    
     cv2.imshow('Original Image', gray)
     cv2.waitKey(0)
 
     # Aplicar detección de bordes difusa
     fuzzy_image = gray.astype(float) / 256.00000000  # Normalizar la imagen entre 0 y 1
-    edge_detect = create_fuzzy_system (imagen)
+    edge_detect = create_fuzzy_system (image2)
     edge_image = apply_fuzzy_rules_to_image (fuzzy_image, edge_detect)
     #print(edge_image)
     edge_image_uint8 = (edge_image * 255).astype(np.uint8)
@@ -1155,7 +1157,7 @@ def main():
     # Mostrar resultados
     # cv2.imshow('Original Image', image)
     cv2.imshow('Fuzzy Edge Detected Image', imagen_umbral)  # Escalar a 0-255 para visualizar
-    cv2.imshow('Solo contorno', imagen_resaltada)
+    cv2.imshow('Solo contorno', edge_image_uint8)
     cv2.waitKey(0)
     #cv2.imwrite("test.jpeg",edge_image_uint8)
     cv2.destroyAllWindows()

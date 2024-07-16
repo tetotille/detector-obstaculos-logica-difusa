@@ -48,9 +48,8 @@ if __name__ == "__main__":
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/amanecer.jpeg")
-imagen = cv2.resize(filter_s(filename), (300, 300))
-cv2.imshow('s filter', imagen)
-cv2.waitKey(0)
-    #cv2.imwrite("test.jpeg",edge_image_uint8)
-cv2.destroyAllWindows()
+        filename = join(dirname(dirname(abspath(__file__))), "img/IMG_6830.jpeg")
+    #img=cv2.imread(filename)
+    
+    #cv2.imshow('imagen final',filter_h(img))
+    #cv2.waitKey(0)

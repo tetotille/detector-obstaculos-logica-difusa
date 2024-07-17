@@ -1121,15 +1121,15 @@ def main():
         filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
     image=cv2.imread(filename)
     x,y,a = image.shape
-    image2=filter_h(imagen)
+    image2=filter_h(image)
     imagen=cv2.resize(image2, (200, int(x*200/y)))
-    gray=cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+    #gray=cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
     
-    cv2.imshow('Original Image', gray)
+    cv2.imshow('Original Image', image2)
     cv2.waitKey(0)
 
     # Aplicar detección de bordes difusa
-    fuzzy_image = gray.astype(float) / 256.00000000  # Normalizar la imagen entre 0 y 1
+    fuzzy_image = image2.astype(float) / 256.00000000  # Normalizar la imagen entre 0 y 1
     edge_detect = create_fuzzy_system (image2)
     edge_image = apply_fuzzy_rules_to_image (fuzzy_image, edge_detect)
     #print(edge_image)

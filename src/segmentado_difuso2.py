@@ -2,10 +2,11 @@ import numpy as np
 from PIL import Image
 import skfuzzy as fuzz
 import matplotlib.pyplot as plt
+from skimage import measure
 from os.path import dirname, abspath, join
 from sys import argv
-from skimage import measure, color
 
+# Paso 1: Cargar la imagen
 if len(argv) > 1:
     filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
 else:
@@ -15,7 +16,9 @@ x, y = image2.size
 image = image2.resize((200, int(x*200/y)))  # Redimensionar para simplificar el procesamiento
 image_np = np.array(image)
 
+
 # Paso 2: Convertir la imagen a un formato de datos
+# Reshape la imagen para que cada píxel sea una fila y los valores RGB sean las columnas
 pixels = np.reshape(image_np, (-1, 3))
 
 # Normalizar los valores de los píxeles
@@ -46,11 +49,19 @@ largest_region_label = region_props[largest_region_idx].label
 # Crear una máscara para la región más grande
 mask = (regions == largest_region_label).astype(np.uint8)
 
-# Extraer el objeto usando la máscara
-extracted_object = np.zeros_like(image_np)
-extracted_object[mask == 1] = image_np[mask == 1]
+# Aplicar la máscara al objeto original
+extracted_object = image_np * mask[:,:,np.newaxis]
 
-# Mostrar la imagen original, la imagen segmentada y el objeto extraído
+# Crear una máscara donde los valores del objeto detectado sean negros y el resto sea blanco
+object_value = 0  # Suponiendo que el valor del objeto es 1 después de la segmentación
+mask = np.where(extracted_object == object_value, 0, 255).astype(np.uint8)
+
+# Convertir el array de numpy a un objeto de imagen de Pillow
+mask_image_pil = Image.fromarray(mask)
+# Paso 5: Comparar la imagen original con el objeto extraído
+difference_image = np.abs(image_np - extracted_object)
+
+# Mostrar la imagen original, el objeto extraído y la diferencia
 plt.figure(figsize=(15, 5))
 
 plt.subplot(1, 3, 1)
@@ -58,30 +69,12 @@ plt.title('Imagen Original')
 plt.imshow(image)
 
 plt.subplot(1, 3, 2)
-plt.title('Imagen Segmentada')
-plt.imshow(segmented_image, cmap='viridis')
-print(segmented_image.shape)  # Verificar la forma de la matriz
-print(segmented_image.min(), segmented_image.max())  # Verificar los valores mínimos y máximos
-
-segmented_image_normalized = (segmented_image * (255 / segmented_image.max())).astype(np.uint8)
-
-# Convertir el array de numpy normalizado a un objeto de imagen de Pillow
-segmented_image_pil = Image.fromarray(segmented_image_normalized)
-# Paso 5: Comparar la imagen original con el objeto extraído
-gray_image = color.rgb2gray(image_np)
-difference_image = np.abs(gray_image - segmented_image_pil)
+plt.title('Objeto Extraído')
+plt.imshow(extracted_object)
 
 
 plt.subplot(1, 3, 3)
 plt.title('Diferencia')
-plt.imshow(difference_image)
-
-# Guardar la imagen usando Pillow
-segmented_image_pil.save('/Users/Koki/detector-obstaculos-logica-difusa/imagen_segmentada_guardada.png')
-
-
-#plt.subplot(1, 3, 3)
-#plt.title('Objeto Extraído')
-#plt.imshow(extracted_object)
+plt.imshow(mask_image_pil)
 
 plt.show()

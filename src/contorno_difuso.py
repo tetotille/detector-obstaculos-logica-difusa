@@ -224,7 +224,7 @@ if __name__ == "__main__":
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/ypacarai.jpeg")
+        filename = join(dirname(dirname(abspath(__file__))), "img/tes.jpeg")
 
     detect_horizon(filename)
 

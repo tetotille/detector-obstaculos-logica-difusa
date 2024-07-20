@@ -25,8 +25,8 @@ def filter_h(img):
     return h_filtrada
 
 def filter_s(img_path):
-    img = cv2.imread(img_path,cv2.IMREAD_COLOR)
-    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    #img = cv2.imread(img_path,cv2.IMREAD_COLOR)
+    img_hsv = cv2.cvtColor(img_path, cv2.COLOR_BGR2HSV)
     
     _,s,_ = cv2.split(img_hsv)
     
@@ -48,8 +48,8 @@ if __name__ == "__main__":
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/IMG_6830.jpeg")
-    #img=cv2.imread(filename)
+        filename = join(dirname(dirname(abspath(__file__))), "img/amanecer.jpeg")
+    img=cv2.imread(filename)
     
-    #cv2.imshow('imagen final',filter_h(img))
-    #cv2.waitKey(0)
+    cv2.imshow('imagen final.png',filter_s(img))
+    cv2.waitKey(0)

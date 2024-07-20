@@ -14,9 +14,13 @@ def define_membership_functions(image):
     x,y = image.shape
     #imagen=cv2.resize(image, (200, int(x*200/y)))
     #gray=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    min_pixel = np.min(image)
-    max_pixel = np.max(image)
-    universe = np.arange(min_pixel, max_pixel)/256  # Normalización entre 0 y 1
+    min_pixel = np.min(image)/256
+    max_pixel = np.max(image)/256
+    print(min_pixel, max_pixel)
+    universe = np.arange(min_pixel, max_pixel, (1/256))  # Normalización entre 0 y 1
+    valor_medio = ((min_pixel + max_pixel)/2)
+    print(valor_medio)
+    print(universe)
     #print(gray[2, 100], gray[2, 99], gray[2, 101], gray[1, 99], gray[1, 100], gray[1, 101], gray[3, 99], gray[3, 100], gray[3,101])
     universe2= (np.arange(0, 256)/256)
     # Crear las variables difusas usando ctrl.Antecedent y ctrl.Consequent
@@ -33,15 +37,16 @@ def define_membership_functions(image):
 
     # Esto sería la inicialización de las funciones de pertenencia
     for C in [C1, C2, C3, C4, C5, C6, C7, C8, C9]:
-        C.automf(2, names=['low', 'high']) # Dividir en 2 funciones de membresía
+        C.automf(3, names=['low','medium', 'high']) # Dividir en 2 funciones de membresía
 
     # Definir el consecuente (edge) con un rango adecuado
     edge = ctrl.Consequent(universe2, 'edge')
 
     # Definir funciones de membresía para cada vecino
     for C in [C1, C2, C3, C4, C5, C6, C7, C8, C9]:
-        C['low'] = fuzz.trimf(universe, [0, 0, 0.5])
-        C['high'] = fuzz.trimf(universe, [0.49609375, 1, 1])
+        C['low'] = fuzz.trimf(universe, [min_pixel, min_pixel, valor_medio])
+        C['medium'] = fuzz.trimf(universe, [(max_pixel/3), valor_medio, max_pixel*(2/3)])
+        C['high'] = fuzz.trimf(universe, [0.5, max_pixel, max_pixel])
     
     edge['low'] = fuzz.trimf(universe2, [0, 0, 0.5])
     edge['high']= fuzz.trimf(universe2, [0.5, 1, 1])
@@ -297,12 +302,458 @@ def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
                    C7['low'] & C8['low'] & C9['low'], edge['yes'])
     
 
-    rules = [rule1, rule2, rule3, rule4, rule5, rule6, rule7,rule8, rule9, rule10, rule11, rule12,
+    rules1 = [rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10, rule11, rule12,
         rule15, rule16, rule17,  rule19, rule20, rule21, rule22, rule23, rule24, 
         rule25, rule26,  rule28,  rule31, rule32, rule33, rule34, rule35, rule36, 
         rule37, rule38, rule39, rule40, rule41, rule42, rule43, rule44, rule45, rule46,
         rule47, rule48, rule49, rule50, rule51, rule52]
+    
+    
+    rule53 = ctrl.Rule(C1['high'] & C3['high'] & C5['high'] & 
+                      C2['high'] & C4['high'] & C6['high'] &
+                      C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule54 = ctrl.Rule(C5['high'] & C7['high'] & C9['high'] &
+                      C1['medium'] & C2['medium'] & C3['medium'] &
+                      C4['high'] & C6['high'] & C8['high'], edge['yes'])
+
+    rule55 = ctrl.Rule(C5['high'] & C4['medium'] & C1['medium'] &
+                      C9['high'] & C2['high'] & C7['medium'] &
+                      C3['high'] & C6['high'] & C8['high'], edge['yes'])
+
+    rule56 = ctrl.Rule(C1['high'] & C2['high'] & C4['high'] &
+                      C9['medium'] & C6['medium'] & C3['medium'] &
+                      C5['high'] & C7['high'] & C8['high'], edge['yes'])
+
+    rule57 = ctrl.Rule(C1['medium'] & C2['medium'] & C4['medium'] &
+                      C5['medium'] & C6['high'] & C3['high'] &
+                      C7['high'] & C9['high'] & C8['high'], edge['yes'])
+
+    rule58 = ctrl.Rule(C2['high'] & C1['high'] & C3['high'] &
+                      C8['medium'] & C6['high'] & C9['high'] &
+                      C4['medium'] & C5['medium'] & C7['medium'], edge['yes'])
+
+    rule59 = ctrl.Rule(C4['high'] & C7['high'] & C8['high'] &
+                     C1['high'] & C6['medium'] & C3['medium'] &
+                     C2['medium'] & C9['high'] & C5['medium'], edge['yes'])
+
+    rule60 = ctrl.Rule(C6['medium'] & C5['medium'] & C8['medium'] &
+                     C1['high'] & C4['high'] & C3['high'] &
+                     C2['high'] & C9['medium'] & C7['high'], edge['yes'])
+
+    rule61 = ctrl.Rule(C4['medium'] & C5['medium'] & C1['medium'] &
+                     C6['high'] & C8['high'] & C9['high'] &
+                     C2['medium'] & C3['medium'] & C7['medium'], edge['yes'])
+
+    rule62 = ctrl.Rule(C2['medium'] & C5['medium'] & C9['medium'] &
+                     C1['medium'] & C6['medium'] & C3['medium'] &
+                     C4['high'] & C8['high'] & C7['high'], edge['yes'])
+
+    rule63 = ctrl.Rule(C1['high'] & C2['high'] & C4['high'] &
+                     C5['medium'] & C6['medium'] & C3['medium'] &
+                     C8['medium'] & C9['medium'] & C7['medium'], edge['yes'])
+
+    # ... añadir las otras reglas aquí
+
+    rule64 = ctrl.Rule(C1['medium'] & C5['medium'] & C9['medium'] &
+                       C2['high'] & C3['high'] & C4['medium'] &
+                       C6['high'] & C7['medium'] & C8['medium'], edge['yes'])
+
+    rule65 =ctrl.Rule(C1['medium'] & C5['medium'] & C9['medium'] &
+                       C2['medium'] & C3['medium'] & C4['medium'] &
+                       C6['medium'] & C7['medium'] & C8['medium'], edge['low'])
+
+    rule66 = ctrl.Rule(C5['high'] & C3['high'] & C1['high'] &
+                      C9['high'] & C2['high'] & C7['high'] &
+                      C4['high'] & C6['high'] & C8['high'], edge['low'])
+
+    rule67 = ctrl.Rule(C5['medium'] & C3['medium'] & C1['medium'] &
+                      C2['medium'] & C4['medium'] & C6['medium'] &
+                      C7['high'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule68= ctrl.Rule(C5['medium'] & C3['medium'] & C6['medium'] &
+                      C9['medium'] & C8['medium'] & C2['medium'] &
+                      C1['high'] & C4['high'] & C7['high'], edge['yes'])
+
+    rule69= ctrl.Rule(C5['medium'] & C4['medium'] & C6['medium'] &
+                      C9['medium'] & C8['medium'] & C7['medium'] &
+                      C1['high'] & C2['high'] & C3['high'], edge['yes'])
+
+    rule70 = ctrl.Rule(C9['high'] & C3['high'] & C6['high'] &
+                      C7['medium'] & C8['medium'] & C5['medium'] &
+                      C1['medium'] & C2['medium'] & C3['medium'], edge['low'])
+
+    #otro tipo de division
+
+    rule71 = ctrl.Rule(C1['high'] & C2['high'] & C4['high'] &
+                      C5['high'] & C6['medium'] & C3['medium'] &
+                      C7['medium'] & C9['medium'] & C8['medium'], edge['yes'])
+
+    rule72 = ctrl.Rule(C2['medium'] & C1['medium'] & C3['medium'] &
+                      C8['high'] & C6['medium'] & C9['medium'] &
+                      C4['high'] & C5['high'] & C7['high'], edge['yes'])
+
+    rule73 = ctrl.Rule(C4['medium'] & C7['medium'] & C8['medium'] &
+                     C1['medium'] & C6['high'] & C3['high'] &
+                     C2['high'] & C9['medium'] & C5['high'], edge['yes'])
+
+    rule73 = ctrl.Rule(C6['high'] & C5['high'] & C8['high'] &
+                     C1['medium'] & C4['medium'] & C3['medium'] &
+                     C2['medium'] & C9['high'] & C7['medium'], edge['yes'])
+    #Aca otro
+    rule74 = ctrl.Rule(C4['high'] & C5['high'] & C1['high'] &   #cambiar
+                     C6['medium'] & C8['medium'] & C9['medium'] &
+                     C2['high'] & C3['medium'] & C7['medium'], edge['yes'])
+
+    rule75 = ctrl.Rule(C5['high'] & C6['high'] & C1['high'] &
+                     C4['medium'] & C8['medium'] & C7['medium'] &
+                     C2['high'] & C3['high'] & C9['high'], edge['yes'])
+
+    rule76 = ctrl.Rule(C3['high'] & C5['high'] & C9['high'] &
+                     C1['medium'] & C2['medium'] & C4['medium'] &
+                     C6['high'] & C8['high'] & C7['high'], edge['yes'])
+
+    rule77 = ctrl.Rule(C1['high'] & C5['high'] & C4['high'] &
+                     C2['high'] & C6['medium'] & C3['medium'] &
+                     C8['medium'] & C9['medium'] & C7['medium'], edge['yes'])
+
+    rule78 = ctrl.Rule(C1['medium'] & C5['high'] & C4['high'] &
+                     C2['medium'] & C6['high'] & C3['medium'] &
+                     C8['medium'] & C9['medium'] & C7['medium'], edge['low'])
+
+    rule79 = ctrl.Rule(C1['medium'] & C5['medium'] & C4['high'] &     #cambiar
+                     C2['medium'] & C6['high'] & C3['medium'] &
+                     C8['high'] & C9['high'] & C7['high'], edge['yes'])
+
+    rule80= ctrl.Rule(C1['medium'] & C5['high'] & C4['medium'] &
+                     C2['high'] & C6['medium'] & C3['medium'] &
+                     C8['high'] & C9['medium'] & C7['medium'], edge['low'])
+
+    rule81= ctrl.Rule(C1['high'] & C5['medium'] & C4['high'] &
+                     C2['medium'] & C6['high'] & C3['high'] &
+                     C8['medium'] & C9['high'] & C7['high'], edge['low'])
+
+    rule82 = ctrl.Rule(C1['high'] & C2['high'] & C3['high'] &
+                      C4['high'] & C5['medium'] & C6['high'] &
+                      C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+
+    rule83 = ctrl.Rule(C1['high'] & C2['high'] & C3['medium'] &
+                      C4['high'] & C5['medium'] & C6['medium'] &
+                      C7['high'] & C8['high'] & C9['medium'], edge['yes'])
+    # Definir la regla para cuando solo una variable es 'medium' y el resto son 'high'
+    rule84 = ctrl.Rule(C1['medium'] & C2['high'] & C3['high'] &
+                      C4['medium'] & C5['medium'] & C6['high'] &
+                      C7['medium'] & C8['high'] & C9['high'], edge['yes'])
+
+# Definir la regla para cuando solo una variable es 'high' y el resto son 'medium'
+    rule85= ctrl.Rule(C1['high'] & C2['medium'] & C3['medium'] &
+                      C4['high'] & C5['high'] & C6['medium'] &
+                      C7['high'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule86 = ctrl.Rule(C1['high'] & C2['medium'] & C3['medium'] &
+                   C4['high'] & C5['high'] & C6['medium'] &
+                   C7['high'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule87 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['medium'] & C5['high'] & C6['medium'] &
+                   C7['high'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule88 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['high'] &
+                   C4['medium'] & C5['high'] & C6['high'] &
+                   C7['medium'] & C8['medium'] & C9['high'], edge['yes'])
+
+    rule89 = ctrl.Rule(C1['high'] & C2['high'] & C3['high'] &
+                   C4['medium'] & C5['high'] & C6['medium'] &
+                   C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule90 = ctrl.Rule(C1['high'] & C2['medium'] & C3['medium'] &
+                   C4['high'] & C5['medium'] & C6['medium'] &
+                   C7['high'] & C8['high'] & C9['medium'], edge['yes'])
+
+    rule91 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['high'] & C5['medium'] & C6['medium'] &
+                   C7['high'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule92 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['medium'] & C5['medium'] & C6['high'] &
+                   C7['high'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule93 = ctrl.Rule(C1['medium'] & C2['high'] & C3['high'] &
+                   C4['medium'] & C5['medium'] & C6['high'] &
+                   C7['medium'] & C8['medium'] & C9['high'], edge['yes'])
+
+    rule94 = ctrl.Rule(C1['high'] & C2['high'] & C3['high'] &
+                   C4['medium'] & C5['medium'] & C6['high'] &
+                   C7['medium'] & C8['medium'] & C9['high'], edge['yes'])
+
+    rule95 = ctrl.Rule(C1['high'] & C2['high'] & C3['medium'] &
+                   C4['high'] & C5['medium'] & C6['medium'] &
+                   C7['high'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule96 = ctrl.Rule(C1['medium'] & C2['high'] & C3['high'] &
+                   C4['medium'] & C5['high'] & C6['high'] &
+                   C7['medium'] & C8['medium'] & C9['high'], edge['yes'])
+
+    rule97 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['high'] &
+                   C4['medium'] & C5['high'] & C6['high'] &
+                   C7['medium'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule98 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['medium'] & C5['high'] & C6['high'] &
+                   C7['high'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule99 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['high'] & C5['high'] & C6['medium'] &
+                   C7['high'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule100 = ctrl.Rule(C1['high'] & C2['medium'] & C3['medium'] &
+                   C4['high'] & C5['high'] & C6['medium'] &
+                   C7['high'] & C8['high'] & C9['medium'], edge['yes'])
+
+    rule101 = ctrl.Rule(C1['high'] & C2['high'] & C3['medium'] &
+                   C4['high'] & C5['high'] & C6['medium'] &
+                   C7['high'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule102 = ctrl.Rule(C1['high'] & C2['high'] & C3['high'] &
+                   C4['medium'] & C5['high'] & C6['high'] &
+                   C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule103 = ctrl.Rule(C1['high'] & C2['high'] & C3['high'] &
+                   C4['high'] & C5['high'] & C6['medium'] &
+                   C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+    
+    rules2 = [rule53, rule54, rule55, rule56, rule57, rule58, rule59, rule60, rule61, rule62, rule63, rule64,
+        rule67, rule68, rule69,  rule71, rule72, rule73, rule74, rule75, 
+        rule76, rule77, rule79, rule82, rule83, rule84, rule85, rule86, 
+        rule87, rule88, rule89, rule90, rule91, rule92, rule93, rule94, rule95, rule96,
+        rule97, rule98, rule99, rule100, rule101, rule102, rule103]
+    
+    rule104 = ctrl.Rule(C1['medium'] & C3['medium'] & C5['medium'] & 
+                      C2['medium'] & C4['medium'] & C6['medium'] &
+                      C7['low'] & C8['low'] & C9['low'], edge['yes'])
+
+    rule105 = ctrl.Rule(C5['medium'] & C7['medium'] & C9['medium'] &
+                      C1['low'] & C2['low'] & C3['low'] &
+                      C4['medium'] & C6['medium'] & C8['medium'], edge['yes'])
+
+    rule106 = ctrl.Rule(C5['medium'] & C4['low'] & C1['low'] &
+                      C9['medium'] & C2['medium'] & C7['low'] &
+                      C3['medium'] & C6['medium'] & C8['medium'], edge['yes'])
+
+    rule107 = ctrl.Rule(C1['medium'] & C2['medium'] & C4['medium'] &
+                      C9['low'] & C6['low'] & C3['low'] &
+                      C5['medium'] & C7['medium'] & C8['medium'], edge['yes'])
+
+    rule108 = ctrl.Rule(C1['low'] & C2['low'] & C4['low'] &
+                      C5['low'] & C6['medium'] & C3['medium'] &
+                      C7['medium'] & C9['medium'] & C8['medium'], edge['yes'])
+
+    rule109 = ctrl.Rule(C2['medium'] & C1['medium'] & C3['medium'] &
+                      C8['low'] & C6['medium'] & C9['medium'] &
+                      C4['low'] & C5['low'] & C7['low'], edge['yes'])
+
+    rule110 = ctrl.Rule(C4['medium'] & C7['medium'] & C8['medium'] &
+                     C1['medium'] & C6['low'] & C3['low'] &
+                     C2['low'] & C9['medium'] & C5['low'], edge['yes'])
+
+    rule111 = ctrl.Rule(C6['low'] & C5['low'] & C8['low'] &
+                     C1['medium'] & C4['medium'] & C3['medium'] &
+                     C2['medium'] & C9['low'] & C7['medium'], edge['yes'])
+
+    rule112 = ctrl.Rule(C4['low'] & C5['low'] & C1['low'] &
+                     C6['medium'] & C8['medium'] & C9['medium'] &
+                     C2['low'] & C3['low'] & C7['low'], edge['yes'])
+
+    rule113 = ctrl.Rule(C2['low'] & C5['low'] & C9['low'] &
+                     C1['low'] & C6['low'] & C3['low'] &
+                     C4['medium'] & C8['medium'] & C7['medium'], edge['yes'])
+
+    rule114 = ctrl.Rule(C1['medium'] & C2['medium'] & C4['medium'] &
+                     C5['low'] & C6['low'] & C3['low'] &
+                     C8['low'] & C9['low'] & C7['low'], edge['yes'])
+
+    # ... añadir las otras reglas aquí
+
+    rule115 = ctrl.Rule(C1['low'] & C5['low'] & C9['low'] &
+                       C2['medium'] & C3['medium'] & C4['low'] &
+                       C6['medium'] & C7['low'] & C8['low'], edge['yes'])
+
+    rule116 =ctrl.Rule(C1['low'] & C5['low'] & C9['low'] &
+                       C2['low'] & C3['low'] & C4['low'] &
+                       C6['low'] & C7['low'] & C8['low'], edge['low'])
+
+    rule117 = ctrl.Rule(C5['medium'] & C3['medium'] & C1['medium'] &
+                      C9['medium'] & C2['medium'] & C7['medium'] &
+                      C4['medium'] & C6['medium'] & C8['medium'], edge['low'])
+
+    rule118 = ctrl.Rule(C5['low'] & C3['low'] & C1['low'] &
+                      C2['low'] & C4['low'] & C6['low'] &
+                      C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule119= ctrl.Rule(C5['low'] & C3['low'] & C6['low'] &
+                      C9['low'] & C8['low'] & C2['low'] &
+                      C1['medium'] & C4['medium'] & C7['medium'], edge['yes'])
+
+    rule120= ctrl.Rule(C5['low'] & C4['low'] & C6['low'] &
+                      C9['low'] & C8['low'] & C7['low'] &
+                      C1['medium'] & C2['medium'] & C3['medium'], edge['yes'])
+
+    rule121 = ctrl.Rule(C9['medium'] & C3['medium'] & C6['medium'] &
+                      C7['low'] & C8['low'] & C5['low'] &
+                      C1['low'] & C2['low'] & C3['low'], edge['low'])
+
+    #otro tipo de division
+
+    rule122 = ctrl.Rule(C1['medium'] & C2['medium'] & C4['medium'] &
+                      C5['medium'] & C6['low'] & C3['low'] &
+                      C7['low'] & C9['low'] & C8['low'], edge['yes'])
+
+    rule123 = ctrl.Rule(C2['low'] & C1['low'] & C3['low'] &
+                      C8['medium'] & C6['low'] & C9['low'] &
+                      C4['medium'] & C5['medium'] & C7['medium'], edge['yes'])
+
+    rule124 = ctrl.Rule(C4['low'] & C7['low'] & C8['low'] &
+                     C1['low'] & C6['medium'] & C3['medium'] &
+                     C2['medium'] & C9['low'] & C5['medium'], edge['yes'])
+
+    rule125 = ctrl.Rule(C6['medium'] & C5['medium'] & C8['medium'] &
+                     C1['low'] & C4['low'] & C3['low'] &
+                     C2['low'] & C9['medium'] & C7['low'], edge['yes'])
+    #Aca otro
+    rule126 = ctrl.Rule(C4['medium'] & C5['medium'] & C1['medium'] &   #cambiar
+                     C6['low'] & C8['low'] & C9['low'] &
+                     C2['medium'] & C3['low'] & C7['low'], edge['yes'])
+
+    rule127 = ctrl.Rule(C5['medium'] & C6['medium'] & C1['medium'] &
+                     C4['low'] & C8['low'] & C7['low'] &
+                     C2['medium'] & C3['medium'] & C9['medium'], edge['yes'])
+
+    rule128 = ctrl.Rule(C3['medium'] & C5['medium'] & C9['medium'] &
+                     C1['low'] & C2['low'] & C4['low'] &
+                     C6['medium'] & C8['medium'] & C7['medium'], edge['yes'])
+
+    rule129 = ctrl.Rule(C1['medium'] & C5['medium'] & C4['medium'] &
+                     C2['medium'] & C6['low'] & C3['low'] &
+                     C8['low'] & C9['low'] & C7['low'], edge['yes'])
+
+    rule130 = ctrl.Rule(C1['low'] & C5['medium'] & C4['medium'] &
+                     C2['low'] & C6['medium'] & C3['low'] &
+                     C8['low'] & C9['low'] & C7['low'], edge['low'])
+
+    rule131 = ctrl.Rule(C1['low'] & C5['low'] & C4['medium'] &     #cambiar
+                     C2['low'] & C6['medium'] & C3['low'] &
+                     C8['medium'] & C9['medium'] & C7['medium'], edge['yes'])
+
+    rule132= ctrl.Rule(C1['low'] & C5['medium'] & C4['low'] &
+                     C2['medium'] & C6['low'] & C3['low'] &
+                     C8['medium'] & C9['low'] & C7['low'], edge['low'])
+
+    rule133= ctrl.Rule(C1['medium'] & C5['low'] & C4['medium'] &
+                     C2['low'] & C6['medium'] & C3['medium'] &
+                     C8['low'] & C9['medium'] & C7['medium'], edge['low'])
+
+    rule134 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                      C4['medium'] & C5['low'] & C6['medium'] &
+                      C7['low'] & C8['low'] & C9['low'], edge['yes'])
+
+
+    rule135 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['low'] &
+                      C4['medium'] & C5['low'] & C6['low'] &
+                      C7['medium'] & C8['medium'] & C9['low'], edge['yes'])
+    # Definir la regla para cuando solo una variable es 'low' y el resto son 'medium'
+
+    rule136 = ctrl.Rule(C1['low'] & C2['medium'] & C3['medium'] &
+                      C4['low'] & C5['low'] & C6['medium'] &
+                      C7['low'] & C8['medium'] & C9['medium'], edge['yes'])
+
+# Definir la regla para cuando solo una variable es 'medium' y el resto son 'low'
+    rule137 = ctrl.Rule(C1['medium'] & C2['low'] & C3['low'] &
+                      C4['medium'] & C5['medium'] & C6['low'] &
+                      C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule138 = ctrl.Rule(C1['medium'] & C2['low'] & C3['low'] &
+                   C4['medium'] & C5['medium'] & C6['low'] &
+                   C7['medium'] & C8['low'] & C9['low'], edge['yes'])
+
+    rule139 = ctrl.Rule(C1['low'] & C2['low'] & C3['low'] &
+                   C4['low'] & C5['medium'] & C6['low'] &
+                   C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule140 = ctrl.Rule(C1['low'] & C2['low'] & C3['medium'] &
+                   C4['low'] & C5['medium'] & C6['medium'] &
+                   C7['low'] & C8['low'] & C9['medium'], edge['yes'])
+
+    rule141 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['low'] & C5['medium'] & C6['low'] &
+                   C7['low'] & C8['low'] & C9['low'], edge['yes'])
+
+    rule142 = ctrl.Rule(C1['medium'] & C2['low'] & C3['low'] &
+                   C4['medium'] & C5['low'] & C6['low'] &
+                   C7['medium'] & C8['medium'] & C9['low'], edge['yes'])
+
+    rule143 = ctrl.Rule(C1['low'] & C2['low'] & C3['low'] &
+                   C4['medium'] & C5['low'] & C6['low'] &
+                   C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule144 = ctrl.Rule(C1['low'] & C2['low'] & C3['low'] &
+                   C4['low'] & C5['low'] & C6['medium'] &
+                   C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule145 = ctrl.Rule(C1['low'] & C2['medium'] & C3['medium'] &
+                   C4['low'] & C5['low'] & C6['medium'] &
+                   C7['low'] & C8['low'] & C9['medium'], edge['yes'])
+
+    rule146 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['low'] & C5['low'] & C6['medium'] &
+                   C7['low'] & C8['low'] & C9['medium'], edge['yes'])
+
+    rule147 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['low'] &
+                   C4['medium'] & C5['low'] & C6['low'] &
+                   C7['medium'] & C8['low'] & C9['low'], edge['yes'])
+
+    rule148 = ctrl.Rule(C1['low'] & C2['medium'] & C3['medium'] &
+                   C4['low'] & C5['medium'] & C6['medium'] &
+                   C7['low'] & C8['low'] & C9['medium'], edge['yes'])
+
+    rule149 = ctrl.Rule(C1['low'] & C2['low'] & C3['medium'] &
+                   C4['low'] & C5['medium'] & C6['medium'] &
+                   C7['low'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule150 = ctrl.Rule(C1['low'] & C2['low'] & C3['low'] &
+                   C4['low'] & C5['medium'] & C6['medium'] &
+                   C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule151 = ctrl.Rule(C1['low'] & C2['low'] & C3['low'] &
+                   C4['medium'] & C5['medium'] & C6['low'] &
+                   C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule152 = ctrl.Rule(C1['medium'] & C2['low'] & C3['low'] &
+                   C4['medium'] & C5['medium'] & C6['low'] &
+                   C7['medium'] & C8['medium'] & C9['low'], edge['yes'])
+
+    rule153 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['low'] &
+                   C4['medium'] & C5['medium'] & C6['low'] &
+                   C7['medium'] & C8['low'] & C9['low'], edge['yes'])
+
+    rule154 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['low'] & C5['medium'] & C6['medium'] &
+                   C7['low'] & C8['low'] & C9['low'], edge['yes'])
+
+    rule155 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['medium'] & C5['medium'] & C6['low'] &
+                   C7['low'] & C8['low'] & C9['low'], edge['yes'])
+    
+    rules3 = [rule104, rule105, rule106, rule107, rule108, rule109, rule110, rule111, rule112, rule113, rule114, rule115,
+        rule118, rule119, rule120,  rule122, rule123, rule124, rule125, rule126, rule127, 
+        rule128, rule129,  rule131,  rule134, rule135, rule136, rule137, rule138, rule139, 
+        rule140, rule141, rule142, rule143, rule144, rule145, rule146, rule147, rule148, rule149,
+        rule150, rule151, rule152, rule153, rule154, rule155]
+    
+    rules=rules1+rules2+rules3
+    
     return rules
+
 
 
 # Crear el sistema de control difuso
@@ -379,7 +830,7 @@ def main():
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/imagen_segmentada_guardada.png")
+        filename = join(dirname(dirname(abspath(__file__))), "img/IMG_6830.jpeg")
     image=cv2.imread(filename)
     x,y,a = image.shape
     #image2=filter_h(image)
@@ -412,16 +863,24 @@ def main():
     # Convertir la imagen resaltada al rango [0, 255]
     imagen_resaltada = (imagen_resaltada * 255).astype(np.uint8)
 
-
     # Aplicar el umbral negro
-    _, imagen_umbral = cv2.threshold(edge_image_uint8, umbral, 255, cv2.THRESH_BINARY)
+    _, imagen_umbral = cv2.threshold(edge_image_uint8, 1, 255, cv2.THRESH_BINARY)
+
+    # Suavizar la máscara de contornos
+    mask_smooth = cv2.GaussianBlur(imagen_umbral, (5, 5), 0)
+
+# Detectar contornos
+    contours, _ = cv2.findContours(mask_smooth, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
     # Mostrar resultados
     # cv2.imshow('Original Image', image)
-    cv2.imshow('Fuzzy Edge Detected Image', imagen_umbral)  # Escalar a 0-255 para visualizar
+    #cv2.imshow('Fuzzy Edge Detected Image', mask_smooth)  # Escalar a 0-255 para visualizar
     cv2.imshow('Solo contorno', edge_image_uint8)
     cv2.waitKey(0)
-    cv2.imwrite("tes.jpeg",imagen_resaltada)
+    cv2.imwrite("tes.jpeg",imagen_umbral)
+    cv2.imwrite("filename.png", imagen_umbral)
     cv2.destroyAllWindows()
+
 
 # Ruta a la imagen
 

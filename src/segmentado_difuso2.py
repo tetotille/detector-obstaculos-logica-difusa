@@ -13,7 +13,7 @@ import cv2
 if len(argv) > 1:
     filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
 else:
-    filename = join(dirname(dirname(abspath(__file__))), "img/IMG_6830.jpeg")
+    filename = join(dirname(dirname(abspath(__file__))), "img/amanecer.jpeg")
 image2 = Image.open(filename)
 x, y = image2.size
 image = image2.resize((200, int(y*200/x)))  # Redimensionar para simplificar el procesamiento
@@ -29,7 +29,7 @@ pixels = np.reshape(image_np, (-1, 3))
 pixels = pixels / 255.0
 
 # Paso 3: Aplicar FCM
-n_clusters = 4  # Número de clusters
+n_clusters = 3  # Número de clusters
 cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(
     pixels.T, n_clusters, 100, error=0.00005, maxiter=100000, init=None)
 
@@ -144,7 +144,7 @@ cv2.destroyAllWindows()
 
 # Convertir la imagen a escala de grises
 image_gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
-def segment_and_identify_objects(image_gray, mask_binary, block_size=15, threshold_area=160):
+def segment_and_identify_objects(image_gray, mask_binary, block_size=15, threshold_area=150):
 # Paso 2: Analizar bloques de 12x12 píxeles
     height, width, chanel = image_gray.shape
     rects = []  # Lista para almacenar los rectángulos detectados
@@ -162,73 +162,92 @@ def segment_and_identify_objects(image_gray, mask_binary, block_size=15, thresho
             green_pixel_count = np.sum(green_pixels)
             #print(green_pixel_count)
             #qprint(black_pixel_count)
-            n=0
             # Si el bloque contiene suficientes píxeles negros y tiene contorno en la máscara, marcar el bloque
-            if black_pixel_count > threshold_area and green_pixel_count > 0:
+            if black_pixel_count > threshold_area and green_pixel_count> 0:
                 rects.append((x, y, block_size, block_size))  # Almacena el 
-                n=n+1
+    n=len(rects)
+    print(n)
  # Paso 3: Detectar y marcar rectángulos alineados horizontalmente que cubren toda la fila
     blocks_per_row = int(width // block_size)  # Número de bloques que caben en una fila
+    blocks_per_column = int(height // block_size)
+    rects_by_column= {}
     rects_by_row = {}
     for rect in rects:
         x, y, w, h = rect
+        if x not in rects_by_column:
+            rects_by_column[x] = []
+        rects_by_column[x].append(rect)
+    for rect1 in rects:
+        x, y, w, h = rect1
         if y not in rects_by_row:
             rects_by_row[y] = []
-        rects_by_row[y].append(rect)
-    
+        rects_by_row[y].append(rect1)
+        # Criterio: número mínimo de rectángulos para marcar la columna en amarillo
+# Función para marcar filas en azul
     def mark_row_blue(row_rects):
         for rect in row_rects:
             x, y, w, h = rect
             cv2.rectangle(original, (x, y), (x + w, y + h), (255, 0, 0), 2)  # Azul
 
+    # Función para marcar columnas en amarillo
+    def mark_column_yellow(column_rects):
+        for rect in column_rects:
+            x, y, w, h = rect
+            cv2.rectangle(original, (x, y), (x + w, y + h), (0, 255, 255), 2)  # Amarillo
+
+    # Función para marcar rectángulos en rojo
+    def mark_rect_red(rect):
+        x, y, w, h = rect
+        cv2.rectangle(original, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Rojo
+
+    # Verificar y marcar filas completas
     for y, row_rects in rects_by_row.items():
-        # Ordenar los rectángulos en la fila por la coordenada x
         row_rects.sort()
-        a=0
         if len(row_rects) == blocks_per_row:
-            a=a+1
-            print(a)
-            # Verificar si los rectángulos cubren toda la fila
             first_rect_x = row_rects[0][0]
-            last_rect_x = row_rects[-1][0] + block_size
+            last_rect_x = row_rects[-1][0] + row_rects[-1][2]
             mark_row_blue(row_rects)
-                # Pintar en azul si cubren toda la fila
-                # Verificar las filas superior e inferior
-            top_y = y - block_size
-            bottom_y = y + block_size
-            # Verificar la fila superior
+
+            # Verificar y marcar la fila superior si está alineada
+            top_y = y - row_rects[0][3]
             if top_y in rects_by_row:
                 top_row_rects = rects_by_row[top_y]
                 top_first_x = top_row_rects[0][0]
                 top_last_x = top_row_rects[-1][0] + top_row_rects[-1][2]
-                
-                print("Fila superior - Primera coordenada x:", top_first_x)
-                print("Fila superior - Última coordenada x:", top_last_x)
-                
-                # Verificar alineación con la fila actual marcada en azul
                 if (top_first_x <= first_rect_x <= top_last_x) or (top_first_x <= last_rect_x <= top_last_x):
                     mark_row_blue(top_row_rects)
-                    print("Fila superior marcada en azul.")
 
-            # Verificar la fila inferior
+            # Verificar y marcar la fila inferior si está alineada
+            bottom_y = y + row_rects[0][3]
             if bottom_y in rects_by_row:
                 bottom_row_rects = rects_by_row[bottom_y]
                 bottom_first_x = bottom_row_rects[0][0]
                 bottom_last_x = bottom_row_rects[-1][0] + bottom_row_rects[-1][2]
-                
-                print("Fila inferior - Primera coordenada x:", bottom_first_x)
-                print("Fila inferior - Última coordenada x:", bottom_last_x)
-                
-                # Verificar alineación con la fila actual marcada en azul
                 if (bottom_first_x <= first_rect_x <= bottom_last_x) or (bottom_first_x <= last_rect_x <= bottom_last_x):
                     mark_row_blue(bottom_row_rects)
-                    print("Fila inferior marcada en azul.")
-        else:
-            # Pintar en rojo si no cubren toda la fila
-            for rect in row_rects:
-                x, y, w, h = rect
-                cv2.rectangle(original, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Rojo
 
+    # Verificar y marcar columnas completas
+    for column_x, column_rects in rects_by_column.items():
+        if len(column_rects) == blocks_per_column:
+            mark_column_yellow(column_rects)
+
+    # Marcar el resto de los rectángulos en rojo
+    for rect in rects:
+        x, y, w, h = rect
+        color = original[y, x]
+        if (color == [0, 0, 255]).all() or (color == [0, 255, 255]).all() or (color == [255, 0, 0]).all():
+            continue
+        else:
+            mark_rect_red(rect)
+
+    # Verificar y marcar columnas completas (incluso si ya están marcadas en azul)
+    for column_x, column_rects in rects_by_column.items():
+        if len(column_rects) == blocks_per_column:
+            for rect in column_rects:
+                x, y, w, h = rect
+                color = original[y, x]
+                if (color == [255, 0, 0]).all():  # Si está marcado en azul
+                    cv2.rectangle(original, (x, y), (x + w, y + h), (0, 255, 255), 2)  # Amarillo
 
 
     # Mostrar la imagen con los bloques marcados

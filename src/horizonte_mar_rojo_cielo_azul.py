@@ -48,7 +48,7 @@ if __name__ == "__main__":
     if len(argv)>1:
         filename = join(dirname(dirname(abspath(__file__))),f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))),"img/barco.jpg")
+        filename = join(dirname(dirname(abspath(__file__))),"img/imagen_segmentada_guardada2.png")
 
     # image_path = "C:/Users/lichi/Desktop/Tesis/detector-obstaculos-logica-difusa/img/ruta-vista-inclinada-que-cruza-horizonte.jpg"
     detect_horizon(filename)

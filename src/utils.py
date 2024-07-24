@@ -112,6 +112,6 @@ def crop_horizontal(imagen, indice_vertical):
 
     if indice_vertical < 0 or indice_vertical >= imagen.shape[0]:
         raise ValueError("El índice vertical está fuera de los límites de la imagen.")
-    parte_superior = imagen[:indice_vertical, :,:]
-    parte_inferior = imagen[indice_vertical:, :,:]
+    parte_superior = imagen[:indice_vertical, :]
+    parte_inferior = imagen[indice_vertical:, :]
     return parte_superior, parte_inferior

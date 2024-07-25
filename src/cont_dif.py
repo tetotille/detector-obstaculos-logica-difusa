@@ -44,9 +44,9 @@ def define_membership_functions(image):
 
     # Definir funciones de membresía para cada vecino
     for C in [C1, C2, C3, C4, C5, C6, C7, C8, C9]:
-        C['low'] = fuzz.trimf(universe, [min_pixel, min_pixel, valor_medio])
+        C['low'] = fuzz.trimf(universe, [min_pixel, min_pixel, (max_pixel/3)])
         C['medium'] = fuzz.trimf(universe, [(max_pixel/3), valor_medio, max_pixel*(2/3)])
-        C['high'] = fuzz.trimf(universe, [0.5, max_pixel, max_pixel])
+        C['high'] = fuzz.trimf(universe, [max_pixel*(2/3), max_pixel, max_pixel])
     
     edge['low'] = fuzz.trimf(universe2, [0, 0, 0.5])
     edge['high']= fuzz.trimf(universe2, [0.5, 1, 1])
@@ -830,7 +830,7 @@ def main():
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/IMG_6830.jpeg")
+        filename = join(dirname(dirname(abspath(__file__))), "img/ypacarai.jpeg")
     image=cv2.imread(filename)
     x,y,a = image.shape
     #image2=filter_h(image)

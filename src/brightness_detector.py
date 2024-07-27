@@ -3,40 +3,17 @@ import os
 import pyopencl as cl
 import skfuzzy as fuzz
 
-from abc import ABC, abstractmethod
 from os.path import abspath,dirname,join
 from skfuzzy import control as ctrl
 from skimage import io
 from sys import argv
+from fuzzy_detector import FuzzyDetector
 
 os.environ["PYOPENCL_ICD_KHR"] = "/usr/lib/x86_64-linux-gnu/intel-opencl/libigdrcl.so"
 
 # Si hay mucho brillo es probable que el objeto salga oscuro
 
-class FuzzyDetector(ABC):
-    def __init__(self):
-        self.antecedent = None
-        self.consequent = None
-        self.rules = []
-        self.control_system = None
-        self.control_system_simulation = None
-        self.kernel = None
 
-    @abstractmethod
-    def define_membership_functions(self):
-        pass
-
-    @abstractmethod
-    def define_rules(self):
-        pass
-
-    @abstractmethod
-    def fuzzify(self, input_value):
-        pass
-
-    @abstractmethod
-    def defuzzify(self):
-        pass
 
 class BrightnessDetector(FuzzyDetector):
     def __init__(self):
@@ -109,31 +86,31 @@ class BrightnessDetector(FuzzyDetector):
             return 100
 
     def process_image(self, image):
-        # Process the image
-        ctx = cl.create_some_context()
-        queue = cl.CommandQueue(ctx)
+        # # Process the image
+        # ctx = cl.create_some_context()
+        # queue = cl.CommandQueue(ctx)
 
-         # Allocate memory for the input and output images on the device
-        mf = cl.mem_flags
-        image_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=image)
-        output_buf = cl.Buffer(ctx, mf.WRITE_ONLY, image.nbytes)
+        #  # Allocate memory for the input and output images on the device
+        # mf = cl.mem_flags
+        # image_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=image)
+        # output_buf = cl.Buffer(ctx, mf.WRITE_ONLY, image.nbytes)
 
-        prg = cl.Program(ctx,self.kernel).build()
+        # prg = cl.Program(ctx,self.kernel).build()
 
-        prg.process_image(queue, image.shape, None, image_buf, output_buf, np.int32(image.shape[1]), np.int32(image.shape[0]))
+        # prg.process_image(queue, image.shape, None, image_buf, output_buf, np.int32(image.shape[1]), np.int32(image.shape[0]))
 
-        # Read the output image from the device
-        output_image = np.empty_like(image)
-        cl.enqueue_copy(queue, output_image, output_buf)
+        # # Read the output image from the device
+        # output_image = np.empty_like(image)
+        # cl.enqueue_copy(queue, output_image, output_buf)
 
 
-        # output_image = np.zeros_like(image)
-        # n,m = image.shape
-        # for i in range(n):
-        #     for j in range(m):
-        #         self.fuzzify(image[i, j])
-        #         output_image[i, j] = self.defuzzify()
-        #     print(f"Procesando: {int(((i)*(m)/(n*m))*100)} %   ",end="\r")
+        output_image = np.zeros_like(image)
+        n,m = image.shape
+        for i in range(n):
+            for j in range(m):
+                self.fuzzify(image[i, j])
+                output_image[i, j] = self.defuzzify()
+            print(f"Procesando: {int(((i)*(m)/(n*m))*100)} %   ",end="\r")
 
         # Save the output image
         io.imshow(output_image)
@@ -155,4 +132,3 @@ if __name__ == "__main__":
     detector.process_image(image)
 
     
-

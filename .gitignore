@@ -162,3 +162,4 @@ cython_debug/
 config.json
 .tesis
 Showcase.ipynb
+test_cont_dif.py

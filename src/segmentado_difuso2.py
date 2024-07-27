@@ -1,8 +1,6 @@
 import numpy as np
-from PIL import Image
 import skfuzzy as fuzz
 import matplotlib.pyplot as plt
-from skimage import measure
 from os.path import dirname, abspath, join
 from sys import argv
 from utils import crop_horizontal
@@ -13,11 +11,10 @@ import cv2
 if len(argv) > 1:
     filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
 else:
-    filename = join(dirname(dirname(abspath(__file__))), "img/amanecer.jpeg")
-image2 = Image.open(filename)
-x, y = image2.size
-image = image2.resize((200, int(y*200/x)))  # Redimensionar para simplificar el procesamiento
-image_np = np.array(image)
+    filename = join(dirname(dirname(abspath(__file__))), "img/ypacarai.jpeg")
+image2 = cv2.imread(filename)
+x, y, a = image2.shape
+image_np = cv2.resize(image2, (200, int(x*200/y)))  # Redimensionar para simplificar el procesamiento
 height3, width3, canal = image_np.shape
 print(height3, width3)
 
@@ -29,7 +26,7 @@ pixels = np.reshape(image_np, (-1, 3))
 pixels = pixels / 255.0
 
 # Paso 3: Aplicar FCM
-n_clusters = 3  # Número de clusters
+n_clusters = 4  # Número de clusters
 cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(
     pixels.T, n_clusters, 100, error=0.00005, maxiter=100000, init=None)
 
@@ -42,7 +39,9 @@ print(segmented_image)
 segmented_image_normalized = (segmented_image * (255 / segmented_image.max())).astype(np.uint8)
 
 # Convertir el array de numpy normalizado a un objeto de imagen de Pillow
-segmented_image_pil = Image.fromarray(segmented_image_normalized)
+#segmented_image_pil = Image.fromarray(segmented_image_normalized)
+segmented_image_normalized = np.random.rand(100, 100)  # Ejemplo de array normalizado
+segmented_image_normalized = (segmented_image_normalized * 255).astype(np.uint8)
 
 # Paso 5: Calcular la frecuencia de cada cluster
 
@@ -144,7 +143,8 @@ cv2.destroyAllWindows()
 
 # Convertir la imagen a escala de grises
 image_gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
-def segment_and_identify_objects(image_gray, mask_binary, block_size=15, threshold_area=150):
+def segment_and_identify_objects(image_gray, mask_binary, block_size=15, threshold_area=155):
+    #lim_maximo_155
 # Paso 2: Analizar bloques de 12x12 píxeles
     height, width, chanel = image_gray.shape
     rects = []  # Lista para almacenar los rectángulos detectados
@@ -163,7 +163,8 @@ def segment_and_identify_objects(image_gray, mask_binary, block_size=15, thresho
             #print(green_pixel_count)
             #qprint(black_pixel_count)
             # Si el bloque contiene suficientes píxeles negros y tiene contorno en la máscara, marcar el bloque
-            if black_pixel_count > threshold_area and green_pixel_count> 0:
+            if black_pixel_count > threshold_area and green_pixel_count> 70:
+                #lim_max_70_green
                 rects.append((x, y, block_size, block_size))  # Almacena el 
     n=len(rects)
     print(n)

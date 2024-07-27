@@ -847,4 +847,5 @@ if __name__ == "__main__":
     cv2.imwrite("tes.jpeg",imagen_umbral)
     cv2.imwrite("filename.png", imagen_umbral)
     cv2.destroyAllWindows()
+
     

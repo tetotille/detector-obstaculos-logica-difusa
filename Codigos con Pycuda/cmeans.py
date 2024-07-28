@@ -109,12 +109,7 @@ __global__ void kernel(
     if (tid == 0) {
         atomicAdd(jm, shared_sum[0]);
     }
-}
-
-    
-    
-
-        
+}        
 """
 
 # Compila el código CUDA
@@ -141,14 +136,21 @@ def _cmeans0(data, u_old, c, m):
     d_T = np.zeros((num_features, num_data), dtype=np.float32)
     d_sums = np.zeros(num_clusters, dtype=np.float32)
 
-    # Preparar datos para CUDA
+   # Preparar datos para CUDA
     data2_gpu = cuda.mem_alloc(data2.nbytes)
     data_gpu = cuda.mem_alloc(data.nbytes)
     u_old_gpu = cuda.mem_alloc(u_old.nbytes)
+    um_gpu = cuda.mem_alloc(um.nbytes)
+    d_T_gpu = cuda.mem_alloc(d_T.nbytes)
+    d_sums_gpu = cuda.mem_alloc(d_sums.nbytes)
     d_gpu = cuda.mem_alloc(d.nbytes)
     cntr_gpu = cuda.mem_alloc(cntr.nbytes)
     jm_gpu = cuda.mem_alloc(jm.nbytes)
     power=(-2.)/(m-1)
+
+    num_rows, num_cols = data2.shape
+    num_elements = num_rows * num_cols
+    EPSILON = 1e-10
 
 
     cuda.memcpy_htod(data_gpu, data)

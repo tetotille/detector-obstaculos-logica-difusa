@@ -26,6 +26,7 @@ __global__ void cmeans_kernel(float *data, float *u_old, float *c, float *d, flo
 
     if (data_idx < num_data) {
         float um[1024];  // Assuming num_clusters <= 1024
+        float sum_um = 0.0f;
 
         // Initialize um with a very small value to avoid zero issues
         for (int i = 0; i < num_clusters; ++i) {
@@ -33,7 +34,7 @@ __global__ void cmeans_kernel(float *data, float *u_old, float *c, float *d, flo
             um[i] = powf(u_old[data_idx * num_clusters + i], m);
         }
 
-        float sum_um = 0.0f;
+        
         for (int i = 0; i < num_clusters; ++i) {
             sum_um += um[i];
         }
@@ -119,6 +120,7 @@ def _cmeans0(data, u_old, c, m):
     cuda.memcpy_dtoh(jm, jm_gpu)
 
     jm_value = jm.sum()  # Total sum of jm across all data points
+    
     end_time = time.perf_counter()
 
     # Verifica los resultados

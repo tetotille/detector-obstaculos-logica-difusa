@@ -1,12 +1,12 @@
 import cv2
 import pycuda.driver as cuda
-import pycuda.autoinit
 import pycuda.compiler as compiler
 import numpy as np
 from os.path import dirname, abspath, join
 from sys import argv
 from normalize_columns import normalize_columns, normalize_power_columns
 import time
+import cupy as cp
 
 # Define el código CUDA como una cadena de texto
 kernel_code = """
@@ -86,6 +86,7 @@ def _cmeans0(data, u_old, c, m):
     """
     start_time = time.perf_counter()
     num_data, num_features = data.shape
+    print(num_features)
     num_clusters = c
     
     # Normaliza las columnas de u_old

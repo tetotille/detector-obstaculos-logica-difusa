@@ -37,8 +37,10 @@ class ContDifDetector(FuzzyDetector):
         super().__init__()
         self.min_pixel = kwargs.get("min_pixel",300)
         self.max_pixel = kwargs.get("max_pixel",300)
+        print(min_pixel)
+        print(max_pixel)
 
-        self.antecedent_universe = np.arange(self.min_pixel, self.max_pixel, (1/256))
+        self.antecedent_universe = np.arange(self.min_pixel/256, self.max_pixel/256, (1/256))
         self.consequent_universe = np.arange(0, 256)/256
 
         self.antecedents = [ctrl.Antecedent(self.antecedent_universe,f'C{x}') for x in range(1,10)]
@@ -51,11 +53,11 @@ class ContDifDetector(FuzzyDetector):
         self.control_system_simulation = ctrl.ControlSystemSimulation(self.control_system)
 
     def define_membership_functions(self):
-        valor_medio = (int(self.min_pixel) + int(self.max_pixel))/2
+        valor_medio = (int(self.min_pixel) + int(self.max_pixel))/(256*2)
         for C in self.antecedents:
-            C['low'] = fuzz.trimf(self.antecedent_universe, [self.min_pixel, self.min_pixel, valor_medio])
-            C['medium'] = fuzz.trimf(self.antecedent_universe, [(self.max_pixel/3), valor_medio, self.max_pixel*(2/3)])
-            C['high'] = fuzz.trimf(self.antecedent_universe, [0.5, self.max_pixel, self.max_pixel])
+            C['low'] = fuzz.trimf(self.antecedent_universe, [self.min_pixel/256, self.min_pixel/256, 1/3])
+            C['medium'] = fuzz.trimf(self.antecedent_universe, [1/3, 0.5, 2/3])
+            C['high'] = fuzz.trimf(self.antecedent_universe, [2/3, self.max_pixel/256, self.max_pixel/256])
         
         self.consequent['low'] = fuzz.trimf(self.consequent_universe, [0, 0, 0.5])
         self.consequent['high']= fuzz.trimf(self.consequent_universe, [0.5, 1, 1])
@@ -792,7 +794,7 @@ if __name__ == "__main__":
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/IMG_6830.jpeg")
+        filename = join(dirname(dirname(abspath(__file__))), "img/ypacarai.jpeg")
 
     image=cv2.imread(filename)
     x,y,a = image.shape

@@ -59,7 +59,7 @@ if __name__ == "__main__":
     imag=cv2.resize(img, (200, int(x*200/y)))
     ima, fila_interes = detectar_horizonte(imag)
     imagen=cv2.resize(img, (200, int(x*200/y)))
-    _, image3 =crop_horizontal(filter_h(imagen), fila_interes)
+    _, image3 =crop_horizontal(filter_s(imagen), fila_interes)
     print(fila_interes)
 
     # Crea una imagen con transparencia (canal alfa)

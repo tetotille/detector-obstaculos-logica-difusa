@@ -28,7 +28,7 @@ pixels = pixels / 255.0
 print("\npixeles:", pixels)
 
 # Paso 3: Aplicar FCM
-n_clusters = 4  # Número de clusters
+n_clusters = 3  # Número de clusters
 cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(
     pixels.T, n_clusters, 100, error=0.00005, maxiter=100000, init=None)
 

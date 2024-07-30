@@ -178,7 +178,7 @@ def main(image_path, num_clusters=3, m=2.0, metric='euclidean'):
     #print(data)
     
     # Run the fuzzy c-means algorithm
-    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.00005, maxiter=100000, metric=metric, init=None, seed=None)
+    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.00005, maxiter=10, metric=metric, init=None, seed=None)
     # Reconstruir y mostrar la imagen segmentada
     # Convertir u de nuevo a CuPy
     u_cp = cp.asarray(u)

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from os.path import dirname, abspath, join
 from sys import argv
 from utils import crop_horizontal
+import time
 from horizonte_mar_rojo_cielo_azul import detectar_horizonte
 import cv2
 
@@ -29,8 +30,13 @@ print("\npixeles:", pixels)
 
 # Paso 3: Aplicar FCM
 n_clusters = 3  # Número de clusters
+
+start_time = time.perf_counter()
 cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(
     pixels.T, n_clusters, 100, error=0.00005, maxiter=100000, init=None)
+end_time = time.perf_counter()
+elapsed_time = end_time - start_time
+print(f"Tiempo de ejecución hasta el primer resultado: {elapsed_time:.4f} segundos")
 
 # Obtener el índice del cluster más probable para cada píxel
 cluster_membership = np.argmax(u, axis=0)

@@ -47,10 +47,7 @@ def _cmeans0(data, u_old, c, m, metric='euclidean'):
     u_old_gpu = cp.array(u_old, dtype=cp.float32)
     
     # Create events for timing
-    start_event = cp.cuda.Event()
-    end_event = cp.cuda.Event()
     
-    start_event.record()
 
     # Normalizing, then eliminating any potential zero values.
     u_old_gpu = normalize_columns(u_old_gpu)
@@ -73,21 +70,17 @@ def _cmeans0(data, u_old, c, m, metric='euclidean'):
     # Move results back to CPU
     jm = jm.get()
     
-    end_event.record()
-    end_event.synchronize()
-
-    elapsed_time = cp.cuda.get_elapsed_time(start_event, end_event) / 1000.0  # Convert to seconds
+    
 
     # Free GPU memory
-    cp.get_default_memory_pool().free_all_blocks()
-    print(f"Tiempo total de ejecución en GPU: {elapsed_time:.6f} segundos")
 
+    
     return cntr, u, jm, d
 
 def _fp_coeff(u):
     """
-    Fuzzy partition coefficient `fpc` relative to fuzzy c-partitioned
-    matrix `u`. Measures 'fuzziness' in partitioned clustering.
+    Fuzzy partition coefficient fpc relative to fuzzy c-partitioned
+    matrix u. Measures 'fuzziness' in partitioned clustering.
 
     Parameters
     ----------
@@ -110,6 +103,7 @@ def _fp_coeff(u):
     return fpc.get()
 
 def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None):
+    start_time = time.time()
     if init is None:
         if seed is not None:
             cp.random.seed(seed=seed)
@@ -135,6 +129,11 @@ def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None)
 
     error = cp.linalg.norm(u - u2)
     fpc = _fp_coeff(u)
+
+ # Convert to seconds
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Tiempo total de ejecución en GPU: {elapsed_time:.6f} segundos")
     
     # Free GPU memory
     cp.get_default_memory_pool().free_all_blocks()
@@ -162,35 +161,38 @@ def reconstruct_segmented_image(u, image_np):
     cv2.destroyAllWindows()
 
 def main(image_path, num_clusters=3, m=2.0, metric='euclidean'):
-    # Load and resize the image
+    # Cargar y redimensionar la imagen
     image = cv2.imread(image_path)
     height, width, _ = image.shape
     scale_factor = 200.0 / width
     new_height = int(height * scale_factor)
+    print(new_height)
     resized_image = cv2.resize(image, (200, new_height))
+    # Mostrar la imagen inicial
+    cv2.imshow('Imagen inicial', resized_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    # Convert image to float32 and normalize
+    # Convertir la imagen a float32 y normalizar
     data = resized_image.astype(np.float32) / 255.0
 
-    # Reshape the image to the format (S, N)
+    # Reconfigurar la imagen al formato (S, N)
     S, N = data.shape[0] * data.shape[1], data.shape[2]
     data = data.reshape(S, N)
-    #print(data)
-    
-    # Run the fuzzy c-means algorithm
+
+    # Medir el tiempo de ejecución de la función cmeans
     cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.00005, maxiter=10, metric=metric, init=None, seed=None)
+
     # Reconstruir y mostrar la imagen segmentada
-    # Convertir u de nuevo a CuPy
     u_cp = cp.asarray(u)
     reconstruct_segmented_image(u_cp, resized_image.shape[:2])
 
-    # Print results
+    # Imprimir resultados
     print("Cluster Centers:\n", cntr)
     print("Final Membership Matrix:\n", u)
     print("Objective Function Value:\n", jm)
     print("Distance Matrix:\n", d)
-
-    # Free GPU memory at the end of the script
+    # Liberar memoria de GPU al final del script
     cp.get_default_memory_pool().free_all_blocks()
 
 if __name__ == "__main__":
@@ -201,5 +203,3 @@ if __name__ == "__main__":
     image_path = filename
     # Imprimir formas
     main(image_path)
-
-    

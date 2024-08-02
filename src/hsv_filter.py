@@ -53,7 +53,7 @@ if __name__ == "__main__":
         filename = join(dirname(dirname(abspath(__file__))), "img/ypacarai.jpeg")
     img=cv2.imread(filename)
     
-    cv2.imshow('imagen final.png',filter_s(img))
+    cv2.imshow('imagen final.png',filter_h(img))
     cv2.waitKey(0)
     x,y,a = img.shape
     imag=cv2.resize(img, (200, int(x*200/y)))

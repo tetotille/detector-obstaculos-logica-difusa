@@ -16,21 +16,21 @@ def define_membership_functions(image):
     universe2 = np.arange(0, 256) / 256
 
     # Crear las variables difusas usando ctrl.Antecedent y ctrl.Consequent
-    C1 = ctrl.Antecedent(universe, 'C1')
-    C2 = ctrl.Antecedent(universe, 'C2')
-    C3 = ctrl.Antecedent(universe, 'C3')
-    C4 = ctrl.Antecedent(universe, 'C4')
-    C5 = ctrl.Antecedent(universe, 'C5')
-    C6 = ctrl.Antecedent(universe, 'C6')
-    C7 = ctrl.Antecedent(universe, 'C7')
-    C8 = ctrl.Antecedent(universe, 'C8')
-    C9 = ctrl.Antecedent(universe, 'C9')
+    C1 = ctrl.Antecedent(universe2, 'C1')
+    C2 = ctrl.Antecedent(universe2, 'C2')
+    C3 = ctrl.Antecedent(universe2, 'C3')
+    C4 = ctrl.Antecedent(universe2, 'C4')
+    C5 = ctrl.Antecedent(universe2, 'C5')
+    C6 = ctrl.Antecedent(universe2, 'C6')
+    C7 = ctrl.Antecedent(universe2, 'C7')
+    C8 = ctrl.Antecedent(universe2, 'C8')
+    C9 = ctrl.Antecedent(universe2, 'C9')
 
     # Definir funciones de membresía para cada vecino
     for C in [C1, C2, C3, C4, C5, C6, C7, C8, C9]:
-        C['low'] = fuzz.trimf(universe, [min_pixel, min_pixel, max_pixel / 3])
-        C['medium'] = fuzz.trimf(universe, [max_pixel / 3, valor_medio, max_pixel * 2 / 3])
-        C['high'] = fuzz.trimf(universe, [max_pixel * 2 / 3, max_pixel, max_pixel])
+        C['low'] = fuzz.trimf(universe2, [0, 0, 0.5])
+        C['medium'] = fuzz.trimf(universe2, [max_pixel / 3, valor_medio, max_pixel * 2 / 3])
+        C['high'] = fuzz.trimf(universe2, [0.5, 1, 1])
 
     # Definir el consecuente (edge) con un rango adecuado
     edge = ctrl.Consequent(universe2, 'edge')
@@ -41,9 +41,9 @@ def define_membership_functions(image):
     # Graficar las funciones de membresía
     universe = np.arange(0, 1.01, 0.01)
     universe2 = np.arange(0, 1.01, 0.01)
-    C_low = fuzz.trimf(universe, [0, 0, 1 / 3])
-    C_medium = fuzz.trimf(universe, [1 / 3, 0.5, 2 / 3])
-    C_high = fuzz.trimf(universe, [2 / 3, 1, 1])
+    C_low = fuzz.trimf(universe, [0, 0, 0.5])
+    C_medium = fuzz.trimf(universe, [max_pixel / 3, valor_medio, max_pixel*2 / 3])
+    C_high = fuzz.trimf(universe, [0.5, 1, 1])
     edge_low = fuzz.trimf(universe2, [0, 0, 0.5])
     edge_high = fuzz.trimf(universe2, [0.5, 1, 1])
     edge_yes = fuzz.trimf(universe2, [0.5, 0.5, 0.5])
@@ -755,27 +755,34 @@ def apply_fuzzy_rules_to_image(fuzzy_image, edge_ctrl, membership_functions):
         print(f"Procesando: {(i * cols) / (cols * rows) * 100:.2f}%     ", end="\r")
         for j in range(1, cols - 1):
             neighbor_values = [fuzzy_image[i + di, j + dj] for di, dj in neighbors]
-            membership_values = [calculate_membership_values(value, membership_functions[idx]) for idx, value in enumerate(neighbor_values)]
+            membership_values_list = [calculate_membership_values(value, membership_functions[idx]) for idx, value in enumerate(neighbor_values)]
 
-            # Asignar los valores de entrada según la ponderación calculada
-            for k, values in enumerate(membership_values):
-                max_label = max(values, key=values.get)
+            # Ajustar las entradas para la simulación según los valores de membresía calculados
+            for idx, membership_values in enumerate(membership_values_list):
+                max_label = max(membership_values, key=membership_values.get)
                 if max_label == 'high':
-                    edge_simulation.input[f'C{k+1}'] = 1
+                    fuzzy_image[i + neighbors[idx][0], j + neighbors[idx][1]] = 1
                 elif max_label == 'medium':
-                    edge_simulation.input[f'C{k+1}'] = 0.5
+                    fuzzy_image[i + neighbors[idx][0], j + neighbors[idx][1]] = 0.5
                 else:
-                    edge_simulation.input[f'C{k+1}'] = 0
+                    fuzzy_image[i + neighbors[idx][0], j + neighbors[idx][1]] = 0
+
+            # Configurar las entradas para la simulación después de ajustar la imagen difusa
+            # Configurar las entradas para la simulación después de ajustar la imagen difusa
+            for idx in range(9):
+                di, dj = neighbors[idx]
+                edge_simulation.input[f'C{idx+1}'] = fuzzy_image[i + di, j + dj]
+
             try:
                 edge_simulation.compute()
-                edge_image[i, j] = edge_simulation.output['edge']
+                edge_value = edge_simulation.output['edge']
+                edge_image[i, j] = edge_value
             except Exception as e:
                 print(f"Error en la posición ({i}, {j}): {e}\n\n")
                 edge_image[i, j] = 0
                 continue
 
     return edge_image
-
 
 def load_image(file_path):
     image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)

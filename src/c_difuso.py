@@ -43,9 +43,9 @@ def define_membership_functions(image):
 
     # Definir funciones de membresía para cada vecino
     for C in [C1, C2, C3, C4, C5, C6, C7, C8, C9]:
-        C['low'] = fuzz.trimf(universe, [min_pixel, min_pixel, (max_pixel/3)])
-        C['medium'] = fuzz.trimf(universe, [(max_pixel/3)-(1/255), valor_medio, max_pixel*(2/3)])
-        C['high'] = fuzz.trimf(universe, [max_pixel*(2/3)-(1/255), max_pixel, max_pixel])
+        C['low'] = fuzz.trimf(universe, [min_pixel, min_pixel, 0.5])
+        C['medium'] = fuzz.trimf(universe, [(max_pixel/3), valor_medio, max_pixel*(2/3)])
+        C['high'] = fuzz.trimf(universe, [0.5, max_pixel, max_pixel])
     
     edge['low'] = fuzz.trimf(universe2, [0, 0, 0.5])
     edge['high']= fuzz.trimf(universe2, [0.5, 1, 1])

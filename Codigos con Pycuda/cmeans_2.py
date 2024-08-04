@@ -6,7 +6,6 @@ from os.path import dirname, abspath, join
 from sys import argv
 from normalize_columns import normalize_columns, normalize_power_columns
 import time
-import cupy as cp
 
 # Define el código CUDA como una cadena de texto
 kernel_code = """

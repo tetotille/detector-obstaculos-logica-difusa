@@ -2,6 +2,7 @@ import cupy as cp
 from collections import OrderedDict
 from term import Term  # Asegúrate de que el archivo term.py esté en el mismo directorio o en el path adecuado
 from ordereddict import OrderedDict
+
 class FuzzyVariable(object):
     """
     Base class containing universe variable & associated membership functions.

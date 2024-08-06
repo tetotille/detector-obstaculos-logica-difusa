@@ -1,0 +1,44 @@
+import cupy as cp
+
+class OrderedDict:
+    """
+    Dictionary that remembers insertion order using CuPy.
+    """
+
+    def __init__(self):
+        self._keys = cp.array([], dtype=object)
+        self._values = {}
+
+    def __setitem__(self, key, value):
+        if key not in self._values:
+            self._keys = cp.append(self._keys, key)
+        self._values[key] = value
+
+    def __delitem__(self, key):
+        if key in self._values:
+            self._keys = cp.array([k for k in self._keys if k != key], dtype=object)
+            del self._values[key]
+        else:
+            raise KeyError(f"Key '{key}' not found")
+
+    def keys(self):
+        return self._keys
+
+    def values(self):
+        return [self._values[key] for key in self._keys]
+
+    def items(self):
+        return [(key, self._values[key]) for key in self._keys]
+
+# Ejemplo de uso de OrderedDict con CuPy
+od = OrderedDict()
+od['one'] = 1
+od['two'] = 2
+od['three'] = 3
+
+print(od.keys())    # [one, two, three]
+print(od.values())  # [1, 2, 3]
+print(od.items())   # [(one, 1), (two, 2), (three, 3)]
+print(len(od))      # 3
+print('two' in od)  # True
+print(od)           # OrderedDict({one: 1, two: 2, three: 3})

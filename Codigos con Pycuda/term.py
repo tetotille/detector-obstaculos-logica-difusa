@@ -12,8 +12,7 @@ from __future__ import print_function, division
 
 import cupy as cp
 
-from .visualization import FuzzyVariableVisualizer
-from .state import StatefulProperty
+from state import StatefulProperty
 
 
 class TermPrimitive(object):
@@ -63,11 +62,6 @@ class Term(TermPrimitive):
         if self.parent is None:
             raise ValueError("This term must be bound to a parent first")
         return self.parent.label + "[" + self.label + "]"
-
-    def view(self, *args, **kwargs):
-        """""" + FuzzyVariableVisualizer.view.__doc__
-        fig, ax = FuzzyVariableVisualizer(self).view(*args, **kwargs)
-        fig.show()
 
     def __repr__(self):
         return self.full_label

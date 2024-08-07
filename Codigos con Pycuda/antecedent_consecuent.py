@@ -1,13 +1,6 @@
 import cupy as cp
-
-class FuzzyVariable:
-    # Placeholder for the actual implementation of FuzzyVariable
-    pass
-
-class StatefulProperty:
-    # Placeholder para la implementación real de StatefulProperty
-    def __init__(self, value):
-        self.value = value
+from state import StatefulProperty
+from fuzzyvariable import FuzzyVariable
 
 class Antecedent(FuzzyVariable):
     """
@@ -27,9 +20,8 @@ class Antecedent(FuzzyVariable):
         """
         Initialize the Antecedent with universe and label.
         """
-        super(Antecedent, self).__init__(universe, label)
+        super().__init__(universe, label)
         self.__name__ = 'Antecedent'
-        self.universe = universe
         self.terms = {}  # This should be initialized as needed
 
     def add_term(self, term_name, term_value):
@@ -70,8 +62,10 @@ class Consequent(FuzzyVariable):
         """
         Initialize the Consequent with universe, label, and defuzzify_method.
         """
-        super(Consequent, self).__init__(universe, label, defuzzify_method)
+        super().__init__(universe, label)
         self.__name__ = 'Consequent'
+        self.defuzzify_method = defuzzify_method
+        self.terms = {}
 
     def add_term(self, term_name, term_value):
         """

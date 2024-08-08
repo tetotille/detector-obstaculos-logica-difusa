@@ -4,12 +4,12 @@ import cupy as cp
 import networkx as nx
 from warnings import warn
 
-from .fuzzymath.fuzzy_ops import _interp_universe_fast
-from skfuzzy import interp_membership, defuzz
-from .fuzzyvariable import FuzzyVariable
+#from fuzzymath.fuzzy_ops import _interp_universe_fast
+#from skfuzzy import interp_membership, defuzz
+from fuzzyvariable import FuzzyVariable
 from antecedent_consecuent import Antecedent, Consequent
-from term import Term, WeightedTerm, TermAggregate
-from .rule import Rule
+from term import Term
+from rule import Rule
 
 try:
     from collections import OrderedDict
@@ -148,16 +148,10 @@ class ControlSystemSimulation(object):
             self._reset_simulation()
 
     def compute_rule(self, rule):
-        if isinstance(rule.antecedent, TermAggregate):
-            rule.antecedent.agg_methods = rule._aggregation_methods
         rule.aggregate_firing[self] = rule.antecedent.membership_value[self]
         for c in rule.consequent:
-            assert isinstance(c, WeightedTerm)
-            c.activation[self] = rule.aggregate_firing[self] * c.weight
-        for c in rule.consequent:
-            assert isinstance(c, WeightedTerm)
             term = c.term
-            value = c.activation[self]
+            value = rule.aggregate_firing[self]
             if term.membership_value[self] is None:
                 term.membership_value[self] = value
             else:
@@ -227,7 +221,6 @@ class ControlSystemSimulation(object):
             print("    {0:>54} = {1}".format(r.antecedent, r.aggregate_firing[self]))
             print("  Activation (THEN-clause):")
             for c in r.consequent:
-                assert isinstance(c, WeightedTerm)
                 print("    {0:>54} : {1}".format(c, c.activation[self]))
             print("")
         print("==============================")

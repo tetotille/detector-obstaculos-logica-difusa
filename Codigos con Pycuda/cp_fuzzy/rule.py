@@ -9,8 +9,7 @@ from __future__ import print_function, division
 import cupy as cp
 import networkx as nx
 
-from term import (Term, WeightedTerm, TermAggregate, FuzzyAggregationMethods,
-                   TermPrimitive)
+from term import Term, TermPrimitive
 from state import StatefulProperty
 
 
@@ -26,16 +25,14 @@ class Rule(object):
         parentheticals to group terms.
     consequent : Consequent term(s), optional
         Consequent terms serving as outputs from this rule. Multiple terms may
-        be accepted in four formats:
+        be accepted in tres formatos:
 
         Unweighted single output.
             output['term']
-        Weighted single output
-            (output['term']%0.5)
         Unweighted multiple output
             (output1['term1'], output2['term2'])
-        Weighted multiple output
-            ((output1['term1']%1.0), (output2['term2']%0.5))
+        Weighted single or multiple output
+            (output['term']%0.5) or ( (output1['term1']%1.0), (output2['term2']%0.5) )
     label : string, optional
         Label to reference the meaning of this rule. Optional, but recommended.
         If provided, the label must be unique among rules in any particular
@@ -78,7 +75,6 @@ class Rule(object):
             returns a single value. Defaults to CuPy function `fmax`, to
             support both single values and arrays.
         """
-        self._aggregation_methods = FuzzyAggregationMethods()
         self.and_func = and_func
         self.or_func = or_func
 
@@ -115,7 +111,7 @@ class Rule(object):
         """
         Aggregation function for AND relationships. Default is `min`.
         """
-        return self._aggregation_methods.and_func
+        return self._and_func
 
     @and_func.setter
     def and_func(self, newfunc):
@@ -127,14 +123,14 @@ class Rule(object):
         except:
             raise ValueError("The provided function does not support "
                              "floating-point arguments.")
-        self._aggregation_methods.and_func = newfunc
+        self._and_func = newfunc
 
     @property
     def or_func(self):
         """
         Aggregation function for OR relationships. Default is `max`.
         """
-        return self._aggregation_methods.or_func
+        return self._or_func
 
     @or_func.setter
     def or_func(self, newfunc):
@@ -146,7 +142,7 @@ class Rule(object):
         except:
             raise ValueError("The provided function does not support "
                              "floating-point arguments.")
-        self._aggregation_methods.or_func = newfunc
+        self._or_func = newfunc
 
     @property
     def antecedent(self):
@@ -179,10 +175,6 @@ class Rule(object):
                 terms.append(obj)
             elif obj is None:
                 pass
-            else:
-                assert isinstance(obj, TermAggregate)
-                _find_terms(obj.term1)
-                _find_terms(obj.term2)
         _find_terms(self.antecedent)
         return terms
 
@@ -198,21 +190,16 @@ class Rule(object):
     @consequent.setter
     def consequent(self, value):
         """
-        Accept consequents in four formats:
+        Accept consequents in three formats:
 
          a) Unweighted single output.
             e.g.: output['term']
-         b) Weighted single output
-            e.g.: (output['term']%0.5)
-         c) Unweighted multiple output
+         b) Unweighted multiple output
             e.g.: (output1['term1'], output2['term2'])
-         d) Weighted multiple output
-            e.g.: ( (output1['term1']%1.0), (output2['term2']%0.5) )
+         c) Weighted single or multiple output
+            e.g.: (output['term']%0.5) or ( (output1['term1']%1.0), (output2['term2']%0.5) )
         """
         if isinstance(value, Term):
-            self._consequent = [WeightedTerm(value, 1.)]
-
-        elif isinstance(value, WeightedTerm):
             self._consequent = [value]
 
         elif not hasattr(value, '__iter__'):
@@ -222,8 +209,6 @@ class Rule(object):
             self._consequent = []
             for i in value:
                 if isinstance(i, Term):
-                    self._consequent.append(WeightedTerm(i, 1.))
-                elif isinstance(i, WeightedTerm):
                     self._consequent.append(i)
                 else:
                     raise ValueError("Unexpected consequent type")
@@ -231,8 +216,7 @@ class Rule(object):
     @property
     def graph_n(self):
         graph = nx.DiGraph()
-        # Link all antecedents to me by decomposing
-        #  TermAggregate down to just Terms
+        # Link all antecedents to me by decomposing terms
         nodes = []
         structure = []
         colors = []
@@ -240,7 +224,7 @@ class Rule(object):
                            dir(self.antecedent) if
                            not attr.startswith("__")]
         for method in antecedent_attr:
-            if type(method) == Term:
+            if isinstance(method, Term):
                 active_label = method.label
                 nodes.append(method.parent.label)
                 colors.append([method.parent.label, 'green'])
@@ -253,11 +237,10 @@ class Rule(object):
                         colors.append([str(key), 'red'])
                 for j in range(len(self.consequent)):
                     structure.append([method.parent.label,
-                                      self.consequent[j].term.parent.label])
-                    nodes.append(self.consequent[j].term.parent.label)
-                    colors.append(
-                        [self.consequent[j].term.parent.label, 'green'])
-        if len(nodes) == 0:
+                                      self.consequent[j].parent.label])
+                    nodes.append(self.consequent[j].parent.label)
+                    colors.append([self.consequent[j].parent.label, 'green'])
+        if not nodes:
             active_label = self.antecedent.label
             nodes.append(self.antecedent.parent.label)
             colors.append([self.antecedent.parent.label, 'green'])
@@ -270,10 +253,9 @@ class Rule(object):
                     colors.append([str(key), 'red'])
             for j in range(len(self.consequent)):
                 structure.append([self.antecedent.parent.label,
-                                  self.consequent[j].term.parent.label])
-                nodes.append(self.consequent[j].term.parent.label)
-                colors.append(
-                    [self.consequent[j].term.parent.label, 'green'])
+                                  self.consequent[j].parent.label])
+                nodes.append(self.consequent[j].parent.label)
+                colors.append([self.consequent[j].parent.label, 'green'])
         graph.add_nodes_from(nodes)
         graph.add_edges_from(structure)
         return graph, colors
@@ -284,18 +266,15 @@ class Rule(object):
         NetworkX directed graph representing this Rule's connectivity.
         """
         graph = nx.DiGraph()
-        # Link all antecedents to me by decomposing
-        #  TermAggregate down to just Terms
         for t in self.antecedent_terms:
             assert isinstance(t, Term)
             graph.add_edge(t, self)
             graph = nx.compose(graph, t.parent.graph)
 
-        # Link all consequents from me
         for c in self.consequent:
-            assert isinstance(c, WeightedTerm)
-            graph.add_edge(self, c.term)
-            graph = nx.compose(graph, c.term.parent.graph)
+            assert isinstance(c, Term)
+            graph.add_edge(self, c)
+            graph = nx.compose(graph, c.parent.graph)
         return graph
 
     def view(self):

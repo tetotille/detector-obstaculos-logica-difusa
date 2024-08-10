@@ -741,12 +741,13 @@ def apply_fuzzy_rules_to_image(fuzzy_image, edge_ctrl, membership_functions):
 
     return edge_image
 
-def load_image(file_path):
-    image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
-    return image
+def load_image(image):
+    # Convertir la imagen a escala de grises
+    grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return grayscale_image
 
-def process_image(file_path):
-    image = load_image(file_path)
+def process_image(image):
+    image = load_image(image)
     x, y = image.shape
     resized_image = cv2.resize(image, (200, int(x * 200 / y)))
 
@@ -761,3 +762,4 @@ def process_image(file_path):
 
     _, imagen_umbral = cv2.threshold(edge_image_uint8, 1, 255, cv2.THRESH_BINARY)
     return imagen_umbral
+

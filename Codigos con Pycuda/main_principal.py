@@ -1,9 +1,11 @@
 import cv2
 from os.path import join, dirname, abspath
-from contour_detection import process_image
+from contorno_difuso_cp import process_image
 
 def main():
-    filename = join(dirname(dirname(abspath(__file__))), "img/ypacarai.jpeg")
+    print("Script iniciado")
+    filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
+    print(filename)  # Esto te permitirá verificar la ruta completa
 
     # Cargar y mostrar la imagen original
     image = cv2.imread(filename)

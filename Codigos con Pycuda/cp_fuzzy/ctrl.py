@@ -6,15 +6,15 @@ from warnings import warn
 
 #from fuzzymath.fuzzy_ops import _interp_universe_fast
 #from skfuzzy import interp_membership, defuzz
-from fuzzyvariable import FuzzyVariable
-from antecedent_consecuent import Antecedent, Consequent
-from term import Term
-from rule import Rule
+from .fuzzyvariable import FuzzyVariable
+from .antecedent_consecuent import Antecedent, Consequent
+from .term import Term
+from .rule import Rule
 
 try:
     from collections import OrderedDict
 except ImportError:
-    from ordered_dict import OrderedDict
+    from .ordered_dict import OrderedDict
 
 class ControlSystem(object):
     def __init__(self, rules=None):

@@ -836,7 +836,7 @@ def main():
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/ypacarai.jpeg")
+        filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
     image=cv2.imread(filename)
     x,y,a = image.shape
     #image2=filter_h(image)

@@ -9,8 +9,8 @@ from __future__ import print_function, division
 import cupy as cp
 import networkx as nx
 
-from term import Term, TermPrimitive
-from state import StatefulProperty
+from .term import Term, TermPrimitive
+from .state import StatefulProperty
 
 
 class Rule(object):

@@ -1,6 +1,6 @@
 import cupy as cp
-from state import StatefulProperty
-from fuzzyvariable import FuzzyVariable
+from .state import StatefulProperty
+from .fuzzyvariable import FuzzyVariable
 
 class Antecedent(FuzzyVariable):
     """
@@ -36,6 +36,9 @@ class Antecedent(FuzzyVariable):
             The value of the term, must be in CuPy array format.
         """
         self.terms[term_name] = term_value
+        
+def membership_function(antecedent, label):
+    return antecedent.terms[label]
 
 class Consequent(FuzzyVariable):
     """

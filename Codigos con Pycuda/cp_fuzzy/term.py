@@ -12,7 +12,7 @@ from __future__ import print_function, division
 
 import cupy as cp
 
-from state import StatefulProperty
+from .state import StatefulProperty
 
 
 class TermPrimitive(object):

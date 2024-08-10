@@ -1,7 +1,7 @@
-import cupyimg as cpi
 import cupy as cp
 import cv2
-import cp_fuzzy
+import cp_fuzzy as fuzz
+from cp_fuzzy import ctrl
 
 def define_membership_functions(image):
     min_pixel = cp.min(image)
@@ -23,6 +23,7 @@ def define_membership_functions(image):
     edge['yes'] = fuzz.trimf(universe2, [0.5, 0.5, 0.5])
 
     return antecedents, edge
+
 def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
     rule1 = ctrl.Rule(C1['high'] & C3['high'] & C5['high'] & 
                       C2['high'] & C4['high'] & C6['high'] & 
@@ -428,14 +429,38 @@ def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
                    C4['high'] & C5['medium'] & C6['medium'] &
                    C7['high'] & C8['medium'] & C9['medium'], edge['yes'])
 
-    rule96 = ctrl.Rule(C1['high'] & C2['high'] & C3['high'] &
+    rule96 = ctrl.Rule(C1['medium'] & C2['high'] & C3['high'] &
+                   C4['medium'] & C5['high'] & C6['high'] &
+                   C7['medium'] & C8['medium'] & C9['high'], edge['yes'])
+
+    rule97 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['high'] &
+                   C4['medium'] & C5['high'] & C6['high'] &
+                   C7['medium'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule98 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['medium'] & C5['high'] & C6['high'] &
+                   C7['high'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule99 = ctrl.Rule(C1['medium'] & C2['medium'] & C3['medium'] &
+                   C4['high'] & C5['high'] & C6['medium'] &
+                   C7['high'] & C8['high'] & C9['high'], edge['yes'])
+
+    rule100 = ctrl.Rule(C1['high'] & C2['medium'] & C3['medium'] &
+                   C4['high'] & C5['high'] & C6['medium'] &
+                   C7['high'] & C8['high'] & C9['medium'], edge['yes'])
+
+    rule101 = ctrl.Rule(C1['high'] & C2['high'] & C3['medium'] &
+                   C4['high'] & C5['high'] & C6['medium'] &
+                   C7['high'] & C8['medium'] & C9['medium'], edge['yes'])
+
+    rule102 = ctrl.Rule(C1['high'] & C2['high'] & C3['high'] &
                    C4['medium'] & C5['high'] & C6['high'] &
                    C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
 
-    rule97 = ctrl.Rule(C1['high'] & C2['high'] & C3['high'] &
+    rule103 = ctrl.Rule(C1['high'] & C2['high'] & C3['high'] &
                    C4['high'] & C5['high'] & C6['medium'] &
                    C7['medium'] & C8['medium'] & C9['medium'], edge['yes'])
-
+    
     rules2 = [rule53, rule54, rule55, rule56, rule57, rule58, rule59, rule60, rule61, rule62, rule63, rule64,
         rule67, rule68, rule69,  rule71, rule72, rule73, rule74, rule75, 
         rule76, rule77, rule79, rule82, rule83, rule84, rule85, rule86, 
@@ -663,9 +688,10 @@ def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
         rule140, rule141, rule142, rule143, rule144, rule145, rule146, rule147, rule148, rule149,
         rule150, rule151, rule152, rule153, rule154, rule155]
     
-    rules = rules1 + rules2 + rules3
+    rules=rules1+rules2+rules3
     
     return rules
+
 def calculate_membership_values(value, func):
     membership_values = {}
     for label in func.terms:
@@ -738,6 +764,41 @@ def adaptive_threshold(image, block_size, C):
 
     return thresholded_image
 
+def resize_image(image, new_shape):
+    # Obtén las dimensiones originales y las nuevas dimensiones
+    orig_shape = image.shape
+    new_height, new_width = new_shape
+
+    # Crea matrices para las nuevas coordenadas
+    y = cp.linspace(0, orig_shape[0] - 1, new_height)
+    x = cp.linspace(0, orig_shape[1] - 1, new_width)
+    x_grid, y_grid = cp.meshgrid(x, y)
+
+    # Interpolación bilineal
+    x0 = cp.floor(x_grid).astype(cp.int32)
+    x1 = x0 + 1
+    y0 = cp.floor(y_grid).astype(cp.int32)
+    y1 = y0 + 1
+
+    x0 = cp.clip(x0, 0, orig_shape[1] - 1)
+    x1 = cp.clip(x1, 0, orig_shape[1] - 1)
+    y0 = cp.clip(y0, 0, orig_shape[0] - 1)
+    y1 = cp.clip(y1, 0, orig_shape[0] - 1)
+
+    Ia = image[y0, x0]
+    Ib = image[y1, x0]
+    Ic = image[y0, x1]
+    Id = image[y1, x1]
+
+    wa = (x1 - x_grid) * (y1 - y_grid)
+    wb = (x1 - x_grid) * (y_grid - y0)
+    wc = (x_grid - x0) * (y1 - y_grid)
+    wd = (x_grid - x0) * (y_grid - y0)
+
+    resized_image = wa * Ia + wb * Ib + wc * Ic + wd * Id
+
+    return resized_image
+
 
 def process_image(file_path):
     image = load_image(file_path)
@@ -747,7 +808,7 @@ def process_image(file_path):
     image_cp = cp.asarray(image)
 
     # Redimensionar la imagen usando cupyimg
-    resized_image = cpi.resize(image_cp, (int(x * 200 / y), 200), mode='reflect', anti_aliasing=True)
+    resized_image = resize_image(image_cp, (int(x * 200 / y), 200))
 
     # Normalizar la imagen entre 0 y 1
     fuzzy_image = resized_image.astype(float) / 256.0

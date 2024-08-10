@@ -1,7 +1,7 @@
 import cupy as cp
 from collections import OrderedDict
-from term import Term  # Asegúrate de que el archivo term.py esté en el mismo directorio o en el path adecuado
-from ordered_dict import OrderedDict
+from .term import Term  # Asegúrate de que el archivo term.py esté en el mismo directorio o en el path adecuado
+from .ordered_dict import OrderedDict
 
 class FuzzyVariable(object):
     """

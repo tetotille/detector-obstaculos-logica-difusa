@@ -1,6 +1,7 @@
 import cv2
 from os.path import join, dirname, abspath
-from contorno_difuso_cp import process_image
+from cp_contorno_difuso import process_image
+import cupy as cp
 
 def main():
     print("Script iniciado")
@@ -13,14 +14,15 @@ def main():
     cv2.waitKey(0)
 
     # Llamar a la función de procesamiento y obtener la imagen procesada
-    processed_image = process_image(filename)
-
+    processed_image = process_image(image)
+        # Convertir la imagen de CuPy a NumPy
+    processed_image_np = cp.asnumpy(processed_image)
     # Mostrar la imagen procesada
-    cv2.imshow('Imagen Umbral', processed_image)
+    cv2.imshow('Imagen Umbral', processed_image_np)
     cv2.waitKey(0)
 
     # Guardar la imagen procesada
-    cv2.imwrite("imagen_umbral.png", processed_image)
+    cv2.imwrite("imagen_umbral.png", processed_image_np)
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":

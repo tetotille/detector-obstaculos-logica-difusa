@@ -15,12 +15,13 @@ def main():
     # Llamar a la función de procesamiento y obtener la imagen procesada
     processed_image = process_image(image)
 
+
     # Mostrar la imagen procesada
-    cv2.imshow('Imagen Umbral', processed_image)
+    cv2.imshow('Imagen Umbral', processed_image_np)
     cv2.waitKey(0)
 
     # Guardar la imagen procesada
-    cv2.imwrite("imagen_umbral.png", processed_image)
+    cv2.imwrite("imagen_umbral.png", processed_image_np)
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":

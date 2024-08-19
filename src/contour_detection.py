@@ -13,6 +13,7 @@ def define_membership_functions(image):
     antecedents = [ctrl.Antecedent(universe2, f'C{i}') for i in range(1, 10)]
     for C in antecedents:
         C['low'] = fuzz.trimf(universe2, [0, 0, 0.5])
+        #C['medium'] = fuzz.trimf(universe2, [max_pixel / 3, (min_pixel + max_pixel) / 2, max_pixel * 2 / 3])
         C['medium'] = fuzz.trimf(universe2, [max_pixel / 3, (min_pixel + max_pixel) / 2, max_pixel * 2 / 3])
         C['high'] = fuzz.trimf(universe2, [0.5, 1, 1])
 

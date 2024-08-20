@@ -1,6 +1,7 @@
 import cupy as cp
 import cv2
 import numpy as np
+from cupyx.scipy.ndimage import maximum_filter
 
 # Función de membresía triangular
 def triangular(x, abc):
@@ -44,18 +45,31 @@ def write_membership_values_to_file(membership_values_list, filename="membership
 
 
 # Función de defuzzificación por centroide
-def defuzzify_centroid(min_value, output_function, universo):
-    if cp.any(min_value > 0):  # Verificar si hay algún valor mayor que 0 en min_value
-        numerator = cp.sum(min_value * output_function(universo))
-        denominator = cp.sum(min_value)
-        if denominator != 0:
-            return numerator / denominator
-        else:
-            return cp.zeros_like(universo[0])  # Retorna 0 si el denominador es 0
+def defuzzify_centroid(rules, universo):
+    if rules:
+        numerator = cp.zeros_like(rules[0][0])  # Mismo tamaño que final_membership
+        denominator = cp.zeros_like(rules[0][0])
+        
+        for final_membership, output_function in rules:
+            print("Output Function:")
+            print(output_function)  # Esto imprimirá la referencia a la función
+            print("Universo de Discurso:", universo.get())
+            output_values = output_function(final_membership)  # Asegurar que las dimensiones coincidan
+            print("Output Values:")
+            print(output_values.get())  # Utiliza .get() para convertir de CuPy a NumPy antes de imprimir
+            max_value = cp.max(output_values)
+            print(max_value.get())
+            numerator += final_membership * output_values
+            denominator += final_membership
+        
+        # Evitar división por cero: si el denominador es 0, retorna 0 para esos píxeles
+        result = cp.where(denominator != 0, numerator / denominator, cp.zeros_like(denominator))
+        
+        return result
+    
     else:
-        return cp.zeros_like(universo[0])  # Retorna 0 si no hay valores significativos en min_value
-
-
+        # Retorna un array de ceros si no hay reglas activadas
+        return cp.zeros_like(universo[0])
 
 # Definición de funciones de membresía
 def define_membership_functions(image):
@@ -70,97 +84,242 @@ def define_membership_functions(image):
 
     antecedents = [{'low': low_membership, 'medium': medium_membership, 'high': high_membership} for _ in range(9)]
 
+    # Supongamos que tienes un valor Python nativo
+
     edge = {
         'low': low_membership,
         'high': high_membership,
-        'yes': lambda x: triangular(x, [0.5, 0.5, 0.5])  # Definición de 'yes' como un singleton
+        'yes': lambda x: cp.full_like(x, cp.float32(0.5))  # Definición de 'yes' como un singleton
     }
 
     return antecedents, edge
 
-def cp_minimum(arr1, arr2):
-    # Utiliza una operación de comparación para calcular el mínimo entre dos arrays
-    return cp.where(arr1 < arr2, arr1, arr2)
-
 # Definición de reglas difusas
-def define_rules(antecedents, edge, neighbor_values, output_file="reglas_activadas.txt"):
+def define_rules(antecedents, edge, neighbor_values, universo, output_file="reglas_activadas.txt"):
+    num_rules = len(antecedents)
+    num_neighbors = neighbor_values.shape[0]
+
+    # Definir las reglas en formato de listas de índices para high, medium, low y la salida
+    rule_sets = [
+        ([0, 1, 3, 4, 6, 7], [], [2, 5, 8], edge['yes']),  # Ejemplo de regla 1
+        ([0, 1, 2, 3, 4, 5], [], [6, 7, 8], edge['yes']),  # Ejemplo de regla 2
+        ([3, 4, 5, 6, 7, 8], [], [0, 1, 2], edge['yes']),  # Ejemplo de regla 3
+        ([1, 2, 4, 5, 7, 8], [], [0, 4, 6], edge['yes']), #4
+        ([2, 5, 6, 7, 8], [], [0, 1, 3, 4], edge['yes']), #5
+        ([0, 1, 2, 5, 8], [], [3, 4, 6, 7], edge['yes']), #6
+        ([0, 3, 6, 7, 8], [], [1, 2, 4, 5], edge['yes']), #7
+        ([0, 1, 2, 3, 6], [], [4, 5, 7, 8], edge['yes']), #8
+        ([5, 7, 8], [], [0, 1, 2, 3, 4, 6], edge['yes']), #9
+        ([3, 6, 7], [], [0, 1, 2, 4, 5, 8], edge['yes']), #10
+        ([0, 1, 3], [], [2, 4, 5, 6, 7, 8], edge['yes']), #11
+        ([1, 2, 5], [], [0, 3, 4, 6, 7, 8], edge['yes']), #12
+    #create_rule([], [], [0, 3, 4, 6, 1, 2, 5, 7, 8], edge['low']) #13
+    #create_rule([0, 3, 4, 6, 1, 2, 5, 7, 8], [], [], edge['low']) #14
+        ([6, 7, 8], [], [0, 1, 2, 3, 4, 5], edge['yes']), #15
+        ([0, 3, 6], [], [1, 2, 4, 5, 7, 8], edge['yes']), #16
+        ([0, 1, 2], [], [3, 4, 5, 6, 7, 8], edge['yes']), #17
+        ([3, 4, 5], [], [0, 1, 2, 6, 7, 8], edge['yes']), #18
+        ([2, 5, 8], [], [0, 1, 3, 4, 6, 7], edge['yes']), #19
+        ([3, 4, 6, 7], [], [0, 1, 2, 5, 8], edge['yes']), #20
+        ([0, 3, 6], [], [1, 2, 4, 5, 7, 8], edge['yes']), #21
+        ([4, 5, 7, 8], [], [0, 1, 2, 3, 6], edge['yes']), #22
+        ([0, 1, 3, 4], [], [2, 5, 6, 7, 8], edge['yes']), #23
+        ([0, 1, 2, 4, 5, 8], [], [3, 6, 7], edge['yes']), #24
+        ([2, 4, 5, 6, 7, 8], [], [0, 1, 3], edge['yes']), #25
+        ([0, 1, 2, 3, 4, 6], [], [5, 7, 8], edge['yes']), #26
+        ([3, 4, 5], [], [0, 1, 2, 6, 7, 8], edge['yes']), #27
+        ([3, 5, 6, 7, 8], [], [0, 1, 2, 4], edge['yes']), #28
+    #create_rule([1, 4, 7], [], [0, 2, 3, 5, 6, 8], edge['yes']) #29
+    #create_rule([0, 2, 3, 5, 6, 8], [], [1, 4, 7], edge['yes']) #30
+        ([0, 1, 2, 3, 5], [4, 6, 7, 8], [], edge['yes']), #31
+        ([0, 1, 3, 6, 7], [2, 4, 5, 8], [], edge['yes']), #32
+        ([3, 5, 6, 7, 8], [0, 1, 2, 4], [], edge['yes']), #33
+        ([0, 3, 4, 6, 7, 8], [1, 2, 5], [], edge['yes']), #34
+        ([0, 3, 4, 5], [1, 2, 5, 7, 8], [], edge['yes']), #35
+        ([4, 6, 7, 8], [0, 1, 2, 3, 5], [], edge['yes']), #36
+        ([2, 4, 5, 8], [0, 1, 3, 6, 7], [], edge['yes']), #37
+        ([0, 1, 2, 4], [3, 5, 6, 7, 8], [], edge['yes']), #38
+        ([0, 3, 6, 7], [1, 2, 4, 5, 8], [], edge['yes']), #39
+        ([3, 6, 7, 8], [0, 1, 2, 4, 5], [], edge['yes']), #40
+        ([5, 6, 7, 8], [0, 1, 2, 3, 4], [], edge['yes']), #41
+        ([0, 1, 3, 4, 6], [2, 5, 7, 8], [], edge['yes']), #42
+        ([3, 5, 6, 7, 8], [0, 1, 2, 4], [], edge['yes']), #43
+        ([0, 1, 3, 6], [2, 4, 5, 7, 8], [], edge['yes']), #44
+        ([1, 2, 4, 5, 8], [0, 3, 6, 7], [], edge['yes']), #45
+        ([2, 4, 5, 7, 8], [0, 1, 3, 6], [], edge['yes']), #46
+        ([4, 5, 6, 7, 8], [0, 1, 2, 3], [], edge['yes']), #47
+        ([3, 4, 6, 7, 8], [0, 1, 2, 5], [], edge['yes']), #48
+        ([0, 3, 4, 6, 7], [1, 2, 5, 8], [], edge['yes']), #49
+        ([0, 1, 3, 4, 6], [2, 5, 7, 8], [], edge['yes']), #50
+        ([0, 1, 2, 4, 5], [3, 6, 7, 8], [], edge['yes']), #51
+        ([0, 1, 2, 3, 4], [5, 6, 7, 8], [], edge['yes']), #52
+
+        ([0, 1, 3, 4, 6, 7], [2, 5, 8], [], edge['yes']),  # Ejemplo de regla 1
+        ([0, 1, 2, 3, 4, 5], [6, 7, 8], [], edge['yes']),  # Ejemplo de regla 2
+        ([3, 4, 5, 6, 7, 8], [0, 1, 2], [], edge['yes']),  # Ejemplo de regla 3
+        ([1, 2, 4, 5, 7, 8], [0, 4, 6], [], edge['yes']), #4
+        ([2, 5, 6, 7, 8], [0, 1, 3, 4], [], edge['yes']), #5
+        ([0, 1, 2, 5, 8], [3, 4, 6, 7], [], edge['yes']), #6
+        ([0, 3, 6, 7, 8], [1, 2, 4, 5], [], edge['yes']), #7
+        ([0, 1, 2, 3, 6], [4, 5, 7, 8], [], edge['yes']), #8
+        ([5, 7, 8], [0, 1, 2, 3, 4, 6], [], edge['yes']), #9
+        ([3, 6, 7], [0, 1, 2, 4, 5, 8], [], edge['yes']), #10
+        ([0, 1, 3], [2, 4, 5, 6, 7, 8], [], edge['yes']), #11
+        ([1, 2, 5], [0, 3, 4, 6, 7, 8], [], edge['yes']), #12
+    #create_rule([], [], [0, 3, 4, 6, 1, 2, 5, 7, 8], edge['low']) #13
+    #create_rule([0, 3, 4, 6, 1, 2, 5, 7, 8], [], [], edge['low']) #14
+        ([6, 7, 8], [0, 1, 2, 3, 4, 5], [], edge['yes']), #15
+        ([0, 3, 6], [1, 2, 4, 5, 7, 8], [], edge['yes']), #16
+        ([0, 1, 2], [3, 4, 5, 6, 7, 8], [], edge['yes']), #17
+        ([3, 4, 5], [0, 1, 2, 6, 7, 8], [], edge['yes']), #18
+        ([2, 5, 8], [0, 1, 3, 4, 6, 7], [], edge['yes']), #19
+        ([3, 4, 6, 7], [0, 1, 2, 5, 8], [], edge['yes']), #20
+        ([0, 3, 6], [1, 2, 4, 5, 7, 8], [], edge['yes']), #21
+        ([4, 5, 7, 8], [0, 1, 2, 3, 6], [], edge['yes']), #22
+        ([0, 1, 3, 4], [2, 5, 6, 7, 8], [], edge['yes']), #23
+        ([0, 1, 2, 4, 5, 8], [3, 6, 7], [], edge['yes']), #24
+        ([2, 4, 5, 6, 7, 8], [0, 1, 3], [], edge['yes']), #25
+        ([0, 1, 2, 3, 4, 6], [5, 7, 8], [], edge['yes']), #26
+        ([3, 4, 5], [0, 1, 2, 6, 7, 8], [], edge['yes']), #27
+        ([3, 5, 6, 7, 8], [0, 1, 2, 4], [], edge['yes']), #28
+    #create_rule([1, 4, 7], [], [0, 2, 3, 5, 6, 8], edge['yes']) #29
+    #create_rule([0, 2, 3, 5, 6, 8], [], [1, 4, 7], edge['yes']) #30
+        ([0, 1, 2, 3, 5], [], [4, 6, 7, 8], edge['yes']), #31
+        ([0, 1, 3, 6, 7], [], [2, 4, 5, 8], edge['yes']), #32
+        ([3, 5, 6, 7, 8], [], [0, 1, 2, 4], edge['yes']), #33
+        ([0, 3, 4, 6, 7, 8], [], [1, 2, 5], edge['yes']), #34
+        ([0, 3, 4, 5], [], [1, 2, 5, 7, 8], edge['yes']), #35
+        ([4, 6, 7, 8], [], [0, 1, 2, 3, 5], edge['yes']), #36
+        ([2, 4, 5, 8], [], [0, 1, 3, 6, 7], edge['yes']), #37
+        ([0, 1, 2, 4], [], [3, 5, 6, 7, 8], edge['yes']), #38
+        ([0, 3, 6, 7], [], [1, 2, 4, 5, 8], edge['yes']), #39
+        ([3, 6, 7, 8], [], [0, 1, 2, 4, 5], edge['yes']), #40
+        ([5, 6, 7, 8], [], [0, 1, 2, 3, 4], edge['yes']), #41
+        ([0, 1, 3, 4, 6], [], [2, 5, 7, 8], edge['yes']), #42
+        ([3, 5, 6, 7, 8], [], [0, 1, 2, 4], edge['yes']), #43
+        ([0, 1, 3, 6], [], [2, 4, 5, 7, 8], edge['yes']), #44
+        ([1, 2, 4, 5, 8], [], [0, 3, 6, 7], edge['yes']), #45
+        ([2, 4, 5, 7, 8], [], [0, 1, 3, 6], edge['yes']), #46
+        ([4, 5, 6, 7, 8], [], [0, 1, 2, 3], edge['yes']), #47
+        ([3, 4, 6, 7, 8], [], [0, 1, 2, 5], edge['yes']), #48
+        ([0, 3, 4, 6, 7], [], [1, 2, 5, 8], edge['yes']), #49
+        ([0, 1, 3, 4, 6], [], [2, 5, 7, 8], edge['yes']), #50
+        ([0, 1, 2, 4, 5], [], [3, 6, 7, 8], edge['yes']), #51
+        ([0, 1, 2, 3, 4], [], [5, 6, 7, 8], edge['yes']), #52
+
+        ([], [0, 1, 3, 4, 6, 7], [2, 5, 8], edge['yes']),  # Ejemplo de regla 1
+        ([], [0, 1, 2, 3, 4, 5], [6, 7, 8], edge['yes']),  # Ejemplo de regla 2
+        ([], [3, 4, 5, 6, 7, 8], [0, 1, 2], edge['yes']),  # Ejemplo de regla 3
+        ([], [1, 2, 4, 5, 7, 8], [0, 4, 6], edge['yes']), #4
+        ([], [2, 5, 6, 7, 8], [0, 1, 3, 4], edge['yes']), #5
+        ([], [0, 1, 2, 5, 8], [3, 4, 6, 7], edge['yes']), #6
+        ([], [0, 3, 6, 7, 8], [1, 2, 4, 5], edge['yes']), #7
+        ([], [0, 1, 2, 3, 6], [4, 5, 7, 8], edge['yes']), #8
+        ([], [5, 7, 8], [0, 1, 2, 3, 4, 6], edge['yes']), #9
+        ([], [3, 6, 7], [0, 1, 2, 4, 5, 8], edge['yes']), #10
+        ([], [0, 1, 3], [2, 4, 5, 6, 7, 8], edge['yes']), #11
+        ([], [1, 2, 5], [0, 3, 4, 6, 7, 8], edge['yes']), #12
+    #create_rule([], [], [0, 3, 4, 6, 1, 2, 5, 7, 8], edge['low']) #13
+    #create_rule([0, 3, 4, 6, 1, 2, 5, 7, 8], [], [], edge['low']) #14
+        ([], [6, 7, 8], [0, 1, 2, 3, 4, 5], edge['yes']), #15
+        ([], [0, 3, 6], [1, 2, 4, 5, 7, 8], edge['yes']), #16
+        ([], [0, 1, 2], [3, 4, 5, 6, 7, 8], edge['yes']), #17
+        ([], [3, 4, 5], [0, 1, 2, 6, 7, 8], edge['yes']), #18
+        ([], [2, 5, 8], [0, 1, 3, 4, 6, 7], edge['yes']), #19
+        ([], [3, 4, 6, 7], [0, 1, 2, 5, 8], edge['yes']), #20
+        ([], [0, 3, 6], [1, 2, 4, 5, 7, 8], edge['yes']), #21
+        ([], [4, 5, 7, 8], [0, 1, 2, 3, 6], edge['yes']), #22
+        ([], [0, 1, 3, 4], [2, 5, 6, 7, 8], edge['yes']), #23
+        ([], [0, 1, 2, 4, 5, 8], [3, 6, 7], edge['yes']), #24
+        ([], [2, 4, 5, 6, 7, 8], [0, 1, 3], edge['yes']), #25
+        ([], [0, 1, 2, 3, 4, 6], [5, 7, 8], edge['yes']), #26
+        ([], [3, 4, 5], [0, 1, 2, 6, 7, 8], edge['yes']), #27
+        ([], [3, 5, 6, 7, 8], [0, 1, 2, 4], edge['yes']), #28
+    #create_rule([1, 4, 7], [], [0, 2, 3, 5, 6, 8], edge['yes']) #29
+    #create_rule([0, 2, 3, 5, 6, 8], [], [1, 4, 7], edge['yes']) #30
+        ([], [0, 1, 2, 3, 5], [4, 6, 7, 8], edge['yes']), #31
+        ([], [0, 1, 3, 6, 7], [2, 4, 5, 8], edge['yes']), #32
+        ([], [3, 5, 6, 7, 8], [0, 1, 2, 4], edge['yes']), #33
+        ([], [0, 3, 4, 6, 7, 8], [1, 2, 5], edge['yes']), #34
+        ([], [0, 3, 4, 5], [1, 2, 5, 7, 8], edge['yes']), #35
+        ([], [4, 6, 7, 8], [0, 1, 2, 3, 5], edge['yes']), #36
+        ([], [2, 4, 5, 8], [0, 1, 3, 6, 7], edge['yes']), #37
+        ([], [0, 1, 2, 4], [3, 5, 6, 7, 8], edge['yes']), #38
+        ([], [0, 3, 6, 7], [1, 2, 4, 5, 8], edge['yes']), #39
+        ([], [3, 6, 7, 8], [0, 1, 2, 4, 5], edge['yes']), #40
+        ([], [5, 6, 7, 8], [0, 1, 2, 3, 4], edge['yes']), #41
+        ([], [0, 1, 3, 4, 6], [2, 5, 7, 8], edge['yes']), #42
+        ([], [3, 5, 6, 7, 8], [0, 1, 2, 4], edge['yes']), #43
+        ([], [0, 1, 3, 6], [2, 4, 5, 7, 8], edge['yes']), #44
+        ([], [1, 2, 4, 5, 8], [0, 3, 6, 7], edge['yes']), #45
+        ([], [2, 4, 5, 7, 8], [0, 1, 3, 6], edge['yes']), #46
+        ([], [4, 5, 6, 7, 8], [0, 1, 2, 3], edge['yes']), #47
+        ([], [3, 4, 6, 7, 8], [0, 1, 2, 5], edge['yes']), #48
+        ([], [0, 3, 4, 6, 7], [1, 2, 5, 8], edge['yes']), #49
+        ([], [0, 1, 3, 4, 6], [2, 5, 7, 8], edge['yes']), #50
+        ([], [0, 1, 2, 4, 5], [3, 6, 7, 8], edge['yes']), #51
+        ([], [0, 1, 2, 3, 4], [5, 6, 7, 8], edge['yes']), #52
+        # Agrega más reglas según sea necesario...
+    ]
+
+    # Convertir a matriz de reglas
+    indices_high = [rule[0] for rule in rule_sets]
+    indices_medium = [rule[1] for rule in rule_sets]
+    indices_low = [rule[2] for rule in rule_sets]
+    outputs = [rule[3] for rule in rule_sets]
+
+    # Expandir neighbor_values para que cada conjunto corresponda a una regla
+    expanded_neighbor_values = cp.repeat(neighbor_values[:, cp.newaxis, :, :], len(rule_sets), axis=1)
+
+    # Calcular memberships para cada conjunto de reglas
+    high_memberships = cp.ones_like(expanded_neighbor_values[0])
+    medium_memberships = cp.ones_like(expanded_neighbor_values[0])
+    low_memberships = cp.ones_like(expanded_neighbor_values[0])
+
+    for i, indices in enumerate(indices_high):
+        for idx in indices:
+            high_memberships[i] = cp.minimum(high_memberships[i], antecedents[idx]['high'](expanded_neighbor_values[idx, i]))
+
+    for i, indices in enumerate(indices_medium):
+        for idx in indices:
+            medium_memberships[i] = cp.minimum(medium_memberships[i], antecedents[idx]['medium'](expanded_neighbor_values[idx, i]))
+
+    for i, indices in enumerate(indices_low):
+        for idx in indices:
+            low_memberships[i] = cp.minimum(low_memberships[i], antecedents[idx]['low'](expanded_neighbor_values[idx, i]))
+
+    # Calcular la membresía mínima entre high, medium y low para cada regla
+    final_memberships = cp.minimum(cp.minimum(high_memberships, medium_memberships), low_memberships)
+
+    # Evaluar cuáles reglas se activan y guardar los resultados para la defuzzificación
     rules = []
-    min_kernel = cp.ElementwiseKernel(
-    'float32 x, float32 y', 'float32 z',
-    'z = min(x, y)',
-    'min_kernel')
+    for i in range(len(rule_sets)):
+        activation = final_memberships[i] > 0.4
 
-    def create_rule(indices_high=[], indices_medium=[], indices_low=[], output=None):
-        memberships_high = cp.ones_like(neighbor_values[0])
-        memberships_medium = cp.ones_like(neighbor_values[0])
-        memberships_low = cp.ones_like(neighbor_values[0])
-
-        # Verificación de índices específicos
-        if indices_high:
-            for i in indices_high:
-                if memberships_high.shape == antecedents[i]['high'](neighbor_values[i]).shape:
-                    print("Tipo de dato de memberships_high:", memberships_high.dtype)
-
-                    height, width = neighbor_values.shape[1], neighbor_values.shape[2]
-
-                    # Generar 50 índices aleatorios dentro de los límites de neighbor_values
-                    random_indices = np.random.choice(height * width, 50, replace=False)
-
-                        # Convertir los índices planos a coordenadas 2D dentro de los límites de neighbor_values
-                    random_coords = np.unravel_index(random_indices, (height, width))
-                    antecedents_high_values = []
-
-                    for j in range(50):
-                        
-                        x, y = random_coords[0][j], random_coords[1][j]
-                        high_value = antecedents[0]['high'](neighbor_values[0][x, y]).get()  # Cambia el índice [0] si quieres usar otros vecinos
-                        antecedents_high_values.append(high_value)
-                    high_membership_values = antecedents[i]['high'](neighbor_values[i])
-                    memberships_high = cp.minimum(memberships_high, cp.min(antecedents[0]['high'](neighbor_values[0]), axis=0))
-
-                    print("Valores de antecedentes 'high':", antecedents_high_values)
-                else:
-                    raise ValueError(f"Dimensiones no coinciden: memberships_high {memberships_high.shape}, antecedents {antecedents[i]['high'](neighbor_values[i]).shape}")
-            for j in range(9):
-                high_values = antecedents[j]['high'](neighbor_values[j])
-                print(f"Vecino {j}: high_membership: {high_values.get()}")
-
-        if indices_medium:
-            for i in indices_medium:
-                memberships_medium = cp.minimum(memberships_medium, antecedents[i]['medium'](neighbor_values[i]))
-
-        if indices_low:
-            for i in indices_low:
-                memberships_low = cp.minimum(memberships_low, antecedents[i]['low'](neighbor_values[i]))
-        
-        for i in range(9):
-                
-            print(f"Valores de neighbor_values para indices_high: {neighbor_values.get()}")
-            print(f"memberships_high: {memberships_high.get()}")
-            print(f"memberships_medium: {memberships_medium.get()}")
-            print(f"memberships_low: {memberships_low.get()}")
-
-        # Combinación final
-        final_membership = cp.minimum(cp.minimum(memberships_high, memberships_medium), memberships_low)
-
-        # Activar regla si la membresía mínima es mayor a 0
-        if cp.any(final_membership > 0.4):
+        if cp.any(activation):
             with open(output_file, "a") as f:
-                f.write(f"Regla activada con final_membership:\n")
-                np_final_membership = final_membership.get()  # Convertir a NumPy para imprimir
-                np.set_printoptions(precision=10, suppress=False, floatmode='fixed')   # Ajustar precisión decimal
+                f.write(f"Regla {i + 1} activada con final_membership:\n")
+                np_final_membership = final_memberships[i].get()  # Convertir a NumPy para imprimir
+                np.set_printoptions(precision=10, suppress=False, floatmode='fixed')  # Ajustar precisión decimal
                 f.write(np.array2string(np_final_membership, separator=', ') + "\n")
-            rules.append((final_membership, output))
-        else:
-            with open(output_file, "a") as f:
-                f.write("Regla no activada debido a final_membership <= 0\n")
+            
+            # Guardar la membresía final y el valor de salida correspondiente
+            rules.append((final_memberships[i], outputs[i]))
 
-    # Ejemplos de reglas
-    create_rule([0], [], [], edge['yes'])  # Vecino 0 debe ser high para activar la regla
-    #create_rule([0], [3], [4], edge['low'])  # Vecino 0 es high, 3 es medium, y 4 es low para activar la regla
+    # Procesar las reglas activadas y realizar la defuzzificación
+    final_crisp_values = defuzzify_centroid(rules, universo)
+    
+    print("Final Crisp Values:")
+    print(final_crisp_values.get())  # Utiliza .get() para obtener el array en formato NumPy desde CuPy
+    
+    max_value = cp.max(final_crisp_values).get()  # Obtener el valor máximo utilizando CuPy y convertirlo a NumPy
+    print("Máximo valor del array final_crisp_values:", max_value)
 
-    return rules
+    with open(output_file, "a") as f:
+        f.write(f"Salida defuzzificada por píxel: {final_crisp_values.get()}\n")
 
+    # Retornar la salida defuzzificada
+    return final_crisp_values
 
 # Aplicar reglas difusas a la imagen
 """def print_antecedents(antecedents):
@@ -281,24 +440,13 @@ def apply_fuzzy_rules_to_image(fuzzy_image, antecedents, edge):
     # Mostrar los valores de antecedentes 'high'
     
     # Ahora, recalcular las reglas usando la fuzzy_image modificada y los nuevos neighbor_values
-    rules = define_rules(antecedents, edge, neighbor_values)
+    rules = define_rules(antecedents, edge, neighbor_values, cp.linspace(0, 1, 256))
 
     # Evaluar reglas y determinar salida
     central_pixel_output = cp.zeros((rows - 2, cols - 2), dtype=cp.float32)
-
-    for rule, output in rules:
-        # Verificar si se cumple la regla con los valores actualizados
-        min_value = cp.min(rule, axis=0)
-        #print(f"min_value: {min_value.get()}")  # Añadir esta línea para verificar los valores
-
-        if callable(output):
-            output_value = defuzzify_centroid(min_value, output, cp.linspace(0, 1, 256))
-            #print(f"Defuzzificación aplicada, valor: {output_value}")
-        else:
-            output_value = output
-
         # Actualizar el valor de salida basado en la regla que se cumple
-        central_pixel_output = cp.maximum(central_pixel_output, output_value)
+    central_pixel_output = cp.maximum(central_pixel_output, rules)
+    
 
     # Asignar el valor final al píxel central
     edge_image[i_coords, j_coords] = cp.where(central_pixel_output > 0, central_pixel_output, 0)

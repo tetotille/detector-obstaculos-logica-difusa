@@ -163,10 +163,10 @@ if __name__ == "__main__":
     if len(argv) > 1:
         filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
     else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/IMG_6830.jpeg")
+        filename = join(dirname(dirname(abspath(__file__))), "img/ypacarai.jpeg")
     img=cv2.imread(filename)
     
-    cv2.imshow('imagen final.png',filter_s(img))
+    cv2.imshow('imagen final.png',filter_h(img))
     cv2.waitKey(0)
     x,y,a = img.shape
     imag=cv2.resize(img, (200, int(x*200/y)))

@@ -3,35 +3,28 @@ import cmeeans_3
 import cp_contorno_difuso
 from os.path import join, dirname, abspath
 import filters
-import utils
 import cv2
-import threading
+import time
 
 def resize_image_bgr(image, new_shape):
-    # Obtén las dimensiones originales y las nuevas dimensiones
     orig_height, orig_width, channels = image.shape
     new_height, new_width = new_shape
 
-    # Factor de escala
     scale_y = orig_height / new_height
     scale_x = orig_width / new_width
 
-    # Crea matrices para las nuevas coordenadas
     y = cp.arange(new_height) * scale_y
     x = cp.arange(new_width) * scale_x
     x_grid, y_grid = cp.meshgrid(x, y)
 
-    # Coordenadas de los píxeles vecinos
     x0 = cp.floor(x_grid).astype(cp.int32)
     x1 = cp.clip(x0 + 1, 0, orig_width - 1)
     y0 = cp.floor(y_grid).astype(cp.int32)
     y1 = cp.clip(y0 + 1, 0, orig_height - 1)
 
-    # Coeficientes de interpolación
     x_weight = x_grid - x0
     y_weight = y_grid - y0
 
-    # Inicializar la imagen redimensionada
     resized_image = cp.zeros((new_height, new_width, channels), dtype=image.dtype)
 
     for c in range(channels):
@@ -40,7 +33,6 @@ def resize_image_bgr(image, new_shape):
         Ic = image[y0, x1, c]
         Id = image[y1, x1, c]
 
-        # Interpolación bilineal
         resized_image[:, :, c] = (
             Ia * (1 - x_weight) * (1 - y_weight) +
             Ib * (1 - x_weight) * y_weight +
@@ -48,93 +40,92 @@ def resize_image_bgr(image, new_shape):
             Id * x_weight * y_weight
         )
 
-    # Asegurarse de que los valores estén dentro del rango [0, 255]
     resized_image = cp.clip(resized_image, 0, 255)
-
     return resized_image.astype(cp.uint8)
 
+# Configuración de la imagen
 filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
-print(filename)  # Esto te permitirá verificar la ruta completa
 image = cv2.imread(filename)
-# Normalizar la imagen a un rango de 0 a 255
-# Convertir la imagen a un arreglo de CuPy
 image_cupy = cp.array(image)
 
-# Obtener las dimensiones originales
-orig_height, orig_width, channels = image.shape
-
-# Definir el nuevo ancho y alto manteniendo la proporción
-new_width = 200
-new_height = int(orig_height * new_width / orig_width)
-
 # Redimensionar la imagen
+new_width = 200
+orig_height, orig_width, channels = image_cupy.shape
+new_height = int(orig_height * new_width / orig_width)
 resized_image = resize_image_bgr(image_cupy, (new_height, new_width))
 
-
-# Cargar y mostrar la imagen original
-
-cv2.imshow('Original Image', image)
-cv2.waitKey(0)
+# Crear streams para ejecutar en paralelo
+stream_slow = cp.cuda.Stream()
+stream_fast_1 = cp.cuda.Stream()
+stream_fast_2 = cp.cuda.Stream()
+stream_fast_3 = cp.cuda.Stream()
+stream_fast_4 = cp.cuda.Stream()
 
 # Contenedores para los resultados
-edge_result = []
-cmeans_3_result = []
-cmeans_4_result = []
-filtro_h_result = []
-filtro_s_result = []
+edge_result = cp.empty_like(resized_image)
+cmeans_3_result = cp.empty_like(resized_image)
+cmeans_4_result = cp.empty_like(resized_image)
+filtro_h_result = cp.empty_like(resized_image)
+filtro_s_result = cp.empty_like(resized_image)
 
-# Definir las funciones que capturan resultados en contenedores
-def process_edge(resized_image, result_container1):
-    result = cp_contorno_difuso.process_image(resized_image)
-    result_container1.append(result)
+# Ejecutar la tarea lenta en su propio stream
+with stream_slow:
+    edge_result = cp_contorno_difuso.process_image(resized_image)
 
-def process_cmeans_3(resized_image, centroides, result_container2):
-    result = cmeeans_3.main(resized_image, centroides)
-    result_container2.append(result)
+# Inicializar la variable para verificar el tiempo
+slow_task_done = False
 
-def process_cmeans_4(resized_image, centroides, result_container3):
-    result = cmeeans_3.main(resized_image, centroides)
-    result_container3.append(result)
+# Mientras la tarea lenta se ejecuta, repetir las tareas rápidas
+fast_results_1 = []
+fast_results_2 = []
+fast_results_3 = []
+fast_results_4 = []
 
-def process_filter_h(resized_image, result_container4):
-    result = filters.filter_h(resized_image)
-    result_container4.append(result)
+while not slow_task_done:
+    # Verificar si la tarea lenta ha terminado
+    try:
+        stream_slow.synchronize()  # Si la tarea lenta ha terminado, se sincroniza sin problemas
+        slow_task_done = True  # La tarea lenta ha terminado
+    except cp.cuda.runtime.CUDARuntimeError:
+        slow_task_done = False  # La tarea lenta aún se está ejecutando
 
-def process_filter_s(resized_image, result_container5):
-    result = filters.filter_s(resized_image)
-    result_container5.append(result)
+    # Ejecución de tareas rápidas
+    with stream_fast_1:
+        centroides_3 = 3
+        fast_result_1 = cmeeans_3.main(resized_image, centroides_3)
+    fast_results_1.append(fast_result_1)
+    stream_fast_1.synchronize()
+    print(f"Fast task 1 (cmeans 3 centroides) completed with result: {fast_result_1}")
 
-# Crear hilos para los scripts
-edge = threading.Thread(target=process_edge, args=(resized_image, edge_result))
-centroides_3 = 3
-cmeans_3 = threading.Thread(target=process_cmeans_3, args=(resized_image, centroides_3, cmeans_3_result))
-centroides_4 = 4
-cmeans_4 = threading.Thread(target=process_cmeans_4, args=(resized_image, centroides_4, cmeans_4_result))
-filtro_h = threading.Thread(target=process_filter_h, args=(resized_image, filtro_h_result))
-filtro_s = threading.Thread(target=process_filter_s, args=(resized_image, filtro_s_result))
+    with stream_fast_2:
+        centroides_4 = 4
+        fast_result_2 = cmeeans_3.main(resized_image, centroides_4)
+    fast_results_2.append(fast_result_2)
+    stream_fast_2.synchronize()
+    print(f"Fast task 2 (cmeans 4 centroides) completed with result: {fast_result_2}")
 
-# Iniciar los hilos
-edge.start()
-cmeans_3.start()
-cmeans_4.start()
-filtro_h.start()
-filtro_s.start()
+    with stream_fast_3:
+        fast_result_3 = filters.filter_h(resized_image)
+    fast_results_3.append(fast_result_3)
+    stream_fast_3.synchronize()
+    print(f"Fast task 3 (filter H) completed with result: {fast_result_3}")
 
-# Esperar a que los hilos terminen
-edge.join()
+    with stream_fast_4:
+        fast_result_4 = filters.filter_s(resized_image)
+    fast_results_4.append(fast_result_4)
+    stream_fast_4.synchronize()
+    print(f"Fast task 4 (filter S) completed with result: {fast_result_4}")
 
-# Acceder y mostrar los resultados después de que los hilos terminen
+    # Añadir un retardo opcional entre iteraciones
+    time.sleep(0.1)
+
+# Mostrar los resultados finales
 print("Resultado del proceso de contorno difuso:")
-print(edge_result[0])  # Imprime o procesa el resultado
+print(edge_result)
 
-print("Resultado del cmeans con 3 centroides:")
-print(cmeans_3_result[0])  # Imprime o procesa el resultado
+print("Resultados de las tareas rápidas:")
+print(f"cmeans 3 centroides: {fast_results_1}")
+print(f"cmeans 4 centroides: {fast_results_2}")
+print(f"filter H: {fast_results_3}")
+print(f"filter S: {fast_results_4}")
 
-print("Resultado del cmeans con 4 centroides:")
-print(cmeans_4_result[0])  # Imprime o procesa el resultado
-
-print("Resultado del filtro H:")
-print(filtro_h_result[0])  # Imprime o procesa el resultado
-
-print("Resultado del filtro S:")
-print(filtro_s_result[0])  # Imprime o procesa el resultado

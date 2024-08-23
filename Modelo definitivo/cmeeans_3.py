@@ -1,8 +1,6 @@
 from os.path import dirname, abspath, join
 from sys import argv
-import numpy as np
 import cupy as cp
-import cv2
 import time
 from normalize_columns2 import normalize_columns, normalize_power_columns
 
@@ -134,7 +132,7 @@ def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None)
  # Convert to seconds
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print(f"Tiempo total de ejecución en GPU: {elapsed_time:.6f} segundos")
+
     
     return cntr, u, u0, d, jm, p, fpc
 
@@ -159,7 +157,7 @@ def main(resized_image, num_clusters, m=2.0, metric='euclidean'):
         Imagen segmentada como un array de NumPy.
     """
     # Cargar y redimensionar la imagen
-
+    resized_image = resized_image.astype(cp.float32)
     # Convertir la imagen a float32 y normalizar
     resized_image /= 255.0
     

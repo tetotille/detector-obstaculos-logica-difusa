@@ -3,13 +3,15 @@ import cv2
 from os.path import dirname, abspath, join
 from sys import argv
 
-def rgb_to_hsv(img):
+import cupy as cp
+
+def bgr_to_hsv(img):
     """
-    Convierte una imagen RGB a HSV.
+    Convierte una imagen BGR a HSV.
     img: array 3D de CuPy con forma (height, width, 3) y valores en el rango [0, 255].
     """
     img = img / 255.0
-    r, g, b = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+    b, g, r = img[:, :, 0], img[:, :, 1], img[:, :, 2]  # Cambiar el orden de los canales
     
     max_val = cp.max(img, axis=2)
     min_val = cp.min(img, axis=2)
@@ -73,9 +75,8 @@ def trapmf(x, a, b, c, d):
     return y
 
 def filter_h(img):
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Convertir BGR a RGB
-    img_array = cp.asarray(img_rgb)
-    h, _, _ = rgb_to_hsv(img_array)
+
+    h, _, _ = bgr_to_hsv(img)
     
     h = cp.asarray(255 - h)
 
@@ -106,9 +107,8 @@ def filter_h(img):
     return h
 
 def filter_s(img):
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Convertir BGR a RGB
-    img_array = cp.asarray(img_rgb)
-    _, s, _ = rgb_to_hsv(img_array)
+
+    _, s, _ = bgr_to_hsv(img)
     
     s = cp.asarray(255 - s)
 

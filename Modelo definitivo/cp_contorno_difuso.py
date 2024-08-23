@@ -1,7 +1,5 @@
 import cupy as cp
-import cv2
 import numpy as np
-from cupyx.scipy.ndimage import maximum_filter
 
 # Función de membresía triangular
 def triangular(x, abc):
@@ -51,14 +49,7 @@ def defuzzify_centroid(rules, universo):
         denominator = cp.zeros_like(rules[0][0])
         
         for final_membership, output_function in rules:
-            print("Output Function:")
-            print(output_function)  # Esto imprimirá la referencia a la función
-            print("Universo de Discurso:", universo.get())
             output_values = output_function(final_membership)  # Asegurar que las dimensiones coincidan
-            print("Output Values:")
-            print(output_values.get())  # Utiliza .get() para convertir de CuPy a NumPy antes de imprimir
-            max_value = cp.max(output_values)
-            print(max_value.get())
             numerator += final_membership * output_values
             denominator += final_membership
         
@@ -75,7 +66,6 @@ def defuzzify_centroid(rules, universo):
 def define_membership_functions(image):
     min_pixel = cp.min(image)
     max_pixel = cp.max(image)
-    universo = cp.linspace(0, 1, 256)
 
     # Crear funciones de membresía
     low_membership = lambda x: triangular(x, [0, 0, 0.5])
@@ -96,8 +86,6 @@ def define_membership_functions(image):
 
 # Definición de reglas difusas
 def define_rules(antecedents, edge, neighbor_values, universo, output_file="reglas_activadas.txt"):
-    num_rules = len(antecedents)
-    num_neighbors = neighbor_values.shape[0]
 
     # Definir las reglas en formato de listas de índices para high, medium, low y la salida
     rule_sets = [
@@ -309,12 +297,8 @@ def define_rules(antecedents, edge, neighbor_values, universo, output_file="regl
     # Procesar las reglas activadas y realizar la defuzzificación
     final_crisp_values = defuzzify_centroid(rules, universo)
     
-    print("Final Crisp Values:")
     print(final_crisp_values.get())  # Utiliza .get() para obtener el array en formato NumPy desde CuPy
     
-    max_value = cp.max(final_crisp_values).get()  # Obtener el valor máximo utilizando CuPy y convertirlo a NumPy
-    print("Máximo valor del array final_crisp_values:", max_value)
-
     with open(output_file, "a") as f:
         f.write(f"Salida defuzzificada por píxel: {final_crisp_values.get()}\n")
 
@@ -403,7 +387,6 @@ def apply_fuzzy_rules_to_image(fuzzy_image, antecedents, edge):
         
 
     write_fuzzy_image_to_file(fuzzy_image, filename="fuzzy_image_values.txt")
-    print("Forma de edge_image:", fuzzy_image.shape)
     
     # Actualizar neighbor_values con la nueva fuzzy_image
     expanded_image = cp.pad(fuzzy_image, pad_width=1, mode='constant', constant_values=0)
@@ -441,12 +424,10 @@ def apply_fuzzy_rules_to_image(fuzzy_image, antecedents, edge):
     
     # Ahora, recalcular las reglas usando la fuzzy_image modificada y los nuevos neighbor_values
     rules = define_rules(antecedents, edge, neighbor_values, cp.linspace(0, 1, 256))
-
     # Evaluar reglas y determinar salida
     central_pixel_output = cp.zeros((rows - 2, cols - 2), dtype=cp.float32)
         # Actualizar el valor de salida basado en la regla que se cumple
     central_pixel_output = cp.maximum(central_pixel_output, rules)
-    
 
     # Asignar el valor final al píxel central
     edge_image[i_coords, j_coords] = cp.where(central_pixel_output > 0, central_pixel_output, 0)

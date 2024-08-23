@@ -68,6 +68,7 @@ def _cmeans0(data, u_old, c, m, metric='euclidean'):
     u = normalize_power_columns(d_gpu, -2. / (m - 1))
 
     # Move results back to CPU
+    
     jm = jm.get()
     
     
@@ -100,7 +101,7 @@ def _fp_coeff(u):
     trace_u_ut = cp.trace(cp.dot(u_gpu, u_gpu.T))
     fpc = trace_u_ut / float(n)
     
-    return fpc.get()
+    return fpc
 
 def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None):
     start_time = time.time()
@@ -135,71 +136,58 @@ def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None)
     elapsed_time = end_time - start_time
     print(f"Tiempo total de ejecución en GPU: {elapsed_time:.6f} segundos")
     
-    # Free GPU memory
-    cp.get_default_memory_pool().free_all_blocks()
-    
-    return cntr, cp.asnumpy(u), cp.asnumpy(u0), cp.asnumpy(d), cp.asnumpy(jm), p, fpc
+    return cntr, u, u0, d, jm, p, fpc
 
-def reconstruct_segmented_image(u, image_np):
-    # Paso 1: Obtener el índice del cluster más probable para cada píxel
+def main(resized_image, num_clusters, m=2.0, metric='euclidean'):
+    """
+    Cargar la imagen, aplicar Fuzzy C-Means clustering y devolver la imagen segmentada.
+
+    Parameters
+    ----------
+    image_path : str
+        Ruta del archivo de imagen a cargar.
+    num_clusters : int
+        Número de clusters para el algoritmo Fuzzy C-Means.
+    m : float, optional
+        Parámetro de fuzziness. Default es 2.0.
+    metric : str, optional
+        Métrica para el cálculo de distancias. Default es 'euclidean'.
+
+    Returns
+    -------
+    numpy.ndarray
+        Imagen segmentada como un array de NumPy.
+    """
+    # Cargar y redimensionar la imagen
+
+    # Convertir la imagen a float32 y normalizar
+    resized_image /= 255.0
+    
+    # Reconfigurar la imagen al formato (S, N) en la GPU
+    S, N = resized_image.shape[0] * resized_image.shape[1], resized_image.shape[2]
+    data = resized_image.reshape(S, N)
+
+    # Medir el tiempo de ejecución de la función cmeans
+    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.00005, maxiter=10, metric=metric, init=None, seed=None)
+
+    # Reconstruir la imagen segmentada
     cluster_membership = cp.argmax(u, axis=0)
+    segmented_image = cp.reshape(cluster_membership, resized_image.shape[:2]).astype(cp.uint8)
 
-    # Paso 2: Reconstruir la imagen segmentada
-    segmented_image = cp.reshape(cluster_membership, image_np).astype(cp.uint8)
-    
-    # Paso 3: Normalizar la imagen segmentada
+    # Normalizar la imagen segmentada
     max_val = cp.max(segmented_image)
     segmented_image_normalized = (segmented_image * (255 / max_val)).astype(cp.uint8)
 
     # Convertir el array de CuPy a NumPy
     segmented_image_normalized_np = cp.asnumpy(segmented_image_normalized)
     
-    # Paso 4: Usar OpenCV para mostrar o guardar la imagen
-    cv2.imshow('Segmented Image', segmented_image_normalized_np)
-    #cv2.imwrite('segmented_image.png', segmented_image_normalized_np)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-def main(image_path, num_clusters=3, m=2.0, metric='euclidean'):
-    # Cargar y redimensionar la imagen
-    image = cv2.imread(image_path)
-    height, width, _ = image.shape
-    scale_factor = 200.0 / width
-    new_height = int(height * scale_factor)
-    print(new_height)
-    resized_image = cv2.resize(image, (200, new_height))
-    # Mostrar la imagen inicial
-    cv2.imshow('Imagen inicial', resized_image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-    # Convertir la imagen a float32 y normalizar
-    data = resized_image.astype(np.float32) / 255.0
-
-    # Reconfigurar la imagen al formato (S, N)
-    S, N = data.shape[0] * data.shape[1], data.shape[2]
-    data = data.reshape(S, N)
-
-    # Medir el tiempo de ejecución de la función cmeans
-    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.00005, maxiter=10, metric=metric, init=None, seed=None)
-
-    # Reconstruir y mostrar la imagen segmentada
-    u_cp = cp.asarray(u)
-    reconstruct_segmented_image(u_cp, resized_image.shape[:2])
-
-    # Imprimir resultados
-    print("Cluster Centers:\n", cntr)
-    print("Final Membership Matrix:\n", u)
-    print("Objective Function Value:\n", jm)
-    print("Distance Matrix:\n", d)
     # Liberar memoria de GPU al final del script
     cp.get_default_memory_pool().free_all_blocks()
 
+    return segmented_image_normalized_np
+
+# Ejemplo de uso
 if __name__ == "__main__":
-    if len(argv) > 1:
-        filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
-    else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/ypacarai.jpeg")
-    image_path = filename
-    # Imprimir formas
-    main(image_path)
+    image_path = "img/ypacarai.jpeg"
+    segmented_image = main(image_path, num_clusters=3)
+    print(segmented_image)

@@ -67,96 +67,87 @@ def filter_s(img_path):
 
     return s_filtrada
 
-def segment_and_identify_objects(image_gray, mask_binary, block_size=15, threshold_area=155):
-        #lim_maximo_155
-    # Paso 2: Analizar bloques de 12x12 píxeles
-        height, width, chanel = image_gray.shape
-        rects = []  # Lista para almacenar los rectángulos detectados
-        for y in range(block_size, height - block_size, block_size):
-            for x in range(block_size, width - block_size, block_size):
-                # Extraer el bloque de la imagen y de la máscara
-                block_image = image_gray[y:y+block_size, x:x+block_size]
-                block_mask = mask_binary[y:y+block_size, x:x+block_size]
+import cupy as cp
 
-                # Contar los píxeles negros en el bloque de la imagen en todos los canales
-                black_pixel_count = np.sum(np.all(block_image == [0, 0, 0], axis=-1))
+import cupy as cp
 
-                # Verde: canal verde alto y canales rojo y azul bajos
-                green_pixels = (block_mask[:, :, 1] > 100) & (block_mask[:, :, 0] < 50) & (block_mask[:, :, 2] < 50)
-                green_pixel_count = np.sum(green_pixels)
+def segment_and_identify_objects(image_gray, mask_binary, original, block_size=15, threshold_area=155):
+    # Paso 1: Analizar bloques de block_size x block_size píxeles
+    height, width, _ = image_gray.shape
+    
+    # Crear grids de índices para recorrer en bloques
+    y_indices, x_indices = cp.meshgrid(cp.arange(block_size, height - block_size, block_size),
+                                       cp.arange(block_size, width - block_size, block_size),
+                                       indexing='ij')
 
-                # Si el bloque tiene suficientes píxeles negros y un máximo de 70 píxeles verdes
-                if black_pixel_count > threshold_area and green_pixel_count <= 40:
-                    # Inicializar un flag para verificar los bloques adyacentes
-                    adyacente_verificado = False
-                    
-                    # Verificar los 3 bloques adyacentes a la derecha (i, j+1), (i+1, j+1), (i-1, j+1)
-                    if x + block_size < width and y + block_size < height and y - block_size >= 0:
-                        block_mask_right1 = mask_binary[y:y+block_size, x+block_size:x+2*block_size]
-                        block_mask_right2 = mask_binary[y+block_size:y+2*block_size, x+block_size:x+2*block_size]
-                        block_mask_right3 = mask_binary[y-block_size:y, x+block_size:x+2*block_size]
-                        green_pixels_right1 = (block_mask_right1[:, :, 1] > 100) & (block_mask_right1[:, :, 0] < 50) & (block_mask_right1[:, :, 2] < 50)
-                        green_pixels_right2 = (block_mask_right2[:, :, 1] > 100) & (block_mask_right2[:, :, 0] < 50) & (block_mask_right2[:, :, 2] < 50)
-                        green_pixels_right3 = (block_mask_right3[:, :, 1] > 100) & (block_mask_right3[:, :, 0] < 50) & (block_mask_right3[:, :, 2] < 50)
-                        if np.sum(green_pixels_right1) > 15 and np.sum(green_pixels_right2) > 15 and np.sum(green_pixels_right3) > 15:
-                            adyacente_verificado = True
-                    
-                    # Verificar los 3 bloques adyacentes a la izquierda (i, j-1), (i+1, j-1), (i-1, j-1)
-                    if x - block_size >= 0 and y + block_size < height and y - block_size >= 0:
-                        block_mask_left1 = mask_binary[y:y+block_size, x-block_size:x]
-                        block_mask_left2 = mask_binary[y+block_size:y+2*block_size, x-block_size:x]
-                        block_mask_left3 = mask_binary[y-block_size:y, x-block_size:x]
-                        green_pixels_left1 = (block_mask_left1[:, :, 1] > 100) & (block_mask_left1[:, :, 0] < 50) & (block_mask_left1[:, :, 2] < 50)
-                        green_pixels_left2 = (block_mask_left2[:, :, 1] > 100) & (block_mask_left2[:, :, 0] < 50) & (block_mask_left2[:, :, 2] < 50)
-                        green_pixels_left3 = (block_mask_left3[:, :, 1] > 100) & (block_mask_left3[:, :, 0] < 50) & (block_mask_left3[:, :, 2] < 50)
-                        if np.sum(green_pixels_left1) > 15 and np.sum(green_pixels_left2) > 15 and np.sum(green_pixels_left3) > 15:
-                            adyacente_verificado = True
-                    
-                    # Verificar los 3 bloques adyacentes hacia abajo (i+1, j), (i+1, j+1), (i+1, j-1)
-                    if y + block_size < height and x + block_size < width and x - block_size >= 0:
-                        block_mask_down1 = mask_binary[y+block_size:y+2*block_size, x:x+block_size]
-                        block_mask_down2 = mask_binary[y+block_size:y+2*block_size, x+block_size:x+2*block_size]
-                        block_mask_down3 = mask_binary[y+block_size:y+2*block_size, x-block_size:x]
-                        green_pixels_down1 = (block_mask_down1[:, :, 1] > 100) & (block_mask_down1[:, :, 0] < 50) & (block_mask_down1[:, :, 2] < 50)
-                        green_pixels_down2 = (block_mask_down2[:, :, 1] > 100) & (block_mask_down2[:, :, 0] < 50) & (block_mask_down2[:, :, 2] < 50)
-                        green_pixels_down3 = (block_mask_down3[:, :, 1] > 100) & (block_mask_down3[:, :, 0] < 50) & (block_mask_down3[:, :, 2] < 50)
-                        if np.sum(green_pixels_down1) > 15 and np.sum(green_pixels_down2) > 15 and np.sum(green_pixels_down3) > 15:
-                            adyacente_verificado = True
-                    
-                    # Verificar los 3 bloques adyacentes hacia arriba (i-1, j), (i-1, j+1), (i-1, j-1)
-                    if y - block_size >= 0 and x + block_size < width and x - block_size >= 0:
-                        block_mask_up1 = mask_binary[y-block_size:y, x:x+block_size]
-                        block_mask_up2 = mask_binary[y-block_size:y, x+block_size:x+2*block_size]
-                        block_mask_up3 = mask_binary[y-block_size:y, x-block_size:x]
-                        green_pixels_up1 = (block_mask_up1[:, :, 1] > 100) & (block_mask_up1[:, :, 0] < 50) & (block_mask_up1[:, :, 2] < 50)
-                        green_pixels_up2 = (block_mask_up2[:, :, 1] > 100) & (block_mask_up2[:, :, 0] < 50) & (block_mask_up2[:, :, 2] < 50)
-                        green_pixels_up3 = (block_mask_up3[:, :, 1] > 100) & (block_mask_up3[:, :, 0] < 50) & (block_mask_up3[:, :, 2] < 50)
-                        if np.sum(green_pixels_up1) > 15 and np.sum(green_pixels_up2) > 15 and np.sum(green_pixels_up3) > 15:
-                            adyacente_verificado = True
-                    
-                    # Si cualquiera de las direcciones tiene 3 bloques adyacentes con suficientes píxeles verdes
-                    if adyacente_verificado:
-                        rects.append((x, y, block_size, block_size))
-        n=len(rects)
-        print(n)
-        # Función para marcar rectángulos en rojo
-        def mark_rect_red(rect):
-            x, y, w, h = rect
-            cv2.rectangle(original, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Rojo
+    # Generar las coordenadas de los bloques de forma compatible con el broadcasting
+    y_offsets = cp.arange(block_size).reshape(1, block_size, 1)
+    x_offsets = cp.arange(block_size).reshape(block_size, 1, 1)
 
-        # Verificar y marcar filas completas
-        # Marcar el resto de los rectángulos en rojo
-        for rect in rects:
-            x, y, w, h = rect
-            color = original[y, x]
-            if (color == [0, 0, 255]).all() or (color == [0, 255, 255]).all() or (color == [255, 0, 0]).all():
-                continue
-            else:
-                mark_rect_red(rect)
-        cv2.imshow('Segmented Image with Detected Objects', image_gray)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+    # Reestructurar las imágenes para aplicar operaciones en bloques
+    block_images = image_gray[y_indices[:, :, None] + y_offsets,
+                              x_indices[:, None, :] + x_offsets]
 
+    block_masks = mask_binary[y_indices[:, :, None] + y_offsets,
+                              x_indices[:, None, :] + x_offsets]
+    
+    # Contar los píxeles negros en cada bloque
+    black_pixel_counts = cp.sum(cp.all(block_images == cp.array([0, 0, 0]), axis=-1), axis=(2, 3))
+
+    # Detectar píxeles verdes en la máscara
+    green_pixel_masks = (block_masks[:, :, :, 1] > 100) & (block_masks[:, :, :, 0] < 50) & (block_masks[:, :, :, 2] < 50)
+    green_pixel_counts = cp.sum(green_pixel_masks, axis=(2, 3))
+
+    # Condición para identificar bloques
+    valid_blocks = (black_pixel_counts > threshold_area) & (green_pixel_counts <= 40)
+
+    # Procesar bloques adyacentes para verificar si cumplen con las condiciones
+    # Crear un padding alrededor de la matriz para manejar bordes
+    padded_valid_blocks = cp.pad(valid_blocks, ((1, 1), (1, 1)), mode='constant', constant_values=False)
+
+    # Desplazamientos para los vecinos (arriba, abajo, izquierda, derecha, y diagonales)
+    shifts = [
+        (0, 1),  # derecha
+        (1, 1),  # diagonal abajo derecha
+        (-1, 1), # diagonal arriba derecha
+        (0, -1), # izquierda
+        (1, -1), # diagonal abajo izquierda
+        (-1, -1),# diagonal arriba izquierda
+        (1, 0),  # abajo
+        (-1, 0)  # arriba
+    ]
+    
+    # Inicializar una matriz para almacenar si el bloque tiene vecinos válidos
+    adyacente_verificado = cp.zeros_like(valid_blocks, dtype=cp.bool_)
+
+    for dy, dx in shifts:
+        # Comparar bloques válidos con sus vecinos desplazados
+        vecinos = padded_valid_blocks[1 + dy:height//block_size + 1 + dy, 1 + dx:width//block_size + 1 + dx]
+        adyacente_verificado |= vecinos  # Si cualquier vecino es válido, marcarlo
+
+    # Obtener los bloques que son válidos y tienen al menos un vecino válido
+    final_valid_blocks = valid_blocks & adyacente_verificado
+
+    # Aplanar los índices válidos
+    valid_y_indices, valid_x_indices = cp.where(final_valid_blocks)
+    
+    # Inicializar rectángulos detectados
+    rects = [(x_indices[y, x], y_indices[y, x], block_size, block_size) for y, x in zip(valid_y_indices, valid_x_indices)]
+
+    # Marcar los rectángulos encontrados en la imagen original
+    for rect in rects:
+        x, y, w, h = rect
+        original[y:y+h, x:x+w, :] = cp.array([0, 0, 255])  # Rojo
+    
+    # Convertir a un formato que pueda mostrar la imagen
+    image_to_show = cp.asnumpy(original)
+
+    # Mostrar la imagen con los bloques marcados
+    cv2.imshow('Segmented Image with Detected Objects', image_to_show)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Usar la función con la ruta de la imagen, la máscara y la imagen original en forma de array de CuPy
 if __name__ == "__main__":
 
     # Ruta a la imagen

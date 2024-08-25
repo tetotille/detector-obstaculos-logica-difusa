@@ -5,43 +5,7 @@ from os.path import join, dirname, abspath
 import filters
 import cv2
 import time
-
-def resize_image_bgr(image, new_shape):
-    orig_height, orig_width, channels = image.shape
-    new_height, new_width = new_shape
-
-    scale_y = orig_height / new_height
-    scale_x = orig_width / new_width
-
-    y = cp.arange(new_height) * scale_y
-    x = cp.arange(new_width) * scale_x
-    x_grid, y_grid = cp.meshgrid(x, y)
-
-    x0 = cp.floor(x_grid).astype(cp.int32)
-    x1 = cp.clip(x0 + 1, 0, orig_width - 1)
-    y0 = cp.floor(y_grid).astype(cp.int32)
-    y1 = cp.clip(y0 + 1, 0, orig_height - 1)
-
-    x_weight = x_grid - x0
-    y_weight = y_grid - y0
-
-    resized_image = cp.zeros((new_height, new_width, channels), dtype=image.dtype)
-
-    for c in range(channels):
-        Ia = image[y0, x0, c]
-        Ib = image[y1, x0, c]
-        Ic = image[y0, x1, c]
-        Id = image[y1, x1, c]
-
-        resized_image[:, :, c] = (
-            Ia * (1 - x_weight) * (1 - y_weight) +
-            Ib * (1 - x_weight) * y_weight +
-            Ic * x_weight * (1 - y_weight) +
-            Id * x_weight * y_weight
-        )
-
-    resized_image = cp.clip(resized_image, 0, 255)
-    return resized_image.astype(cp.uint8)
+import utils 
 
 # Configuración de la imagen
 filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
@@ -52,7 +16,7 @@ image_cupy = cp.array(image)
 new_width = 200
 orig_height, orig_width, channels = image_cupy.shape
 new_height = int(orig_height * new_width / orig_width)
-resized_image = resize_image_bgr(image_cupy, (new_height, new_width))
+resized_image = utils.resize_image_bgr(image_cupy, (new_height, new_width))
 
 # Crear streams para ejecutar en paralelo
 stream_slow = cp.cuda.Stream()
@@ -71,6 +35,7 @@ filtro_s_result = cp.empty_like(resized_image)
 # Ejecutar la tarea lenta en su propio stream
 with stream_slow:
     edge_result = cp_contorno_difuso.process_image(resized_image)
+
 
 # Inicializar la variable para verificar el tiempo
 slow_task_done = False
@@ -93,7 +58,10 @@ while True:
     # Ejecución de tareas rápidas
     start_fast_1 = time.time()
     with stream_fast_1:
-        fast_result_1 = cmeeans_3.main(resized_image, 3)
+        mask_max_cluster, fila_interes = cmeeans_3.fcm(resized_image, 3)  
+        combined_image, contour_image = utils.hacer_mascara(mask_max_cluster, fila_interes)
+        fast_result_1= utils.segment_and_identify_objects(combined_image, contour_image, combined_image)
+
     stream_fast_1.synchronize()
     end_fast_1 = time.time()
     fast_results_1.append(fast_result_1)  # Guardar el resultado en la lista

@@ -442,43 +442,6 @@ def load_image(image):
     grayscale_image = 0.299 * r + 0.587 * g + 0.114 * b
     return grayscale_image
 
-# Redimensionar imagen
-def resize_image(image, new_shape):
-    # Obtén las dimensiones originales y las nuevas dimensiones
-    orig_shape = image.shape
-    new_height, new_width = new_shape
-
-    # Crea matrices para las nuevas coordenadas
-    y = cp.linspace(0, orig_shape[0] - 1, new_height)
-    x = cp.linspace(0, orig_shape[1] - 1, new_width)
-    x_grid, y_grid = cp.meshgrid(x, y)
-
-    # Interpolación bilineal
-    x0 = cp.floor(x_grid).astype(cp.int32)
-    x1 = x0 + 1
-    y0 = cp.floor(y_grid).astype(cp.int32)
-    y1 = y0 + 1
-
-    x0 = cp.clip(x0, 0, orig_shape[1] - 1)
-    x1 = cp.clip(x1, 0, orig_shape[1] - 1)
-    y0 = cp.clip(y0, 0, orig_shape[0] - 1)
-    y1 = cp.clip(y1, 0, orig_shape[0] - 1)
-
-    Ia = image[y0, x0]
-    Ib = image[y1, x0]
-    Ic = image[y0, x1]
-    Id = image[y1, x1]
-
-    wa = (x1 - x_grid) * (y1 - y_grid)
-    wb = (x1 - x_grid) * (y_grid - y0)
-    wc = (x_grid - x0) * (y1 - y_grid)
-    wd = (x_grid - x0) * (y_grid - y0)
-
-    resized_image = wa * Ia + wb * Ib + wc * Ic + wd * Id
-    # Asegurarse de que los valores estén dentro del rango [0, 255]
-    resized_image = cp.clip(resized_image, 0, 255)
-
-    return resized_image
 
 def write_image_to_file(image, filename="edge_image_values.txt"):
     with open(filename, "w") as f:

@@ -1,9 +1,7 @@
 import cupy as cp
+import cv2
 import time
 from normalize_columns2 import normalize_columns, normalize_power_columns
-import detectar_horizonte2
-import utils 
-import cv2
 from os.path import join, dirname, abspath
 
 def calculate_distances(data, centers, metric='euclidean'):
@@ -134,7 +132,7 @@ def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None)
     
     return cntr, u, u0, d, jm, p, fpc
 
-def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
+def fcm(image_path, num_clusters, m=2.0, metric='euclidean'):
     """
     Cargar la imagen, aplicar Fuzzy C-Means clustering y devolver la imagen segmentada.
 
@@ -154,80 +152,45 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     numpy.ndarray
         Imagen segmentada como un array de NumPy.
     """
-    # Cargar y redimensionar la imagen
-    # Convertir la imagen a float32 y normalizar
-    resized_image = cp.array(resized_image, dtype=cp.float32)
-    # Normalizar la imagen dividiéndola por 255.0
-    resized_image /= 255.0
+    # Cargar la imagen en la CPU
+    image = cv2.imread(image_path)
+    
+    # Transferir la imagen a la GPU
+    image_gpu = cp.array(image, dtype=cp.float32)
+    
+    # Normalizar la imagen en la GPU
+    image_gpu /= 255.0
     
     # Reconfigurar la imagen al formato (S, N) en la GPU
-    S, N = resized_image.shape[0] * resized_image.shape[1], resized_image.shape[2]
-    data = resized_image.reshape(S, N)
-
-    # Medir el tiempo de ejecución de la función cmeans
-    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.05, maxiter=10, metric=metric, init=None, seed=None)
-    u = cp.asarray(u)
-    # Reconstruir la imagen segmentada
-    cluster_membership = cp.argmax(u, axis=0)
-    # Supongamos que cluster_membership es un array de CuPy
-# Reshape del array cluster_membership para formar la imagen segmentada
-    segmented_image = cp.reshape(cluster_membership, (resized_image.shape[0], resized_image.shape[1])).astype(cp.uint8)
-
-    # Normalizar la imagen segmentada
-    max_val_gpu = cp.max(segmented_image)
-    segmented_image_normalized = (segmented_image * (255 / max_val_gpu)).astype(cp.uint8)
-
-    # Ejemplo de generación de un array normalizado (si es necesario)
-    #segmented_image_normalized = cp.random.rand(100, 100)  # Ejemplo de array normalizado
-    segmented_image_normalized = (segmented_image_normalized * 255).astype(cp.uint8)
-    segmented_image_normalized_np = cp.asnumpy(segmented_image_normalized)
-    cv2.imshow("segmentado", segmented_image_normalized_np)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    # Paso 5: Calcular la frecuencia de cada cluster
-
-    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
+    S, N = image_gpu.shape[0] * image_gpu.shape[1], image_gpu.shape[2]
+    data_gpu = image_gpu.reshape(S, N)
     
-    # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
-    _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
-    image3_np=cp.asnumpy(image3)
-    cv2.imshow("cortado", image3_np)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    # Calcular la frecuencia de cada cluster dentro del área de interés
-    unique, counts = cp.unique(image3, return_counts=True)
+    # Medir el tiempo de ejecución de la función cmeans
+    cntr, u, u0, d, jm, p, fpc = cmeans(data_gpu.T, num_clusters, m, error=0.005, maxiter=10, metric=metric, init=None, seed=None)
 
-    # Imprimir valores únicos y sus frecuencias
-    print("Unique clusters:", unique)
-    print("Cluster frequencies:", counts)
+    # Reconstruir la imagen segmentada en la GPU
+    u_cp = cp.asarray(u)
+    cluster_membership_gpu = cp.argmax(u_cp, axis=0)
+    segmented_image_gpu = cp.reshape(cluster_membership_gpu, (image_gpu.shape[0], image_gpu.shape[1])).astype(cp.uint8)
 
-    # Encontrar el cluster con la mayor frecuencia
-    max_cluster_idx = cp.argmin(counts)
-    max_cluster = unique[max_cluster_idx]
-    mask_max_cluster = cp.zeros_like(image3, dtype=cp.uint8)
-    mask_max_cluster[image3 == max_cluster] = 255  # Asignar blanco a los píxeles del cluster menos frecuentes
+    # Normalizar la imagen segmentada en la GPU
+    max_val_gpu = cp.max(segmented_image_gpu)
+    segmented_image_normalized_gpu = (segmented_image_gpu * (255 / max_val_gpu)).astype(cp.uint8)
 
-    # Convertir a NumPy para visualizar con OpenCV
-    mask_max_cluster_cpu = cp.asnumpy(mask_max_cluster)
-
-    # Mostrar la imagen utilizando OpenCV
-    cv2.imshow("original_cmeans", mask_max_cluster_cpu)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # Convertir el array de CuPy a NumPy
+    segmented_image_normalized_np = cp.asnumpy(segmented_image_normalized_gpu)
+    
     # Liberar memoria de GPU al final del script
     cp.get_default_memory_pool().free_all_blocks()
 
-    return mask_max_cluster_cpu, fila_interes
+    return segmented_image_normalized_np
 
 # Ejemplo de uso
 if __name__ == "__main__":
-    filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
-    image = cv2.imread(filename)
-    image_cupy = cp.array(image, dtype=cp.float32)
-    new_width = 200
-    orig_height, orig_width, channels = image_cupy.shape
-    new_height = int(orig_height * new_width / orig_width)
-    resized_image = utils.resize_image_bgr(image_cupy, (new_height, new_width))
-    segmented_image = fcm(resized_image, num_clusters=4)
-    
-    print(segmented_image)
+    image_path = "img/barco.jpg"
+    segmented_image = fcm(image_path, num_clusters=3)
+    cv2.imshow("original_cmeans", segmented_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    print(segmented_image.shape)
+

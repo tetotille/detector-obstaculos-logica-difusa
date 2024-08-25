@@ -1,6 +1,6 @@
 import cupy as cp
 import cv2
-
+import numpy as np
 def crop_horizontal(imagen, indice_vertical):
     """
     Recorta una imagen a color horizontalmente en un índice dado usando CuPy.
@@ -11,6 +11,12 @@ def crop_horizontal(imagen, indice_vertical):
         Una tupla que contiene dos imágenes: la parte superior y la parte inferior.
     """
 
+    # Verifica si indice_vertical es un array de más de un elemento
+    if isinstance(indice_vertical, cp.ndarray):
+        if indice_vertical.size > 1:
+            raise ValueError("indice_vertical debe ser un valor único, pero se recibió un array de más de un elemento.")
+        indice_vertical = indice_vertical.item()
+
     if indice_vertical < 0 or indice_vertical >= imagen.shape[0]:
         raise ValueError("El índice vertical está fuera de los límites de la imagen.")
     
@@ -19,93 +25,84 @@ def crop_horizontal(imagen, indice_vertical):
     
     return parte_superior, parte_inferior
 
-def segment_and_identify_objects(image_gray, mask_binary, original, block_size=15, threshold_area=155):
+def segment_and_identify_objects(image_gray, mask_binary, original, block_size=15, threshold_area=40):
     # Paso 2: Analizar bloques de 15x15 píxeles
     height, width, channels = image_gray.shape
     rects = []  # Lista para almacenar los rectángulos detectados
     
-    for y in range(0, height, block_size):
-        for x in range(0, width, block_size):
+    for y in range(block_size, height - block_size, block_size):
+        for x in range(block_size, width - block_size, block_size):
             # Extraer el bloque de la imagen y de la máscara
             block_image = image_gray[y:y+block_size, x:x+block_size]
             block_mask = mask_binary[y:y+block_size, x:x+block_size]
 
             # Contar los píxeles negros en el bloque de la imagen en todos los canales
-            black_pixel_count = cp.sum(cp.all(block_image == cp.array([0, 0, 0]), axis=-1))
+            black_pixel_count = cp.sum(cp.all(block_image == cp.array([255, 255, 255]), axis=-1))
 
             # Verde: canal verde alto y canales rojo y azul bajos
             green_pixels = (block_mask[:, :, 1] > 100) & (block_mask[:, :, 0] < 50) & (block_mask[:, :, 2] < 50)
             green_pixel_count = cp.sum(green_pixels)
 
-            # Si el bloque contiene suficientes píxeles negros y tiene contorno en la máscara, marcar el bloque
-            if black_pixel_count > threshold_area and green_pixel_count > 70:
-                rects.append((x, y, block_size, block_size))  # Almacena el rectángulo
-
-    # Paso 3: Detectar y marcar rectángulos alineados horizontalmente que cubren toda la fila
-    blocks_per_row = int(width // block_size)  # Número de bloques que caben en una fila
-    blocks_per_column = int(height // block_size)
-    rects_by_column = {}
-    rects_by_row = {}
+            # Si el bloque tiene suficientes píxeles negros y un máximo de 40 píxeles verdes
+            if black_pixel_count > threshold_area and green_pixel_count <= 70:
+                # Inicializar un flag para verificar los bloques adyacentes
+                adyacente_verificado = False
+                
+                # Verificar los 3 bloques adyacentes a la derecha (i, j+1), (i+1, j+1), (i-1, j+1)
+                if x + block_size < width and y + block_size < height and y - block_size >= 0:
+                    block_mask_right1 = mask_binary[y:y+block_size, x+block_size:x+2*block_size]
+                    block_mask_right2 = mask_binary[y+block_size:y+2*block_size, x+block_size:x+2*block_size]
+                    block_mask_right3 = mask_binary[y-block_size:y, x+block_size:x+2*block_size]
+                    green_pixels_right1 = (block_mask_right1[:, :, 1] > 100) & (block_mask_right1[:, :, 0] < 50) & (block_mask_right1[:, :, 2] < 50)
+                    green_pixels_right2 = (block_mask_right2[:, :, 1] > 100) & (block_mask_right2[:, :, 0] < 50) & (block_mask_right2[:, :, 2] < 50)
+                    green_pixels_right3 = (block_mask_right3[:, :, 1] > 100) & (block_mask_right3[:, :, 0] < 50) & (block_mask_right3[:, :, 2] < 50)
+                    if cp.sum(green_pixels_right1) > 15 and cp.sum(green_pixels_right2) > 15 and cp.sum(green_pixels_right3) > 15:
+                        adyacente_verificado = True
+                
+                # Verificar los 3 bloques adyacentes a la izquierda (i, j-1), (i+1, j-1), (i-1, j-1)
+                if x - block_size >= 0 and y + block_size < height and y - block_size >= 0:
+                    block_mask_left1 = mask_binary[y:y+block_size, x-block_size:x]
+                    block_mask_left2 = mask_binary[y+block_size:y+2*block_size, x-block_size:x]
+                    block_mask_left3 = mask_binary[y-block_size:y, x-block_size:x]
+                    green_pixels_left1 = (block_mask_left1[:, :, 1] > 100) & (block_mask_left1[:, :, 0] < 50) & (block_mask_left1[:, :, 2] < 50)
+                    green_pixels_left2 = (block_mask_left2[:, :, 1] > 100) & (block_mask_left2[:, :, 0] < 50) & (block_mask_left2[:, :, 2] < 50)
+                    green_pixels_left3 = (block_mask_left3[:, :, 1] > 100) & (block_mask_left3[:, :, 0] < 50) & (block_mask_left3[:, :, 2] < 50)
+                    if cp.sum(green_pixels_left1) > 15 and cp.sum(green_pixels_left2) > 15 and cp.sum(green_pixels_left3) > 15:
+                        adyacente_verificado = True
+                
+                # Verificar los 3 bloques adyacentes hacia abajo (i+1, j), (i+1, j+1), (i+1, j-1)
+                if y + block_size < height and x + block_size < width and x - block_size >= 0:
+                    block_mask_down1 = mask_binary[y+block_size:y+2*block_size, x:x+block_size]
+                    block_mask_down2 = mask_binary[y+block_size:y+2*block_size, x+block_size:x+2*block_size]
+                    block_mask_down3 = mask_binary[y+block_size:y+2*block_size, x-block_size:x]
+                    green_pixels_down1 = (block_mask_down1[:, :, 1] > 100) & (block_mask_down1[:, :, 0] < 50) & (block_mask_down1[:, :, 2] < 50)
+                    green_pixels_down2 = (block_mask_down2[:, :, 1] > 100) & (block_mask_down2[:, :, 0] < 50) & (block_mask_down2[:, :, 2] < 50)
+                    green_pixels_down3 = (block_mask_down3[:, :, 1] > 100) & (block_mask_down3[:, :, 0] < 50) & (block_mask_down3[:, :, 2] < 50)
+                    if cp.sum(green_pixels_down1) > 15 and cp.sum(green_pixels_down2) > 15 and cp.sum(green_pixels_down3) > 15:
+                        adyacente_verificado = True
+                
+                # Verificar los 3 bloques adyacentes hacia arriba (i-1, j), (i-1, j+1), (i-1, j-1)
+                if y - block_size >= 0 and x + block_size < width and x - block_size >= 0:
+                    block_mask_up1 = mask_binary[y-block_size:y, x:x+block_size]
+                    block_mask_up2 = mask_binary[y-block_size:y, x+block_size:x+2*block_size]
+                    block_mask_up3 = mask_binary[y-block_size:y, x-block_size:x]
+                    green_pixels_up1 = (block_mask_up1[:, :, 1] > 100) & (block_mask_up1[:, :, 0] < 50) & (block_mask_up1[:, :, 2] < 50)
+                    green_pixels_up2 = (block_mask_up2[:, :, 1] > 100) & (block_mask_up2[:, :, 0] < 50) & (block_mask_up2[:, :, 2] < 50)
+                    green_pixels_up3 = (block_mask_up3[:, :, 1] > 100) & (block_mask_up3[:, :, 0] < 50) & (block_mask_up3[:, :, 2] < 50)
+                    if cp.sum(green_pixels_up1) > 15 and cp.sum(green_pixels_up2) > 15 and cp.sum(green_pixels_up3) > 15:
+                        adyacente_verificado = True
+                
+                # Si cualquiera de las direcciones tiene 3 bloques adyacentes con suficientes píxeles verdes
+                if adyacente_verificado:
+                    rects.append((x, y, block_size, block_size))
     
-    for rect in rects:
-        x, y, w, h = rect
-        if x not in rects_by_column:
-            rects_by_column[x] = []
-        rects_by_column[x].append(rect)
-        
-    for rect1 in rects:
-        x, y, w, h = rect1
-        if y not in rects_by_row:
-            rects_by_row[y] = []
-        rects_by_row[y].append(rect1)
-
-    # Función para marcar filas en azul
-    def mark_row_blue(row_rects):
-        for rect in row_rects:
-            x, y, w, h = rect
-            original[y:y+h, x:x+w, :] = cp.array([255, 0, 0])  # Azul
-
-    # Función para marcar columnas en amarillo
-    def mark_column_yellow(column_rects):
-        for rect in column_rects:
-            x, y, w, h = rect
-            original[y:y+h, x:x+w, :] = cp.array([0, 255, 255])  # Amarillo
-
+    n = len(rects)
+    print(n)
+    
     # Función para marcar rectángulos en rojo
     def mark_rect_red(rect):
         x, y, w, h = rect
         original[y:y+h, x:x+w, :] = cp.array([0, 0, 255])  # Rojo
-
-    # Verificar y marcar filas completas
-    for y, row_rects in rects_by_row.items():
-        row_rects.sort()
-        if len(row_rects) == blocks_per_row:
-            first_rect_x = row_rects[0][0]
-            last_rect_x = row_rects[-1][0] + row_rects[-1][2]
-            mark_row_blue(row_rects)
-
-            # Verificar y marcar la fila superior si está alineada
-            top_y = y - row_rects[0][3]
-            if top_y in rects_by_row:
-                top_row_rects = rects_by_row[top_y]
-                top_first_x = top_row_rects[0][0]
-                top_last_x = top_row_rects[-1][0] + top_row_rects[-1][2]
-                if (top_first_x <= first_rect_x <= top_last_x) or (top_first_x <= last_rect_x <= top_last_x):
-                    mark_row_blue(top_row_rects)
-
-            # Verificar y marcar la fila inferior si está alineada
-            bottom_y = y + row_rects[0][3]
-            if bottom_y in rects_by_row:
-                bottom_row_rects = rects_by_row[bottom_y]
-                bottom_first_x = bottom_row_rects[0][0]
-                bottom_last_x = bottom_row_rects[-1][0] + bottom_row_rects[-1][2]
-                if (bottom_first_x <= first_rect_x <= bottom_last_x) or (bottom_first_x <= last_rect_x <= bottom_last_x):
-                    mark_row_blue(bottom_row_rects)
-
-    # Verificar y marcar columnas completas
-    for column_x, column_rects in rects_by_column.items():
-        if len(column_rects) == blocks_per_column:
-            mark_column_yellow(column_rects)
 
     # Marcar el resto de los rectángulos en rojo
     for rect in rects:
@@ -115,16 +112,7 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
             continue
         else:
             mark_rect_red(rect)
-
-    # Verificar y marcar columnas completas (incluso si ya están marcadas en azul)
-    for column_x, column_rects in rects_by_column.items():
-        if len(column_rects) == blocks_per_column:
-            for rect in column_rects:
-                x, y, w, h = rect
-                color = original[y, x]
-                if cp.all(color == cp.array([255, 0, 0])):  # Si está marcado en azul
-                    original[y:y+h, x:x+w, :] = cp.array([0, 255, 255])  # Amarillo
-
+    
     # Convertir a un formato que pueda mostrar la imagen
     image_to_show = cp.asnumpy(original)
 
@@ -133,40 +121,127 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def resize_image(image, new_shape):
-    # Obtén las dimensiones originales y las nuevas dimensiones
-    orig_shape = image.shape
+# Usar la función con la ruta de la imagen, la máscara y la imagen original en forma de array de CuPy
+
+def resize_image_bgr(image, new_shape):
+    orig_height, orig_width, channels = image.shape
     new_height, new_width = new_shape
 
-    # Crea matrices para las nuevas coordenadas
-    y = cp.linspace(0, orig_shape[0] - 1, new_height)
-    x = cp.linspace(0, orig_shape[1] - 1, new_width)
+    scale_y = orig_height / new_height
+    scale_x = orig_width / new_width
+
+    y = cp.arange(new_height) * scale_y
+    x = cp.arange(new_width) * scale_x
     x_grid, y_grid = cp.meshgrid(x, y)
 
-    # Interpolación bilineal
     x0 = cp.floor(x_grid).astype(cp.int32)
-    x1 = x0 + 1
+    x1 = cp.clip(x0 + 1, 0, orig_width - 1)
     y0 = cp.floor(y_grid).astype(cp.int32)
-    y1 = y0 + 1
+    y1 = cp.clip(y0 + 1, 0, orig_height - 1)
 
-    x0 = cp.clip(x0, 0, orig_shape[1] - 1)
-    x1 = cp.clip(x1, 0, orig_shape[1] - 1)
-    y0 = cp.clip(y0, 0, orig_shape[0] - 1)
-    y1 = cp.clip(y1, 0, orig_shape[0] - 1)
+    x_weight = x_grid - x0
+    y_weight = y_grid - y0
 
-    Ia = image[y0, x0]
-    Ib = image[y1, x0]
-    Ic = image[y0, x1]
-    Id = image[y1, x1]
+    resized_image = cp.zeros((new_height, new_width, channels), dtype=image.dtype)
+    for c in range(channels):
+        Ia = image[y0, x0, c]
+        Ib = image[y1, x0, c]
+        Ic = image[y0, x1, c]
+        Id = image[y1, x1, c]
 
-    wa = (x1 - x_grid) * (y1 - y_grid)
-    wb = (x1 - x_grid) * (y_grid - y0)
-    wc = (x_grid - x0) * (y1 - y_grid)
-    wd = (x_grid - x0) * (y_grid - y0)
+        resized_image[:, :, c] = (
+            Ia * (1 - x_weight) * (1 - y_weight) +
+            Ib * (1 - x_weight) * y_weight +
+            Ic * x_weight * (1 - y_weight) +
+            Id * x_weight * y_weight
+        )
 
-    resized_image = wa * Ia + wb * Ib + wc * Ic + wd * Id
-    # Asegurarse de que los valores estén dentro del rango [0, 255]
     resized_image = cp.clip(resized_image, 0, 255)
-
-    return resized_image
+    return resized_image.astype(cp.uint8)
 # Usar la función con la ruta de la imagen, la máscara y la imagen original en forma de array de CuPy
+
+def hacer_mascara(image3, fila_interes):
+    # Leer la máscara (suponiendo que ya está en la GPU como array de CuPy)
+    mask = cp.array(cv2.imread("imagen_umbral.png", cv2.IMREAD_GRAYSCALE))
+
+    # Obtener las dimensiones de la máscara
+    x, y = mask.shape
+
+    # Asumiendo que `crop_horizontal` también está en CuPy y devuelve un array de CuPy
+    _, mask2 = crop_horizontal(mask, fila_interes)
+    print(image3.shape)
+
+    # Leer la imagen original (suponiendo que ya está en la GPU como array de CuPy)
+    image3_numpy = cp.asnumpy(image3)
+
+# Aplicar cv2.cvtColor en NumPy
+    image3_rgb_numpy = cv2.cvtColor(image3_numpy, cv2.COLOR_BGR2RGB)
+
+# Convertir de nuevo a CuPy si es necesario
+    original = cp.array(image3_rgb_numpy)
+
+    # Crear una máscara para los píxeles negros
+    mask = cp.logical_and(
+        cp.all(original >= cp.array([0, 0, 0]), axis=-1),
+        cp.all(original <= cp.array([15, 15, 15]), axis=-1)
+    ).astype(cp.uint8) * 255
+
+    # Crear imágenes en negro y blanco
+    white_image = cp.full_like(original, cp.array(255, dtype=original.dtype))
+
+    black_image = cp.zeros_like(original)
+
+    if mask.ndim == 2:
+        mask = cp.stack([mask] * 3, axis=-1)  # Convertir a 3 canales si es necesario
+    # Aplicar la máscara para obtener la imagen con negros convertidos a blancos y el resto a negro
+        # Convertir `mask` a un array booleano para la operación bitwise
+    mask = mask.astype(cp.bool_)
+    mask_invert = cp.invert(mask)
+     # Aplicar la máscara usando operaciones condicionales
+    result = cp.where(mask, white_image, original)
+    result = cp.where(mask_invert, black_image, result)
+    # Obtener las dimensiones de la imagen original y la máscara recortada
+    height, width, channels = original.shape
+    height1, width1 = mask2.shape
+
+    # Verificar las dimensiones de ambas imágenes
+    if (height, width) != (height1, width1):
+        print("Redimensionando la máscara para que coincida con las dimensiones de la imagen original.")
+        mask2 = cp.array(cv2.resize(cp.asnumpy(mask2), (width, height)))
+    else:
+        print("Las dimensiones de la máscara ya coinciden con las dimensiones de la imagen original.")
+
+    # Asegurarse de que la máscara sea binaria
+    _, mask_binary = cv2.threshold(cp.asnumpy(mask2), 1, 255, cv2.THRESH_BINARY)
+    mask_binary = cp.array(mask_binary)
+
+    # Crear una imagen de contornos verdes (tamaño de la imagen original)
+    contour_image = cp.zeros((original.shape[0], original.shape[1], 3), dtype=cp.uint8)
+
+    # Establecer los contornos en verde (BGR) usando la máscara binaria
+    contour_image[mask_binary > 0] = [0, 255, 0]  # Verde en BGR
+
+    # Crear una imagen RGBA con el fondo transparente
+    rgba_image = cp.zeros((original.shape[0], original.shape[1], 4), dtype=cp.uint8)
+
+    # Copiar la imagen original al canal RGB de la imagen RGBA
+    rgba_image[:, :, :3] = original
+
+    # Crear una máscara para el canal alfa (transparencia)
+    transparency_mask = cp.zeros((original.shape[0], original.shape[1]), dtype=cp.uint8)
+    transparency_mask[mask_binary > 0] = 255  # Píxeles de contorno serán completamente opacos
+
+    # Copiar la máscara de transparencia al canal alfa de la imagen RGBA
+    rgba_image[:, :, 3] = transparency_mask
+
+    # Aplicar la imagen de contornos al canal alfa de la imagen RGBA
+    # Para hacer que los contornos sean visibles, combinamos la imagen original con la imagen de contornos
+    combined_image = original + contour_image
+
+    #cv2.imshow("original", original.get())
+    #cv2.imshow("contorno", contour_image.get())
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
+    print(original.shape)
+    print(contour_image.shape)
+    return original, contour_image

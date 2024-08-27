@@ -1,6 +1,5 @@
 import cupy as cp
 import cv2
-import numpy as np
 def crop_horizontal(imagen, indice_vertical):
     """
     Recorta una imagen a color horizontalmente en un índice dado usando CuPy.
@@ -25,7 +24,7 @@ def crop_horizontal(imagen, indice_vertical):
     
     return parte_superior, parte_inferior
 
-def segment_and_identify_objects(image_gray, mask_binary, original, block_size=15, threshold_area=40):
+def segment_and_identify_objects(image_gray, mask_binary, original, block_size=15, threshold_area=25):
     # Paso 2: Analizar bloques de 15x15 píxeles
     height, width, channels = image_gray.shape
     rects = []  # Lista para almacenar los rectángulos detectados
@@ -37,14 +36,19 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
             block_mask = mask_binary[y:y+block_size, x:x+block_size]
 
             # Contar los píxeles negros en el bloque de la imagen en todos los canales
-            black_pixel_count = cp.sum(cp.all(block_image == cp.array([255, 255, 255]), axis=-1))
+            # Contar los píxeles blancos en los tres canales (R, G y B)
+            # Contar los píxeles blancos en cualquiera de los tres canales (R, G o B)
+            black_pixel_count = cp.sum(cp.all(block_image > 200, axis=-1))
 
+
+            print("pixeles blancos", black_pixel_count)
             # Verde: canal verde alto y canales rojo y azul bajos
             green_pixels = (block_mask[:, :, 1] > 100) & (block_mask[:, :, 0] < 50) & (block_mask[:, :, 2] < 50)
             green_pixel_count = cp.sum(green_pixels)
+            print(green_pixel_count)
 
-            # Si el bloque tiene suficientes píxeles negros y un máximo de 40 píxeles verdes
-            if black_pixel_count > threshold_area and green_pixel_count <= 70:
+            # Si el bloque tiene suficientes píxeles negros y un máximo de 15 píxeles verdes
+            if black_pixel_count > threshold_area and green_pixel_count <= 15:
                 # Inicializar un flag para verificar los bloques adyacentes
                 adyacente_verificado = False
                 
@@ -56,7 +60,7 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
                     green_pixels_right1 = (block_mask_right1[:, :, 1] > 100) & (block_mask_right1[:, :, 0] < 50) & (block_mask_right1[:, :, 2] < 50)
                     green_pixels_right2 = (block_mask_right2[:, :, 1] > 100) & (block_mask_right2[:, :, 0] < 50) & (block_mask_right2[:, :, 2] < 50)
                     green_pixels_right3 = (block_mask_right3[:, :, 1] > 100) & (block_mask_right3[:, :, 0] < 50) & (block_mask_right3[:, :, 2] < 50)
-                    if cp.sum(green_pixels_right1) > 15 and cp.sum(green_pixels_right2) > 15 and cp.sum(green_pixels_right3) > 15:
+                    if cp.sum(green_pixels_right1) > 20 and cp.sum(green_pixels_right2) > 20 and cp.sum(green_pixels_right3) > 20:
                         adyacente_verificado = True
                 
                 # Verificar los 3 bloques adyacentes a la izquierda (i, j-1), (i+1, j-1), (i-1, j-1)
@@ -67,7 +71,7 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
                     green_pixels_left1 = (block_mask_left1[:, :, 1] > 100) & (block_mask_left1[:, :, 0] < 50) & (block_mask_left1[:, :, 2] < 50)
                     green_pixels_left2 = (block_mask_left2[:, :, 1] > 100) & (block_mask_left2[:, :, 0] < 50) & (block_mask_left2[:, :, 2] < 50)
                     green_pixels_left3 = (block_mask_left3[:, :, 1] > 100) & (block_mask_left3[:, :, 0] < 50) & (block_mask_left3[:, :, 2] < 50)
-                    if cp.sum(green_pixels_left1) > 15 and cp.sum(green_pixels_left2) > 15 and cp.sum(green_pixels_left3) > 15:
+                    if cp.sum(green_pixels_left1) > 20 and cp.sum(green_pixels_left2) > 20 and cp.sum(green_pixels_left3) > 20:
                         adyacente_verificado = True
                 
                 # Verificar los 3 bloques adyacentes hacia abajo (i+1, j), (i+1, j+1), (i+1, j-1)
@@ -78,7 +82,7 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
                     green_pixels_down1 = (block_mask_down1[:, :, 1] > 100) & (block_mask_down1[:, :, 0] < 50) & (block_mask_down1[:, :, 2] < 50)
                     green_pixels_down2 = (block_mask_down2[:, :, 1] > 100) & (block_mask_down2[:, :, 0] < 50) & (block_mask_down2[:, :, 2] < 50)
                     green_pixels_down3 = (block_mask_down3[:, :, 1] > 100) & (block_mask_down3[:, :, 0] < 50) & (block_mask_down3[:, :, 2] < 50)
-                    if cp.sum(green_pixels_down1) > 15 and cp.sum(green_pixels_down2) > 15 and cp.sum(green_pixels_down3) > 15:
+                    if cp.sum(green_pixels_down1) > 20 and cp.sum(green_pixels_down2) > 20 and cp.sum(green_pixels_down3) > 20:
                         adyacente_verificado = True
                 
                 # Verificar los 3 bloques adyacentes hacia arriba (i-1, j), (i-1, j+1), (i-1, j-1)
@@ -89,7 +93,7 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
                     green_pixels_up1 = (block_mask_up1[:, :, 1] > 100) & (block_mask_up1[:, :, 0] < 50) & (block_mask_up1[:, :, 2] < 50)
                     green_pixels_up2 = (block_mask_up2[:, :, 1] > 100) & (block_mask_up2[:, :, 0] < 50) & (block_mask_up2[:, :, 2] < 50)
                     green_pixels_up3 = (block_mask_up3[:, :, 1] > 100) & (block_mask_up3[:, :, 0] < 50) & (block_mask_up3[:, :, 2] < 50)
-                    if cp.sum(green_pixels_up1) > 15 and cp.sum(green_pixels_up2) > 15 and cp.sum(green_pixels_up3) > 15:
+                    if cp.sum(green_pixels_up1) > 20 and cp.sum(green_pixels_up2) > 20 and cp.sum(green_pixels_up3) > 20:
                         adyacente_verificado = True
                 
                 # Si cualquiera de las direcciones tiene 3 bloques adyacentes con suficientes píxeles verdes
@@ -237,11 +241,18 @@ def hacer_mascara(image3, fila_interes):
     # Aplicar la imagen de contornos al canal alfa de la imagen RGBA
     # Para hacer que los contornos sean visibles, combinamos la imagen original con la imagen de contornos
     combined_image = original + contour_image
+    # Iterar sobre cada píxel y mostrar sus valores en los tres canales
+    """for i in range(original.shape[0]):
+        for j in range(original.shape[1]):
+            r, g, b = original[i, j]
+            print(f"Píxel ({i}, {j}) - R: {r}, G: {g}, B: {b}")"""
 
-    #cv2.imshow("original", original.get())
+
+    #cv2.imshow("original", rgba_image.get())
     #cv2.imshow("contorno", contour_image.get())
     #cv2.waitKey(0)
     #cv2.destroyAllWindows()
     print(original.shape)
     print(contour_image.shape)
     return original, contour_image
+

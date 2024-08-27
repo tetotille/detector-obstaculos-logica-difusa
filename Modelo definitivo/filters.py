@@ -2,7 +2,8 @@ import cupy as cp
 import cv2
 from os.path import dirname, abspath, join
 from sys import argv
-
+import detectar_horizonte2
+import utils
 import cupy as cp
 
 def bgr_to_hsv(img):
@@ -102,9 +103,14 @@ def filter_h(img):
 
     h_filtrada = cp.copy(h)
     h_filtrada[(h >= most_frequent_intensity-10) & (h <= most_frequent_intensity+10)] = 0
-    h=cp.asnumpy(h_filtrada)
-    cp.get_default_memory_pool().free_all_blocks()
-    return h
+    h=(h_filtrada)
+# Suponiendo que `image` es tu imagen en formato RGB cargada como un array de CuPy
+# Reshape para convertir la imagen en una lista de colores (cada color es una tupla de 3 valores)
+    print(h.shape)
+
+    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(img)
+    _, image3 = utils.crop_horizontal(h, fila_interes)
+    return image3, fila_interes
 
 def filter_s(img):
 
@@ -119,9 +125,11 @@ def filter_s(img):
 
     s_filtrada = cp.copy(s)
     s_filtrada[(s >= most_frequent_intensity-10) & (s <= most_frequent_intensity+10)] = 0
-    s = cp.asnumpy(s_filtrada)
-    cp.get_default_memory_pool().free_all_blocks()
-    return s
+    s = (s_filtrada)
+    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(img)
+    _, image3 = utils.crop_horizontal(s, fila_interes)
+
+    return image3, fila_interes
 
 # Cargar la imagen usando OpenCV y convertirla a un array de CuPy
 if len(argv) > 1:

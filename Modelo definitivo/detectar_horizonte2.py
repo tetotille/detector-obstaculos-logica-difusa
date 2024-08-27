@@ -4,7 +4,6 @@ import numpy as np
 from os.path import dirname, abspath, join
 from sys import argv
 import utils
-from cp_contorno_difuso import process_image
 
 def find_horizontal_line(imagen_cp):
     # Si la imagen está en color, convertirla a escala de grises
@@ -12,7 +11,8 @@ def find_horizontal_line(imagen_cp):
         image = imagen_cp
 
     # Detectar bordes en la imagen usando edge detector
-    edges = process_image(imagen_cp)  # Asegúrate de que `process_image` también funcione con CuPy
+    edges = cp.array(cv2.imread("imagen_umbral.png", cv2.IMREAD_GRAYSCALE))
+  # Asegúrate de que `process_image` también funcione con CuPy
 
     # Definir el kernel para la operación de dilatación horizontal
     horizontal_kernel = cp.ones((2, 3), cp.uint8)

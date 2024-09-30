@@ -2,16 +2,17 @@ import cupy as cp
 import cmeeans_3
 import cp_contorno_difuso
 from os.path import join, dirname, abspath
-import filters
 import cv2
 import time
 import utils
 import threading 
-
+import modelo_difuso
+import filters
 # Configuración de la imagen
-filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
+filename = join(dirname(dirname(abspath(__file__))), "img/brillo.jpg")
 image = cv2.imread(filename)
 image_cupy = cp.array(image)
+lista_completa = []
 
 # Redimensionar la imagen
 new_width = 200
@@ -57,11 +58,12 @@ def fast_task_1():
     print(f"Tarea rápida 1 iniciada a {start_time:.6f}")
     
     with stream_fast_1:
-        """mask_max_cluster, fila_interes = cmeeans_3.fcm(resized_image, 3)  
+        mask_max_cluster, fila_interes = cmeeans_3.fcm(resized_image, 3)  
         combined_image, contour_image = utils.hacer_mascara(mask_max_cluster, fila_interes)
-        fast_result_1 = utils.segment_and_identify_objects(combined_image, contour_image, combined_image)
+        lista1, constante = utils.segment_and_identify_objects(combined_image, contour_image, combined_image)
+        lista_completa.extend(lista1)
     
-    stream_fast_1.synchronize()"""
+    stream_fast_1.synchronize()
     end_time = time.time()
     print(f"Tarea rápida 1 finalizada a {end_time:.6f}, duración: {end_time - start_time:.6f} segundos")
     task_times.append(("Tarea rápida 1", start_time, end_time))
@@ -70,26 +72,29 @@ def fast_task_2():
     start_time = time.time()
     print(f"Tarea rápida 2 iniciada a {start_time:.6f}")
     
-    with stream_fast_2:
-        """mask_max_cluster, fila_interes = cmeeans_3.fcm(resized_image, 4)  
+    """with stream_fast_2:
+        mask_max_cluster, fila_interes = cmeeans_3.fcm(resized_image, 4)  
         combined_image, contour_image = utils.hacer_mascara(mask_max_cluster, fila_interes)
-        fast_result_2 = utils.segment_and_identify_objects(combined_image, contour_image, combined_image)
+        lista2, constante = utils.segment_and_identify_objects(combined_image, contour_image, combined_image)
+        lista_completa.extend(lista2)"""
     
-    stream_fast_2.synchronize()"""
+    stream_fast_2.synchronize()
     end_time = time.time()
     print(f"Tarea rápida 2 finalizada a {end_time:.6f}, duración: {end_time - start_time:.6f} segundos")
     task_times.append(("Tarea rápida 2", start_time, end_time))
+    
 
 def fast_task_3():
     start_time = time.time()
     print(f"Tarea rápida 3 iniciada a {start_time:.6f}")
     
-    with stream_fast_3:
-        """h, fila_interes = filters.filter_h(resized_image)
+    """with stream_fast_3:
+        h, fila_interes = filters.filter_h(resized_image)
         combined_image, contour_image = utils.hacer_mascara(h, fila_interes)
-        fast_result_3 = utils.segment_and_identify_objects(combined_image, contour_image, combined_image)"""
+        lista3, constante = utils.segment_and_identify_objects(combined_image, contour_image, combined_image)
+        lista_completa.extend(lista3)
     
-    stream_fast_3.synchronize()
+    stream_fast_3.synchronize()"""
     end_time = time.time()
     print(f"Tarea rápida 3 finalizada a {end_time:.6f}, duración: {end_time - start_time:.6f} segundos")
     task_times.append(("Tarea rápida 3", start_time, end_time))
@@ -99,9 +104,14 @@ def fast_task_4():
     print(f"Tarea rápida 4 iniciada a {start_time:.6f}")
     
     with stream_fast_4:
+        
         h, fila_interes = filters.filter_s(resized_image)
         combined_image, contour_image = utils.hacer_mascara(h, fila_interes)
-        fast_result_4 = utils.segment_and_identify_objects(combined_image, contour_image, combined_image)
+        lista4, constante = utils.segment_and_identify_objects(combined_image, contour_image, combined_image)
+        lista_completa.extend(lista4)
+        constante = 15
+        print("lista",lista_completa)
+ 
     
     stream_fast_4.synchronize()
     end_time = time.time()
@@ -130,3 +140,9 @@ thread_fast_4.join()
 print("Resumen de tiempos:")
 for task, start, end in task_times:
     print(f"{task}: {start:.6f} - {end:.6f}, duración: {end - start:.6f} segundos")
+    constante = 15
+    print(lista_completa)
+    resultado = modelo_difuso.detectar_objeto_principal(lista_completa, constante)
+
+
+

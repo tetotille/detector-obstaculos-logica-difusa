@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rules Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet" />
+    <style>
+        body {
+        background: #ffe4c4;
+        }
+
+        .code-block {
+            position: relative;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding-inline: 10em;
+        }
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 1px solid black;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .black {
+            background-color: black;
+        }
+        .white {
+            background-color: white;
+        }
+
+        .container {
+            display:flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px
+        }
+        input {
+            max-width: 30px;
+        }
+    </style>
+    <script>
+        const $ = selector => document.querySelector(selector);
+        const $$ = selector => document.querySelectorAll(selector);
+
+        let matrix = [];
+        let pythonCode = "import numpy as np\n\n";
+        let index = 0;
+
+        function generateGraphic(){
+            let x = $('#x').value;
+            let y = $('#y').value;
+
+            matrix = Array.from({ length: y }, () => Array(x).fill(0));
+
+            let graphic = $(".rules");
+            graphic.innerHTML = `<table></table>`;
+            let table = graphic.querySelector('table');
+
+            for (let i = 0; i < y; i++) {
+                let row = document.createElement('tr');
+                for (let j = 0; j < x; j++) {
+                    matrix[i][j] = 0;
+                    let cell = document.createElement('td');
+                    cell.classList.add('cell', 'white');
+                    cell.addEventListener('click', () => toggleCell(i, j, cell));
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+        }
+
+        function toggleCell(i, j, cell) {
+            if (matrix[i][j] === 0) {
+                matrix[i][j] = 1;
+                cell.classList.remove('white');
+                cell.classList.add('black');
+            } else {
+                matrix[i][j] = 0;
+                cell.classList.remove('black');
+                cell.classList.add('white');
+            }
+        }
+
+        function createRules() {
+            let code = $(".code-block code");
+            index = index + 1;
+            pythonCode = pythonCode + `matrix${index} = np.array([\n${matrix.map(row => `  [${row.join(', ')}]`).join(',\n')}\n])\n`;
+            code.textContent = pythonCode;
+        }
+
+        function copyCode() {
+            const code = document.getElementById('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Código copiado al portapapeles');
+            }).catch(err => {
+                console.error('Error al copiar el código: ', err);
+            });
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-python.min.js"></script>
+     
+</head>
+<body>
+    <h1>Rules Generator</h1>
+    <div class="container">
+        <div class="params">
+            <input type="number" name="x" id="x">
+            X
+            <input type="number" name="y" id="y">
+            <button onclick="generateGraphic()">Generate</button>
+        </div>
+        <div class="rules">
+        </div>
+        <div>
+            <button onclick="createRules()">Create Rules</button>
+        </div>
+        <div class="code-block">
+            <pre><code class="language-python" id="code"></code>
+            </pre>
+            <button class="copy-button" onclick="copyCode()">Copy</button>
+        </div>
+    </div>
+</body>
+</html>

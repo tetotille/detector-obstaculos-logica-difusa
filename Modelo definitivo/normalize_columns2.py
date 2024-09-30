@@ -1,6 +1,5 @@
 import cupy as cp
 
-
 def normalize_power_columns(matrix, power):
     """
     Normalize columns of the matrix with the given power.

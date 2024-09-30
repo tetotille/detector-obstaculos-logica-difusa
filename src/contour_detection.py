@@ -1,98 +1,29 @@
-import cv2
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
-from os.path import dirname, abspath, join
-from sys import argv
-import matplotlib.pyplot as plt
-from skfuzzy import control as ctrl
-from src.detector_hsv.hsv_filter import filter_h
+import cv2
 
-# Definir las funciones de membresía para los píxeles vecinos y el píxel central
 def define_membership_functions(image):
-    x,y = image.shape
-    #imagen=cv2.resize(image, (200, int(x*200/y)))
-    #gray=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    min_pixel = np.min(image)/256
-    max_pixel = np.max(image)/256
-    print(min_pixel, max_pixel)
-    universe = np.arange(min_pixel, max_pixel, (1/256))  # Normalización entre 0 y 1
-    valor_medio = ((min_pixel + max_pixel)/2)
-    print(valor_medio)
-    print(universe)
-    #print(gray[2, 100], gray[2, 99], gray[2, 101], gray[1, 99], gray[1, 100], gray[1, 101], gray[3, 99], gray[3, 100], gray[3,101])
-    universe2= (np.arange(0, 256)/256)
-    # Crear las variables difusas usando ctrl.Antecedent y ctrl.Consequent
-    # Estas 9 variables indican los 9 pixeles que existen alrededor del elegido son las 9 variables de pixeles difusos
-    C1 = ctrl.Antecedent(universe, 'C1')
-    C2 = ctrl.Antecedent(universe, 'C2')
-    C3 = ctrl.Antecedent(universe, 'C3')
-    C4 = ctrl.Antecedent(universe, 'C4')
-    C5 = ctrl.Antecedent(universe, 'C5')
-    C6 = ctrl.Antecedent(universe, 'C6')
-    C7 = ctrl.Antecedent(universe, 'C7')
-    C8 = ctrl.Antecedent(universe, 'C8')
-    C9 = ctrl.Antecedent(universe, 'C9')
+    min_pixel = np.min(image) 
+    max_pixel = np.max(image) 
+    universe2 = np.arange(0, 256)/256 
+    print(max_pixel)
+    print(min_pixel)
 
-    # Esto sería la inicialización de las funciones de pertenencia
-    for C in [C1, C2, C3, C4, C5, C6, C7, C8, C9]:
-        C.automf(3, names=['low','medium', 'high']) # Dividir en 2 funciones de membresía
+    antecedents = [ctrl.Antecedent(universe2, f'C{i}') for i in range(1, 10)]
+    for C in antecedents:
+        C['low'] = fuzz.trimf(universe2, [0, 0, 0.5])
+        #C['medium'] = fuzz.trimf(universe2, [max_pixel / 3, (min_pixel + max_pixel) / 2, max_pixel * 2 / 3])
+        C['medium'] = fuzz.trimf(universe2, [max_pixel / 3, (min_pixel + max_pixel) / 2, max_pixel * 2 / 3])
+        C['high'] = fuzz.trimf(universe2, [0.5, 1, 1])
 
-    # Definir el consecuente (edge) con un rango adecuado
     edge = ctrl.Consequent(universe2, 'edge')
-
-    # Definir funciones de membresía para cada vecino
-    for C in [C1, C2, C3, C4, C5, C6, C7, C8, C9]:
-        C['low'] = fuzz.trimf(universe, [min_pixel, min_pixel, 0.5])
-        C['medium'] = fuzz.trimf(universe, [(max_pixel/3), valor_medio, max_pixel*(2/3)])
-        C['high'] = fuzz.trimf(universe, [0.5, max_pixel, max_pixel])
-    
     edge['low'] = fuzz.trimf(universe2, [0, 0, 0.5])
-    edge['high']= fuzz.trimf(universe2, [0.5, 1, 1])
+    edge['high'] = fuzz.trimf(universe2, [0.5, 1, 1])
     edge['yes'] = fuzz.trimf(universe2, [0.5, 0.5, 0.5])
-    
-        # Definir el universo de discurso
-    universe = np.arange(0, 1.01, 0.01)
-    universe2 = np.arange(0, 1.01, 0.01)
 
-    ##### Se hace una copia exclusivamente para dibujar y ver las funciones de membresía #####
-    # Definir las funciones de membresía
-    C_low = fuzz.trimf(universe, [0, 0, (1/3)])
-    C_medium = fuzz.trimf(universe, [(1/3), 0.5, (2/3)])
-    C_high = fuzz.trimf(universe, [(2/3), 1, 1])
+    return antecedents, edge
 
-    edge_low = fuzz.trimf(universe2, [0, 0, 0.5])
-    edge_high= fuzz.trimf(universe2, [0.5, 1, 1])
-    edge_yes = fuzz.trimf(universe2, [0.5, 0.5, 0.5])
-
-    # Graficar las funciones de membresía
-    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
-
-    # Funciones de membresía para C (low y high)
-    ax[0].plot(universe, C_low, 'b', linewidth=1.5, label='Low')
-    ax[0].plot(universe, C_medium, 'c', linewidth=1.5, label='Low')
-    ax[0].plot(universe, C_high, 'r', linewidth=1.5, label='High')
-    ax[0].set_title('Funciones de Membresía para C')
-    ax[0].legend()
-
-    # Funciones de membresía para edge (no y yes)
-    ax[1].plot(universe2, edge_low, 'b', linewidth=1.5, label='No')
-    ax[1].plot(universe2, edge_yes, 'r', linewidth=1.5, label='Yes')
-    ax[1].plot(universe2, edge_high, 'y', linewidth=1.5, label='Yes')   
-    ax[1].set_title('Funciones de Membresía para Edge')
-    ax[1].legend()
-
-    plt.tight_layout()
-    plt.show()
-    return C1, C2, C3, C4, C5, C6, C7, C8, C9, edge
-
-def calculate_membership_values(fuzzy_image, membership_functions):
-    membership_values = []
-    for func in membership_functions:
-        membership_values.append(fuzz.interp_membership(fuzzy_image, func.universe, func.mf))
-    return np.array(membership_values)
-
-# Definir las reglas difusas
 def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
     rule1 = ctrl.Rule(C1['high'] & C3['high'] & C5['high'] & 
                       C2['high'] & C4['high'] & C6['high'] & 
@@ -761,20 +692,13 @@ def define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge):
     
     return rules
 
+def calculate_membership_values(value, func):
+    membership_values = {}
+    for label in func.terms:
+        membership_values[label] = fuzz.interp_membership(func.universe, func[label].mf, value)
+    return membership_values
 
-
-# Crear el sistema de control difuso
-def create_fuzzy_system(image):
-    C1, C2, C3, C4, C5, C6, C7, C8, C9, edge = define_membership_functions(image)
-    rules = define_rules(C1, C2, C3, C4, C5, C6, C7, C8, C9, edge)
-    
-    edge_ctrl = ctrl.ControlSystem(rules)
-    edge_detect = ctrl.ControlSystemSimulation(edge_ctrl)
-    
-    return edge_detect
-
-# Aplicar las reglas difusas a la imagen
-def apply_fuzzy_rules_to_image(fuzzy_image, edge_detect):
+def apply_fuzzy_rules_to_image(fuzzy_image, edge_ctrl, membership_functions):
     rows, cols = fuzzy_image.shape
     edge_image = np.zeros((rows, cols), dtype=float)
     
@@ -783,111 +707,60 @@ def apply_fuzzy_rules_to_image(fuzzy_image, edge_detect):
         (0, -1),  (0, 0),  (0, 1),  
         (1, -1),  (1, 0),  (1, 1)   
     ]
-    
-    for i in range(1, rows-1):
-        print(f"Procesando: {(i*cols)/(cols*rows)*100}%     ",end="\r")
-        for j in range(1, cols-1):
-            neighbor_values = [fuzzy_image[i+di, j+dj] for di, dj in neighbors]   
-            edge_detect.input['C1'] = neighbor_values[0]
-            # print(i)
-            # print(j)
-            # print(neighbor_values[0])
-            edge_detect.input['C2'] = neighbor_values[1]
-            # print(neighbor_values[1])
-            edge_detect.input['C3'] = neighbor_values[2]
-            # print(neighbor_values[2])
-            edge_detect.input['C4'] = neighbor_values[3]
-            # print(neighbor_values[3])
-            edge_detect.input['C5'] = neighbor_values[4 ]
-            # print(neighbor_values[4])
-            edge_detect.input['C6'] = neighbor_values[5]
-            # print(neighbor_values[5])
-            edge_detect.input['C7'] = neighbor_values[6]
-            # print(neighbor_values[6])
-            edge_detect.input['C8'] = neighbor_values[7]
-            # print(neighbor_values[7])
-            edge_detect.input['C9'] = neighbor_values[8]
-            # print(neighbor_values[8])
+
+    edge_simulation = ctrl.ControlSystemSimulation(edge_ctrl)
+
+    for i in range(1, rows - 1):
+        print(f"Procesando: {(i * cols) / (cols * rows) * 100:.2f}%     ", end="\r")
+        for j in range(1, cols - 1):
+            neighbor_values = [fuzzy_image[i + di, j + dj] for di, dj in neighbors]
+            membership_values_list = [calculate_membership_values(value, membership_functions[idx]) for idx, value in enumerate(neighbor_values)]
+
+            # Ajustar las entradas para la simulación según los valores de membresía calculados
+            for idx, membership_values in enumerate(membership_values_list):
+                max_label = max(membership_values, key=membership_values.get)
+                if max_label == 'high':
+                    fuzzy_image[i + neighbors[idx][0], j + neighbors[idx][1]] = 1
+                elif max_label == 'medium':
+                    fuzzy_image[i + neighbors[idx][0], j + neighbors[idx][1]] = 0.5
+                else:
+                    fuzzy_image[i + neighbors[idx][0], j + neighbors[idx][1]] = 0
+
+            # Configurar las entradas para la simulación después de ajustar la imagen difusa
+            for idx in range(9):
+                di, dj = neighbors[idx]
+                edge_simulation.input[f'C{idx+1}'] = fuzzy_image[i + di, j + dj]
 
             try:
-                edge_detect.compute()            
+                edge_simulation.compute()
+                edge_value = edge_simulation.output['edge']
+                edge_image[i, j] = edge_value
             except Exception as e:
                 print(f"Error en la posición ({i}, {j}): {e}\n\n")
-                #edge_image[i, j] =  fuzzy_image[i, j]
-                edge_image[i, j] =  0
+                edge_image[i, j] = 0
                 continue
-            edge_image[i,j] = edge_detect.output["edge"] 
-        # if edge_detect.output['edge'] == 0.5:  # Si es 'yes'
-        #     edge_image[i, j] = 0.5 
-        # elif edge_detect.output['edge'] > 0.5: 
-        #     edge_image[i, j] = 1
-        # elif edge_detect.output['edge'] < 0.5:
-        #     edge_image[i, j] = 0
-                  
+
     return edge_image
 
-# Función para cargar una imagen desde la computadora
-def load_image(file_path):
-    image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
-    return image
+def load_image(image):
+    # Convertir la imagen a escala de grises
+    grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return grayscale_image
 
-# Función principal para cargar imagen, aplicar detección de bordes difusa y otros análisis
-def main():
-    if len(argv) > 1:
-        filename = join(dirname(dirname(abspath(__file__))), f"img/{argv[1]}")
-    else:
-        filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
-    image=cv2.imread(filename)
-    x,y,a = image.shape
-    #image2=filter_h(image)
-    imagen=cv2.resize(image, (200, int(x*200/y)))
-    gray=cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
-    
-    cv2.imshow('Original Image', gray)
-    cv2.waitKey(0)
+def process_image(image):
+    image = load_image(image)
+    x, y = image.shape
+    resized_image = cv2.resize(image, (200, int(x * 200 / y)))
 
-    # Aplicar detección de bordes difusa
-    fuzzy_image = gray.astype(float) / 256.00000000  # Normalizar la imagen entre 0 y 1
-    edge_detect = create_fuzzy_system (gray)
-    edge_image = apply_fuzzy_rules_to_image (fuzzy_image, edge_detect)
-    
-    #print(edge_image)
+    fuzzy_image = resized_image.astype(float) / 256.0  # Normalizar la imagen entre 0 y 1
+
+    antecedents, edge = define_membership_functions(fuzzy_image)
+    rules = define_rules(*antecedents, edge)
+
+    edge_ctrl = ctrl.ControlSystem(rules)
+    edge_image = apply_fuzzy_rules_to_image(fuzzy_image, edge_ctrl, antecedents)
     edge_image_uint8 = (edge_image * 255).astype(np.uint8)
-    print(edge_image_uint8)
-    # Definir el valor umbral
-    umbral = 127  # Puedes ajustar este valor según sea necesario
-    tono_deseado = 0.5
 
-    # Crear una máscara para seleccionar los píxeles con el valor deseado
-    umbral_inferior = tono_deseado-(1/255)   # Ajusta este valor según sea necesario
-    umbral_superior = tono_deseado+(1/255)   # Ajusta este valor según sea necesario
-    mascara = cv2.inRange(edge_image_uint8, umbral_inferior, umbral_superior)
-
-    # Crear una imagen para resaltar los píxeles seleccionados
-    imagen_resaltada = np.zeros_like(edge_image_uint8)
-    imagen_resaltada[mascara > 0] = 1  # Resaltar con blanco
-
-    # Convertir la imagen resaltada al rango [0, 255]
-    imagen_resaltada = (imagen_resaltada * 255).astype(np.uint8)
-
-    # Aplicar el umbral negro
     _, imagen_umbral = cv2.threshold(edge_image_uint8, 1, 255, cv2.THRESH_BINARY)
+    return imagen_umbral
 
-    # Suavizar la máscara de contornos
-    mask_smooth = cv2.GaussianBlur(imagen_umbral, (5, 5), 0)
-
-# Detectar contornos
-    #contours, _ = cv2.findContours(mask_smooth, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Mostrar resultados
-    # cv2.imshow('Original Image', image)
-    #cv2.imshow('Fuzzy Edge Detected Image', mask_smooth)  # Escalar a 0-255 para visualizar
-    cv2.imshow('Solo contorno', edge_image_uint8)
-    cv2.waitKey(0)
-    cv2.imwrite("tes.jpeg",imagen_umbral)
-    cv2.imwrite("filename.png", imagen_umbral)
-    cv2.destroyAllWindows()
-
-# Ruta a la imagen
-
-main() 

@@ -8,22 +8,44 @@ from utils import crop_horizontal
 from src.detector_horizonte.horizonte_mar_rojo_cielo_azul import detectar_horizonte
 
 def filter_h(img):
-    #img = cv2.imread(img_path,cv2.IMREAD_COLOR)
+     #img = cv2.imread(img_path,cv2.IMREAD_COLOR)
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     
     h,_,_ = cv2.split(img_hsv)
     
     h = 255 - h
 
-    hist, bins = np.histogram(h.ravel(), 256, [0, 256])
+    num_bins = 256
+    fuzzy_hist = np.zeros(num_bins)
 
-    max_index = np.argmax(hist)
-    most_frequent_intensity = bins[max_index]
+    x_intensities = np.arange(0, 256, 1)
+    
+    for i in range(num_bins):
+        # Crear la función de pertenencia trapezoidal para el intervalo
+        if i == 0:
+            # Trapezoide inicial
+            mf = fuzz.trapmf(x_intensities, [0, 0, 1, 2])
+
+        elif i == num_bins - 1:
+            # Trapezoide final
+            mf = fuzz.trapmf(x_intensities, [254, 255, 255, 255])
+
+        else:
+            # Trapezoide intermedio
+            mf = fuzz.trapmf(x_intensities, [i-1, i, i+1, i+2])
+        
+        # Calcular el grado de pertenencia de cada píxel a este intervalo
+        membership_values = fuzz.interp_membership(x_intensities, mf, h)
+        
+        # Sumar los valores de pertenencia para formar el histograma difuso
+        fuzzy_hist[i] = np.sum(membership_values)
+    
+    max_index = np.argmax(fuzzy_hist)
+    most_frequent_intensity = x_intensities[max_index]
 
     # Se asigna un rango de 20 pixeles entorno a este
     h_filtrada = np.copy(h)
     h_filtrada[(h >= most_frequent_intensity-10) & (h <= most_frequent_intensity+10)] = 0
-
     return h_filtrada
 
 def filter_s(img_path):
@@ -44,6 +66,88 @@ def filter_s(img_path):
     s_filtrada[(s >= most_frequent_intensity-10) & (s <= most_frequent_intensity+10)] = 0
 
     return s_filtrada
+
+import cupy as cp
+
+import cupy as cp
+
+def segment_and_identify_objects(image_gray, mask_binary, original, block_size=15, threshold_area=155):
+    # Paso 1: Analizar bloques de block_size x block_size píxeles
+    height, width, _ = image_gray.shape
+    
+    # Crear grids de índices para recorrer en bloques
+    y_indices, x_indices = cp.meshgrid(cp.arange(block_size, height - block_size, block_size),
+                                       cp.arange(block_size, width - block_size, block_size),
+                                       indexing='ij')
+
+    # Generar las coordenadas de los bloques de forma compatible con el broadcasting
+    y_offsets = cp.arange(block_size).reshape(1, block_size, 1)
+    x_offsets = cp.arange(block_size).reshape(block_size, 1, 1)
+
+    # Reestructurar las imágenes para aplicar operaciones en bloques
+    block_images = image_gray[y_indices[:, :, None] + y_offsets,
+                              x_indices[:, None, :] + x_offsets]
+
+    block_masks = mask_binary[y_indices[:, :, None] + y_offsets,
+                              x_indices[:, None, :] + x_offsets]
+    
+    # Contar los píxeles negros en cada bloque
+    black_pixel_counts = cp.sum(cp.all(block_images == cp.array([0, 0, 0]), axis=-1), axis=(2, 3))
+
+    # Detectar píxeles verdes en la máscara
+    green_pixel_masks = (block_masks[:, :, :, 1] > 100) & (block_masks[:, :, :, 0] < 50) & (block_masks[:, :, :, 2] < 50)
+    green_pixel_counts = cp.sum(green_pixel_masks, axis=(2, 3))
+
+    # Condición para identificar bloques
+    valid_blocks = (black_pixel_counts > threshold_area) & (green_pixel_counts <= 40)
+
+    # Procesar bloques adyacentes para verificar si cumplen con las condiciones
+    # Crear un padding alrededor de la matriz para manejar bordes
+    padded_valid_blocks = cp.pad(valid_blocks, ((1, 1), (1, 1)), mode='constant', constant_values=False)
+
+    # Desplazamientos para los vecinos (arriba, abajo, izquierda, derecha, y diagonales)
+    shifts = [
+        (0, 1),  # derecha
+        (1, 1),  # diagonal abajo derecha
+        (-1, 1), # diagonal arriba derecha
+        (0, -1), # izquierda
+        (1, -1), # diagonal abajo izquierda
+        (-1, -1),# diagonal arriba izquierda
+        (1, 0),  # abajo
+        (-1, 0)  # arriba
+    ]
+    
+    # Inicializar una matriz para almacenar si el bloque tiene vecinos válidos
+    adyacente_verificado = cp.zeros_like(valid_blocks, dtype=cp.bool_)
+
+    for dy, dx in shifts:
+        # Comparar bloques válidos con sus vecinos desplazados
+        vecinos = padded_valid_blocks[1 + dy:height//block_size + 1 + dy, 1 + dx:width//block_size + 1 + dx]
+        adyacente_verificado |= vecinos  # Si cualquier vecino es válido, marcarlo
+
+    # Obtener los bloques que son válidos y tienen al menos un vecino válido
+    final_valid_blocks = valid_blocks & adyacente_verificado
+
+    # Aplanar los índices válidos
+    valid_y_indices, valid_x_indices = cp.where(final_valid_blocks)
+    
+    # Inicializar rectángulos detectados
+    rects = [(x_indices[y, x], y_indices[y, x], block_size, block_size) for y, x in zip(valid_y_indices, valid_x_indices)]
+
+    # Marcar los rectángulos encontrados en la imagen original
+    for rect in rects:
+        x, y, w, h = rect
+        original[y:y+h, x:x+w, :] = cp.array([0, 0, 255])  # Rojo
+    
+    # Convertir a un formato que pueda mostrar la imagen
+    image_to_show = cp.asnumpy(original)
+
+    # Mostrar la imagen con los bloques marcados
+    cv2.imshow('Segmented Image with Detected Objects', image_to_show)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Usar la función con la ruta de la imagen, la máscara y la imagen original en forma de array de CuPy
 if __name__ == "__main__":
 
     # Ruta a la imagen
@@ -59,11 +163,11 @@ if __name__ == "__main__":
     imag=cv2.resize(img, (200, int(x*200/y)))
     ima, fila_interes = detectar_horizonte(imag)
     imagen=cv2.resize(img, (200, int(x*200/y)))
-    _, image3 =crop_horizontal(filter_s(imagen), fila_interes)
+    _, image3 =crop_horizontal(filter_h(imagen), fila_interes)
     print(fila_interes)
 
     # Crea una imagen con transparencia (canal alfa)
-    mask=cv2.imread("tes.jpeg", cv2.IMREAD_GRAYSCALE)
+    mask=cv2.imread("imagen_umbral.png", cv2.IMREAD_GRAYSCALE)
     x,y = mask.shape
     _, mask2=crop_horizontal(mask, fila_interes)
     # Leer la imagen original (en color)
@@ -86,6 +190,7 @@ if __name__ == "__main__":
     height1, width1 = mask2.shape
     print(height, width, channels,height1, width1 )
     # Verificar las dimensiones de ambas imágenes
+
     if (height, width) != (height1, width1):
         print("Redimensionando la máscara para que coincida con las dimensiones de la imagen original.")
         mask2 = cv2.resize(mask2, (width, height))
@@ -132,118 +237,5 @@ if __name__ == "__main__":
 
     # Convertir la imagen a escala de grises
     image_gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
-    def segment_and_identify_objects(image_gray, mask_binary, block_size=15, threshold_area=155):
-        #lim_maximo_155
-    # Paso 2: Analizar bloques de 12x12 píxeles
-        height, width, chanel = image_gray.shape
-        rects = []  # Lista para almacenar los rectángulos detectados
-        for y in range(0, height, block_size):
-            for x in range(0, width, block_size):
-            # Extraer el bloque de la imagen y de la máscara
-                block_image = image_gray[y:y+block_size, x:x+block_size]
-                block_mask = mask_binary[y:y+block_size, x:x+block_size]
-
-                # Contar los píxeles negros en el bloque de la imagen en todos los canales
-                black_pixel_count = np.sum(np.all(block_image == [0, 0, 0], axis=-1))
-
-            # Verde: canal verde alto y canales rojo y azul bajos
-                green_pixels = (block_mask[:, :, 1] > 100) & (block_mask[:, :, 0] < 50) & (block_mask[:, :, 2] < 50)
-                green_pixel_count = np.sum(green_pixels)
-                #print(green_pixel_count)
-                #qprint(black_pixel_count)
-                # Si el bloque contiene suficientes píxeles negros y tiene contorno en la máscara, marcar el bloque
-                if black_pixel_count > threshold_area and green_pixel_count> 70:
-                    #lim_max_70_green
-                    rects.append((x, y, block_size, block_size))  # Almacena el 
-        n=len(rects)
-        print(n)
-    # Paso 3: Detectar y marcar rectángulos alineados horizontalmente que cubren toda la fila
-        blocks_per_row = int(width // block_size)  # Número de bloques que caben en una fila
-        blocks_per_column = int(height // block_size)
-        rects_by_column= {}
-        rects_by_row = {}
-        for rect in rects:
-            x, y, w, h = rect
-            if x not in rects_by_column:
-                rects_by_column[x] = []
-            rects_by_column[x].append(rect)
-        for rect1 in rects:
-            x, y, w, h = rect1
-            if y not in rects_by_row:
-                rects_by_row[y] = []
-            rects_by_row[y].append(rect1)
-            # Criterio: número mínimo de rectángulos para marcar la columna en amarillo
-    # Función para marcar filas en azul
-        def mark_row_blue(row_rects):
-            for rect in row_rects:
-                x, y, w, h = rect
-                cv2.rectangle(original, (x, y), (x + w, y + h), (255, 0, 0), 2)  # Azul
-
-        # Función para marcar columnas en amarillo
-        def mark_column_yellow(column_rects):
-            for rect in column_rects:
-                x, y, w, h = rect
-                cv2.rectangle(original, (x, y), (x + w, y + h), (0, 255, 255), 2)  # Amarillo
-
-        # Función para marcar rectángulos en rojo
-        def mark_rect_red(rect):
-            x, y, w, h = rect
-            cv2.rectangle(original, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Rojo
-
-        # Verificar y marcar filas completas
-        for y, row_rects in rects_by_row.items():
-            row_rects.sort()
-            if len(row_rects) == blocks_per_row:
-                first_rect_x = row_rects[0][0]
-                last_rect_x = row_rects[-1][0] + row_rects[-1][2]
-                mark_row_blue(row_rects)
-
-                # Verificar y marcar la fila superior si está alineada
-                top_y = y - row_rects[0][3]
-                if top_y in rects_by_row:
-                    top_row_rects = rects_by_row[top_y]
-                    top_first_x = top_row_rects[0][0]
-                    top_last_x = top_row_rects[-1][0] + top_row_rects[-1][2]
-                    if (top_first_x <= first_rect_x <= top_last_x) or (top_first_x <= last_rect_x <= top_last_x):
-                        mark_row_blue(top_row_rects)
-
-                # Verificar y marcar la fila inferior si está alineada
-                bottom_y = y + row_rects[0][3]
-                if bottom_y in rects_by_row:
-                    bottom_row_rects = rects_by_row[bottom_y]
-                    bottom_first_x = bottom_row_rects[0][0]
-                    bottom_last_x = bottom_row_rects[-1][0] + bottom_row_rects[-1][2]
-                    if (bottom_first_x <= first_rect_x <= bottom_last_x) or (bottom_first_x <= last_rect_x <= bottom_last_x):
-                        mark_row_blue(bottom_row_rects)
-
-        # Verificar y marcar columnas completas
-        for column_x, column_rects in rects_by_column.items():
-            if len(column_rects) == blocks_per_column:
-                mark_column_yellow(column_rects)
-
-        # Marcar el resto de los rectángulos en rojo
-        for rect in rects:
-            x, y, w, h = rect
-            color = original[y, x]
-            if (color == [0, 0, 255]).all() or (color == [0, 255, 255]).all() or (color == [255, 0, 0]).all():
-                continue
-            else:
-                mark_rect_red(rect)
-
-        # Verificar y marcar columnas completas (incluso si ya están marcadas en azul)
-        for column_x, column_rects in rects_by_column.items():
-            if len(column_rects) == blocks_per_column:
-                for rect in column_rects:
-                    x, y, w, h = rect
-                    color = original[y, x]
-                    if (color == [255, 0, 0]).all():  # Si está marcado en azul
-                        cv2.rectangle(original, (x, y), (x + w, y + h), (0, 255, 255), 2)  # Amarillo
-
-
-        # Mostrar la imagen con los bloques marcados
-        cv2.imshow('Segmented Image with Detected Objects', image_gray)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-    # Usar la función con la ruta de la imagen y la máscara
+# Usar la función con la ruta de la imagen y la máscara
     segment_and_identify_objects(original, contour_image)

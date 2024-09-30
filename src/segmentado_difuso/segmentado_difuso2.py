@@ -17,7 +17,7 @@ image2 = cv2.imread(filename)
 x, y, a = image2.shape
 image_np = cv2.resize(image2, (200, int(x*200/y)))  # Redimensionar para simplificar el procesamiento
 height3, width3, canal = image_np.shape
-#print(height3, width3)
+print(height3, width3)
 
 # Paso 2: Convertir la imagen a un formato de datos
 # Reshape la imagen para que cada píxel sea una fila y los valores RGB sean las columnas
@@ -26,24 +26,17 @@ pixels = np.reshape(image_np, (-1, 3))
 # Normalizar los valores de los píxeles
 pixels = pixels / 255.0
 
-print("\npixeles:", pixels)
-
 # Paso 3: Aplicar FCM
-n_clusters = 3  # Número de clusters
-
-start_time = time.perf_counter()
+n_clusters = 4  # Número de clusters
 cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(
     pixels.T, n_clusters, 100, error=0.00005, maxiter=100000, init=None)
-end_time = time.perf_counter()
-elapsed_time = end_time - start_time
-print(f"Tiempo de ejecución hasta el primer resultado: {elapsed_time:.4f} segundos")
 
 # Obtener el índice del cluster más probable para cada píxel
 cluster_membership = np.argmax(u, axis=0)
 
 # Paso 4: Reconstruir la imagen segmentada
 segmented_image = np.reshape(cluster_membership, (image_np.shape[0], image_np.shape[1])).astype(np.uint8)
-#print(segmented_image)
+print(segmented_image)
 segmented_image_normalized = (segmented_image * (255 / segmented_image.max())).astype(np.uint8)
 
 # Convertir el array de numpy normalizado a un objeto de imagen de Pillow
@@ -56,7 +49,7 @@ segmented_image_normalized = (segmented_image_normalized * 255).astype(np.uint8)
 imagen, fila_interes = detectar_horizonte(image_np)
 
 _, image3 =crop_horizontal(segmented_image, fila_interes)
-#print(fila_interes)
+print(fila_interes)
 # Calcular la frecuencia de cada cluster dentro del área de interés
 unique, counts = np.unique(image3, return_counts=True)
 cluster_frequencies = dict(zip(unique, counts))
@@ -83,12 +76,9 @@ plt.imshow(mask_max_cluster)
 plt.title(f'Imagen con Cluster {max_cluster} Debajo de la Fila {fila_interes}')
 plt.show()
 
-
-
 ### Parte del contorno
 #print(mask_max_cluster)
 original = (mask_max_cluster * 255).astype(np.uint8)
-
 
 # Crea una imagen con transparencia (canal alfa)
 
@@ -151,6 +141,7 @@ cv2.destroyAllWindows()
 
 # Convertir la imagen a escala de grises
 image_gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+
 def segment_and_identify_objects(image_gray, mask_binary, block_size=15, threshold_area=155):
     #lim_maximo_155
 # Paso 2: Analizar bloques de 12x12 píxeles

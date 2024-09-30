@@ -8,8 +8,8 @@ from skfuzzy import control as ctrl
 from skimage import io
 from sys import argv
 
-from fuzzy_detector import FuzzyDetector
-from hsv_filter import filter_h,filter_s
+from src.utils.fuzzy_detector import FuzzyDetector
+from src.detector_hsv.hsv_filter import filter_h,filter_s
 
 class ContDifDetector(FuzzyDetector):
     def __init__(self,**kwargs):

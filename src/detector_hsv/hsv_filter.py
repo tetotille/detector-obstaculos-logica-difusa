@@ -5,7 +5,7 @@ import numpy as np
 from os.path import dirname, abspath, join
 from sys import argv
 from utils import crop_horizontal
-from horizonte_mar_rojo_cielo_azul import detectar_horizonte
+from src.detector_horizonte.horizonte_mar_rojo_cielo_azul import detectar_horizonte
 
 def filter_h(img):
     #img = cv2.imread(img_path,cv2.IMREAD_COLOR)

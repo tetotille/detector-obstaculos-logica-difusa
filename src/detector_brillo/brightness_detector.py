@@ -7,7 +7,7 @@ from os.path import abspath,dirname,join
 from skfuzzy import control as ctrl
 from skimage import io
 from sys import argv
-from fuzzy_detector import FuzzyDetector
+from src.utils.fuzzy_detector import FuzzyDetector
 
 os.environ["PYOPENCL_ICD_KHR"] = "/usr/lib/x86_64-linux-gnu/intel-opencl/libigdrcl.so"
 

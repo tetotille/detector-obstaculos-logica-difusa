@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from object_detector import ObjectDetector
+from src.utils.object_detector import ObjectDetector
 from utils import aplicar_logica_difusa_posicion,aplicar_logica_difusa_pixeles
 
 class ColorDetector(ObjectDetector):

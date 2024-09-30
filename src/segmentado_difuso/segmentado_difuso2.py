@@ -5,7 +5,7 @@ from os.path import dirname, abspath, join
 from sys import argv
 from utils import crop_horizontal
 import time
-from horizonte_mar_rojo_cielo_azul import detectar_horizonte
+from src.detector_horizonte.horizonte_mar_rojo_cielo_azul import detectar_horizonte
 import cv2
 
 # Paso 1: Cargar la imagen

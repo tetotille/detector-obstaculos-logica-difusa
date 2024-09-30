@@ -6,7 +6,7 @@ from os.path import dirname, abspath, join
 from sys import argv
 import matplotlib.pyplot as plt
 from skfuzzy import control as ctrl
-from hsv_filter import filter_h
+from src.detector_hsv.hsv_filter import filter_h
 
 # Definir las funciones de membresía para los píxeles vecinos y el píxel central
 def define_membership_functions(image):

@@ -1,80 +1,72 @@
 import cupy as cp
-from collections import defaultdict
 
-# Función para calcular la distancia euclidiana entre los centros de los cuadrados
-def calcular_distancia(cuadro1, cuadro2):
-    x1, y1, l1 = cuadro1  # Cuadro1: (x, y, block_size)
-    x2, y2, l2 = cuadro2  # Cuadro2: (x, y, block_size)
+def obtener_centro(cuadrado):
+    """Recibe un cuadrado y calcula su centro en coordenadas."""
+    x1, y1, width, height = cuadrado
+    centro_x = x1 + width / 2
+    centro_y = y1 + height / 2
+    return cp.array([centro_x, centro_y])
 
-    # Calcular los centros de los dos cuadrados
-    centro1 = (x1 + l1 / 2, y1 + l1 / 2)
-    centro2 = (x2 + l2 / 2, y2 + l2 / 2)
+def distancia_centros(c1, c2):
+    """Calcula la distancia euclidiana entre dos centros de cuadrados."""
+    return cp.linalg.norm(c1 - c2)
 
-    # Calcular la distancia euclidiana entre los centros
-    distancia = cp.sqrt((centro1[0] - centro2[0])**2 + (centro1[1] - centro2[1])**2)
-    return distancia
-
-# Función para agrupar los cuadrados cercanos en base a una distancia umbral
 def agrupar_cuadrados(cuadrados, umbral_distancia):
-    grupos = defaultdict(list)  # Diccionario para almacenar los grupos de cuadrados
-    visitados = set()  # Set para llevar registro de los cuadrados ya procesados
-
-    # Convertir los cuadros de cupy.ndarray a tuplas hashables
-    cuadrados_hashables = [
-        (int(cuadro[0]), int(cuadro[1]), int(cuadro[2]))  # Convertir a tupla (x, y, block_size)
-        for cuadro in cuadrados
-    ]
-
-    # Función auxiliar para hacer agrupamiento mediante DFS (búsqueda en profundidad)
-    def agrupar_recursivo(cuadro_actual, grupo_actual):
-        grupo_actual.append(cuadro_actual)
-        visitados.add(tuple(cuadro_actual))  # Agregar a visitados como tupla
-
-        # Filtrar cuadrados que tienen las mismas coordenadas
-        x_actual, y_actual, _ = cuadro_actual
-        cuadrados_coincidentes = [
-            cuadro for cuadro in cuadrados_hashables
-            if (cuadro[0] == x_actual and cuadro[1] == y_actual) and cuadro not in visitados
-        ]
-
-        # Verificar distancia solo entre cuadrados coincidentes
-        for cuadro in cuadrados_coincidentes:
-            if calcular_distancia(cuadro_actual, cuadro) <= umbral_distancia:
-                agrupar_recursivo(cuadro, grupo_actual)
-
-    grupo_id = 0
-    # Iterar sobre todos los cuadrados
-    for cuadro in cuadrados_hashables:
-        if cuadro not in visitados:
-            grupo_actual = []
-            agrupar_recursivo(cuadro, grupo_actual)
-            grupos[grupo_id] = grupo_actual
-            grupo_id += 1
-
+    """Agrupa cuadrados que estén cercanos entre sí basándose en la distancia de sus centros."""
+    centros = [obtener_centro(cuadrado) for cuadrado in cuadrados]
+    grupos = []
+    
+    while centros:
+        grupo_actual = [cuadrados.pop(0)]  # Inicia con el primer cuadrado disponible
+        centro_actual = centros.pop(0)
+        
+        i = 0
+        while i < len(centros):
+            if distancia_centros(centro_actual, centros[i]) <= umbral_distancia:
+                grupo_actual.append(cuadrados.pop(i))
+                centros.pop(i)  # Eliminar el centro también para mantener el índice correcto
+            else:
+                i += 1
+        
+        grupos.append(grupo_actual)
+    
     return grupos
 
-# Función para verificar si hay coincidencias en un grupo
-def tiene_coincidencias(grupo):
-    coordenadas = [(cuadro[0], cuadro[1]) for cuadro in grupo]  # (x, y)
-    coincidencias = defaultdict(int)
-
-    # Contar coincidencias de cada coordenada
-    for coord in coordenadas:
-        coincidencias[coord] += 1
-
-    # Comprobar si hay al menos una coincidencia
-    return any(count > 1 for count in coincidencias.values())
-
-# Función principal para detectar el objeto principal
-def detectar_objeto_principal(cuadrados, umbral_distancia=50):
-    # Agrupar los cuadrados que estén lo suficientemente cerca
+def verificar_y_devolver_grupo_mayor(cuadrados, umbral_distancia):
+    """Verifica la coincidencia de cuadrados y agrupa, retornando el grupo más grande."""
+    if not cuadrados:
+        return None
+    
     grupos = agrupar_cuadrados(cuadrados, umbral_distancia)
     
-    # Validar grupos
-    grupos_validos = []
+    # Si no hay grupos, no retornar nada
+    if not grupos:
+        return None
     
-    for grupo in grupos.values():
-        if len(grupo) > 1 and tiene_coincidencias(grupo):
-            grupos_validos.append(grupo)
+    # Ordenar los grupos por tamaño
+    grupos_ordenados = sorted(grupos, key=len, reverse=True)
+    
+    # Comparar tamaños de los dos grupos más grandes
+    if len(grupos_ordenados) > 1 and len(grupos_ordenados[0]) == len(grupos_ordenados[1]):
+        return None  # Si hay un empate, no retornar nada
+    else:
+        grupo_mayor = grupos_ordenados[0]  # Retornar el grupo mayor
+        
+        # Devolver las coordenadas originales de los cuadrados coincidentes (sin duplicados)
+        coordenadas_unicas = set()
+        for cuadrado in grupo_mayor:
+            x1, y1, _, _ = cuadrado  # Obtener las coordenadas originales
+            coordenadas_unicas.add((x1.item(), y1.item()))  # Convertir a tupla de valores hashables
+        
+        return list(coordenadas_unicas)  # Retornar la lista de coordenadas únicas
 
-    # Condiciones para el caso de hasta 8 cuadrados...
+
+# Ejemplo de uso:
+"""cuadrados = [
+    (cp.array(120), cp.array(15), 15, 15),
+    (cp.array(120), cp.array(15), 15, 15),
+    (cp.array(150), cp.array(15), 15, 15),
+    # Agrega más cuadrados según sea necesario
+]
+
+umbral_distancia = 15"""  # Asumimos que si la distancia es igual al tamaño del bloque (15), son "cercanos"

@@ -19,18 +19,27 @@ def agrupar_cuadrados(cuadrados, umbral_distancia):
     grupos = defaultdict(list)  # Diccionario para almacenar los grupos de cuadrados
     visitados = set()  # Set para llevar registro de los cuadrados ya procesados
 
-    # Convertir los cuadros de numpy array a tuplas hashables
+    # Convertir los cuadros de cupy.ndarray a tuplas hashables
     cuadrados_hashables = [
-        (int(cuadro[0]), int(cuadro[1]), int(cuadro[2]))  # Asegúrate de que sean enteros
+        (int(cuadro[0]), int(cuadro[1]), int(cuadro[2]))  # Convertir a tupla (x, y, block_size)
         for cuadro in cuadrados
-    ]  # Convertir a tupla (x, y, block_size) asegurándose de que sean enteros
+    ]
 
     # Función auxiliar para hacer agrupamiento mediante DFS (búsqueda en profundidad)
     def agrupar_recursivo(cuadro_actual, grupo_actual):
         grupo_actual.append(cuadro_actual)
-        visitados.add(tuple(cuadro_actual))  # Convertir a tupla al agregar a visitados
-        for cuadro in cuadrados_hashables:
-            if cuadro not in visitados and calcular_distancia(cuadro_actual, cuadro) <= umbral_distancia:
+        visitados.add(tuple(cuadro_actual))  # Agregar a visitados como tupla
+
+        # Filtrar cuadrados que tienen las mismas coordenadas
+        x_actual, y_actual, _ = cuadro_actual
+        cuadrados_coincidentes = [
+            cuadro for cuadro in cuadrados_hashables
+            if (cuadro[0] == x_actual and cuadro[1] == y_actual) and cuadro not in visitados
+        ]
+
+        # Verificar distancia solo entre cuadrados coincidentes
+        for cuadro in cuadrados_coincidentes:
+            if calcular_distancia(cuadro_actual, cuadro) <= umbral_distancia:
                 agrupar_recursivo(cuadro, grupo_actual)
 
     grupo_id = 0
@@ -60,27 +69,12 @@ def tiene_coincidencias(grupo):
 def detectar_objeto_principal(cuadrados, umbral_distancia=50):
     # Agrupar los cuadrados que estén lo suficientemente cerca
     grupos = agrupar_cuadrados(cuadrados, umbral_distancia)
-
+    
     # Validar grupos
     grupos_validos = []
-
+    
     for grupo in grupos.values():
         if len(grupo) > 1 and tiene_coincidencias(grupo):
             grupos_validos.append(grupo)
 
-    # Condiciones para el caso de hasta 8 cuadrados
-    if len(cuadrados) <= 8:
-        if len(grupos_validos) == 0:
-            print("No hay grupos válidos de cuadrados.")
-            return None
-        
-        # Si hay varios grupos válidos
-        if len(grupos_validos) > 1:
-            # Obtener el tamaño de cada grupo
-            tamaños = [len(g) for g in grupos_validos]
-            max_tamaño = max(tamaños)
-            # Devolver el grupo más grande
-            return grupos_validos[tamaños.index(max_tamaño)]
-
-    # Devolver el primer grupo válido si no hay más de 8 cuadrados
-    return grupos_validos[0] if grupos_validos else None
+    # Condiciones para el caso de hasta 8 cuadrados...

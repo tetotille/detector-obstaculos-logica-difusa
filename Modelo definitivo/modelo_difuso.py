@@ -1,80 +1,64 @@
-import cupy as cp
-
-
 def son_cercanos(cuadrado1, cuadrado2, distancia=15):
-    """Determina si dos cuadrados son cercanos entre sí."""
-    x1, y1 = cuadrado1[0].get().item(), cuadrado1[1].get().item()
-    x2, y2 = cuadrado2[0].get().item(), cuadrado2[1].get().item()
+    """Determina si dos cuadrados están a una distancia de un bloque."""
+    x1, y1 = cuadrado1[0].item(), cuadrado1[1].item()
+    x2, y2 = cuadrado2[0].item(), cuadrado2[1].item()
     return abs(x1 - x2) <= distancia and abs(y1 - y2) <= distancia
 
-def agrupar_cuadrados(lista_cuadrados):
-    # Diccionario para agrupar por coordenadas iguales
-    grupos = {}
-    
-    # Paso 1: Agrupar cuadrados con coordenadas iguales
-    for cuadrado in lista_cuadrados:
-        coord = (cuadrado[0].get().item(), cuadrado[1].get().item())
-        if coord not in grupos:
-            grupos[coord] = [cuadrado]
-        else:
-            grupos[coord].append(cuadrado)
-    
-    # Convertir los grupos en una lista
-    lista_grupos = list(grupos.values())
+def agrupar_cuadrados(lista_cuadrados, max_repeticiones=4):
+    # Paso 1: Identificar el cuadrado con más repeticiones de coordenadas
+    coordenadas_repetidas = {}
+    cuadrado_mas_repetido = None
+    max_repeticiones_encontradas = 0
 
-    # Paso 2: Fusionar grupos adyacentes
+    for cuadrado in lista_cuadrados:
+        coord = (cuadrado[0].item(), cuadrado[1].item())
+        if coord not in coordenadas_repetidas:
+            coordenadas_repetidas[coord] = [cuadrado]
+        else:
+            coordenadas_repetidas[coord].append(cuadrado)
+
+        # Si encontramos más repeticiones que el máximo, actualizamos
+        if len(coordenadas_repetidas[coord]) > max_repeticiones_encontradas:
+            max_repeticiones_encontradas = len(coordenadas_repetidas[coord])
+            cuadrado_mas_repetido = coordenadas_repetidas[coord]
+
+        # Si alcanzamos el máximo permitido de repeticiones, ya no buscamos más
+        if max_repeticiones_encontradas == max_repeticiones:
+            break
+
+    # Paso 2: Crear grupos de cuadrados con coordenadas repetidas
+    grupos = [cuadrados for cuadrados in coordenadas_repetidas.values() if len(cuadrados) > 1]
+
+    # Paso 3: Agregar cuadrados cercanos pero con coordenadas diferentes
+    for grupo in grupos:
+        cuadrados_no_agrupados = [cuadrado for cuadrado in lista_cuadrados if cuadrado not in sum(grupos, [])]
+        
+        for cuadrado in cuadrados_no_agrupados[:]:  # Copia de la lista para evitar modificaciones mientras iteramos
+            if any(son_cercanos(cuadrado, otro_cuadrado) for otro_cuadrado in grupo):
+                grupo.append(cuadrado)
+                cuadrados_no_agrupados.remove(cuadrado)
+
+    # Paso 4: Fusionar grupos que tengan cuadrados cercanos en común
     grupos_fusionados = []
 
-    while lista_grupos:
-        grupo_actual = lista_grupos.pop(0)
+    while grupos:
+        grupo_actual = grupos.pop(0)
         fusionado = True
-        
-        # Intentar fusionar con otros grupos adyacentes
+
         while fusionado:
             fusionado = False
-            for otro_grupo in lista_grupos[:]:
+            for otro_grupo in grupos[:]:
                 if any(son_cercanos(cuadrado, otro_cuadrado) for cuadrado in grupo_actual for otro_cuadrado in otro_grupo):
                     grupo_actual.extend(otro_grupo)
-                    lista_grupos.remove(otro_grupo)
+                    grupos.remove(otro_grupo)
                     fusionado = True
         
         grupos_fusionados.append(grupo_actual)
-    
-    # Paso 3: Incluir cuadrados no coincidentes adyacentes
-    grupo_final = []
-    
+
+    # Paso 5: Retornar el grupo que contiene el cuadrado más repetido
     for grupo in grupos_fusionados:
-        grupo_final.append(grupo)
-        for cuadrado in lista_cuadrados:
-            if cuadrado not in sum(grupo_final, []):
-                if any(son_cercanos(cuadrado, otro_cuadrado) for otro_cuadrado in sum(grupo_final, [])):
-                    grupo.append(cuadrado)
-    
-    # Paso 4: Fusionar si hay grupos adyacentes a un cuadrado solitario
-    fusionados_totales = []
+        if cuadrado_mas_repetido[0] in grupo:
+            return grupo
 
-    while grupo_final:
-        grupo = grupo_final.pop(0)
-        fusionado = False
-        for otro_grupo in grupo_final[:]:
-            if any(son_cercanos(cuadrado, otro_cuadrado) for cuadrado in grupo for otro_cuadrado in otro_grupo):
-                grupo.extend(otro_grupo)
-                grupo_final.remove(otro_grupo)
-                fusionado = True
-        fusionados_totales.append(grupo)
-    
-    # Retornar el grupo más grande
-    grupo_mayor = max(fusionados_totales, key=len, default=None)
-    return grupo_mayor
-
-
-
-# Ejemplo de uso:
-"""cuadrados = [
-    (cp.array(120), cp.array(15), 15, 15),
-    (cp.array(120), cp.array(15), 15, 15),
-    (cp.array(150), cp.array(15), 15, 15),
-    # Agrega más cuadrados según sea necesario
-]
-
-umbral_distancia = 15"""  # Asumimos que si la distancia es igual al tamaño del bloque (15), son "cercanos"
+    # Si no se encuentra el grupo, retornar el más grande por defecto
+    return max(grupos_fusionados, key=len, default=None)

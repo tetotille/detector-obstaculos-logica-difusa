@@ -9,7 +9,7 @@ import threading
 import modelo_difuso
 import filters
 
-filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
+filename = join(dirname(dirname(abspath(__file__))), "img/brillo.jpg")
 image = cv2.imread(filename)
 image_cupy = cp.array(image)
 lista_completa = []
@@ -22,7 +22,7 @@ resized_image = utils.resize_image_bgr(image_cupy, (new_height, new_width))
 
 edge_result = cp_contorno_difuso.process_image(resized_image)
 
-mask_max_cluster, fila_interes = cmeeans_3.fcm(resized_image, 3) 
+mask_max_cluster, fila_interes = cmeeans_3.fcm2(resized_image, 3) 
 fila_interes=50
 combined_image, contour_image = utils.hacer_mascara(mask_max_cluster, fila_interes)
 lista1, constante = utils.segment_and_identify_objects(combined_image, contour_image, combined_image)
@@ -71,5 +71,5 @@ def hay_semejanzas(lista1, lista2, lista3, lista_completa):
     return False
 
 
-resultado = hay_semejanzas(lista1, lista3, lista4, lista_completa)
+resultado = hay_semejanzas(lista2, lista3, lista4, lista_completa)
 print("Se encontraron coincidencias:", resultado)

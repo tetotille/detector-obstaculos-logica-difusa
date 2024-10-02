@@ -47,7 +47,7 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
     green_pixel_counts = cp.sum(green_pixels, axis=(1, 2))
     print(green_pixel_counts)
     # Crear un vector booleano que indique qué bloques cumplen la condición inicial
-    valid_blocks = (black_pixel_counts > threshold_area) & (green_pixel_counts <= 20)
+    valid_blocks = (black_pixel_counts > threshold_area) & (green_pixel_counts <= 30)
     print(black_pixel_counts)
     # Verificar bloques adyacentes
     rects = []

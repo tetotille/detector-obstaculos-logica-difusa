@@ -1,6 +1,23 @@
 import cupy as cp
 import cv2
 
+def normalize_image(image:cp.array) -> cp.array:
+    """
+    Normalize the pixel values of an image to the range [0, 1].
+    This function takes an image represented as a CuPy array and normalizes its pixel values 
+    such that the minimum value becomes 0 and the maximum value becomes 1.
+    Args:
+        image (cp.array): The input image to be normalized.
+    Returns:
+        cp.array: The normalized image with pixel values in the range [0, 1].
+    """
+    
+    min_val = cp.min(image)
+    max_val = cp.max(image)
+    normalized_image = (image - min_val) / (max_val - min_val)
+
+    return normalized_image
+
 def filter_image(image,kernel_code):
     # Cargar la imagen y convertirla a escala de grises
     input_image = cv2.resize(image, (256, 256))

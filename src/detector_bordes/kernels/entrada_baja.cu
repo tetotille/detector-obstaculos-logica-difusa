@@ -1,5 +1,5 @@
 extern "C" __global__
-void process_image(const unsigned char* input, float* output, int width, int height) {
+void triangular_low(const unsigned char* input, float* output, int width, int height) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int limite = 128;
 

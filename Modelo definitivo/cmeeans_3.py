@@ -187,7 +187,7 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     # Paso 5: Calcular la frecuencia de cada cluster
 
     fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
-    
+    fila_interes=50
     # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
     _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
     image3_np=cp.asnumpy(image3)
@@ -202,13 +202,23 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     print("Cluster frequencies:", counts)
 
     # Encontrar el cluster con la mayor frecuencia
-    max_cluster_idx = cp.argmin(counts)
+    """max_cluster_idx = cp.argmin(counts)
     max_cluster = unique[max_cluster_idx]
     mask_max_cluster = cp.zeros_like(image3, dtype=cp.uint8)
-    mask_max_cluster[image3 == max_cluster] = 255  # Asignar blanco a los píxeles del cluster menos frecuentes
+    mask_max_cluster[image3 == max_cluster] = 255  # Asignar blanco a los píxeles del cluster menos frecuentes"""
+    two_min_clusters_idx = cp.argsort(counts)[:2]  # Ordena y toma los dos primeros índices
+
+    # Obtener los valores de los dos clústeres más pequeños
+    two_min_clusters = unique[two_min_clusters_idx]
+
+    # Crear la máscara vacía
+    mask_min_clusters = cp.zeros_like(image3, dtype=cp.uint8)
+
+    # Hacer blancos (255) los píxeles que pertenecen a cualquiera de los dos clústeres
+    mask_min_clusters[cp.isin(image3, two_min_clusters)] = 255
 
     # Convertir a NumPy para visualizar con OpenCV
-    mask_max_cluster_cpu = cp.asnumpy(mask_max_cluster)
+    mask_max_cluster_cpu = cp.asnumpy(mask_min_clusters)
 
     # Mostrar la imagen utilizando OpenCV
     cv2.imshow("original_cmeans", mask_max_cluster_cpu)

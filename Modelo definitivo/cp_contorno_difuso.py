@@ -1,4 +1,6 @@
 import cupy as cp
+import os
+import cv2
 import numpy as np
 
 # Función de membresía triangular
@@ -478,6 +480,8 @@ def process_image(image):
     # Convertir la imagen procesada a formato uint8
     edge_image_uint8 = cp.clip(edge_image * 255, 0, 255).astype(cp.uint8)
     edge_image_uint8_numpy = edge_image_uint8.get()
+    abs_path = os.path.join(os.getcwd(), "imagen_umbral.png")
+    make_contours_white(edge_image_uint8, abs_path)
     cp.get_default_memory_pool().free_all_blocks()
     # Retornar la imagen procesada
     return edge_image_uint8_numpy
@@ -498,3 +502,15 @@ def adaptive_threshold(image, block_size, C):
 
     return thresholded_image
 
+def make_contours_white(image_cupy, save_path):
+    # Cambiar los píxeles grises (no negros) a blancos
+    white_contours = cp.where(image_cupy > 0, 255, 0).astype(cp.uint8)
+
+    # Convertir la imagen de cupy a numpy para guardarla
+    image_numpy = cp.asnumpy(white_contours)
+
+    # Guardar la imagen en el path especificado
+    cv2.imwrite(save_path, image_numpy)
+
+# Ejemplo de uso:
+# Supongamos que tu imagen en cupy se llama 'contours_image'

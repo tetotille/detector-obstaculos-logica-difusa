@@ -109,6 +109,7 @@ def filter_h(img):
     print(h.shape)
 
     fila_interes, imagen = detectar_horizonte2.find_horizontal_line(img)
+    fila_interes=50
     _, image3 = utils.crop_horizontal(h, fila_interes)
     return image3, fila_interes
 
@@ -127,6 +128,7 @@ def filter_s(img):
     s_filtrada[(s >= most_frequent_intensity-10) & (s <= most_frequent_intensity+10)] = 0
     s = (s_filtrada)
     fila_interes, imagen = detectar_horizonte2.find_horizontal_line(img)
+    fila_interes=50
     _, image3 = utils.crop_horizontal(s, fila_interes)
 
     return image3, fila_interes

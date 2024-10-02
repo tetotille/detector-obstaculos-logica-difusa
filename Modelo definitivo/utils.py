@@ -24,7 +24,7 @@ def crop_horizontal(imagen, indice_vertical):
     
     return parte_superior, parte_inferior
 
-def segment_and_identify_objects(image_gray, mask_binary, original, block_size=15, threshold_area=25):
+def segment_and_identify_objects(image_gray, mask_binary, original, block_size=15, threshold_area=60):
     # Paso 2: Analizar bloques de 15x15 píxeles
     height, width = image_gray.shape[:2]
     
@@ -45,10 +45,10 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
     # Identificar píxeles verdes en los bloques
     green_pixels = (block_masks[:, :, :, 1] > 100) & (block_masks[:, :, :, 0] < 50) & (block_masks[:, :, :, 2] < 50)
     green_pixel_counts = cp.sum(green_pixels, axis=(1, 2))
-    #print(green_pixel_counts)
+    print(green_pixel_counts)
     # Crear un vector booleano que indique qué bloques cumplen la condición inicial
-    valid_blocks = (black_pixel_counts > threshold_area) & (green_pixel_counts <= 30)
-    
+    valid_blocks = (black_pixel_counts > threshold_area) & (green_pixel_counts <= 20)
+    print(black_pixel_counts)
     # Verificar bloques adyacentes
     rects = []
     for idx, (y, x) in enumerate(zip(y_grid.ravel(), x_grid.ravel())):
@@ -117,7 +117,6 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
     # Marcar el resto de los rectángulos en rojo
     for rect in rects:
         x, y, w, h = rect
-        print(rect)
         color = original[y, x]
         if cp.all(color == cp.array([0, 0, 255])) or cp.all(color == cp.array([0, 255, 255])) or cp.all(color == cp.array([255, 0, 0])):
             continue

@@ -57,6 +57,6 @@ def read_image(image_path:str,new_width:int,**params) -> cp.array:
 
 if __name__ == "__main__":
     # Leer la imagen y convertirla a un array de CuPy
-    image_path = "/home/tille/Desktop/Tesis/code/assets/images/akaso1.jpeg"
+    image_path = "/home/tesis_liz_tille/detector-obstaculos-logica-difusa/assets/images/akaso1.jpeg"
     image = read_image(image_path, 256)
-    cv2.imshow("Image", cp.asnumpy(image))
+    cv2.imwrite("result.jpg", cp.asnumpy(image))

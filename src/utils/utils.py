@@ -42,6 +42,7 @@ def read_image(image_path:str,new_width:int,**params) -> cp.array:
         La imagen como un array de CuPy.
     """
     grayscale = params.get("grayscale", False)
+    normalize = params.get("normalize", False)
     if grayscale:
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     else:
@@ -52,6 +53,8 @@ def read_image(image_path:str,new_width:int,**params) -> cp.array:
     # Redimensionar la imagen al nuevo ancho
     new_height = int(image.shape[0] * new_width / image.shape[1])
     image = cv2.resize(image, (new_width, new_height))
+    if normalize:
+        image = image / 255.0
     return cp.asarray(image)
 
 

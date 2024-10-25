@@ -1,6 +1,23 @@
 import cupy as cp
 import cv2
 
+
+BLOCK_SIZE = 256
+GRID_SIZE = (256 * 256 + BLOCK_SIZE - 1) // BLOCK_SIZE
+
+def triangular(x, a, b, c):
+    a,b,c = cp.array([a,b,c])
+    assert a <= b and b <= c, "a <= b <= c"
+
+    y = cp.zeros_like(x, dtype=cp.float32)
+    
+    kernel_code = open('kernels/triangular.cu').read()
+    # Lanzar el kernel
+    process_image_kernel = cp.RawKernel(kernel_code, 'process_image')
+    process_image_kernel((GRID_SIZE,), (BLOCK_SIZE,), (x, y, a, b, c))
+    
+    return y
+
 def normalize_image(image:cp.array) -> cp.array:
     """
     Normalize the pixel values of an image to the range [0, 1].

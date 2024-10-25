@@ -100,6 +100,46 @@ def _fp_coeff(u):
     return fpc
 
 def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None):
+    """
+    Perform Fuzzy C-Means clustering on the given data.
+    Parameters:
+    -----------
+    data : array-like, shape (n_samples, n_features)
+        The input data to be clustered.
+    c : int
+        The number of clusters.
+    m : float
+        Fuzziness parameter. Must be greater than 1.
+    error : float
+        Stopping criterion; stop early if the norm of (u - u2) is less than this value.
+    maxiter : int
+        Maximum number of iterations.
+    metric : str, optional, default='euclidean'
+        The distance metric to use. Default is 'euclidean'.
+    init : array-like, shape (c, n_samples), optional, default=None
+        Initial fuzzy partition matrix. If None, a random matrix is generated.
+    seed : int, optional, default=None
+        Random seed for reproducibility.
+    Returns:
+    --------
+    cntr : array-like, shape (c, n_features)
+        Cluster centers.
+    u : array-like, shape (c, n_samples)
+        Final fuzzy partition matrix.
+    u0 : array-like, shape (c, n_samples)
+        Initial fuzzy partition matrix.
+    d : array-like, shape (c, n_samples)
+        Final distance matrix.
+    jm : array-like
+        Objective function values over iterations.
+    p : int
+        Number of iterations run.
+    fpc : float
+        Fuzzy partition coefficient.
+    Notes:
+    ------
+    The function measures the elapsed time for the clustering process.
+    """
     start_time = time.time()
     if init is None:
         if seed is not None:

@@ -20,6 +20,7 @@ orig_height, orig_width, channels = image_cupy.shape
 new_height = int(orig_height * new_width / orig_width)
 resized_image = utils.resize_image_bgr(image_cupy, (new_height, new_width))
 
+# cp_contorno_difuso.py
 edge_result = cp_contorno_difuso.process_image(resized_image)
 
 mask_max_cluster, fila_interes = cmeeans_3.fcm(resized_image, 3)  

@@ -11,7 +11,8 @@ def agrupar_cuadrados(lista_cuadrados, max_repeticiones=4):
     max_repeticiones_encontradas = 0
 
     for cuadrado in lista_cuadrados:
-        coord = (cuadrado[0].item(), cuadrado[1].item())
+        # Convertir las coordenadas en una tupla hashable accediendo a los valores numéricos
+        coord = (cuadrado[0].item(), cuadrado[1].item(), cuadrado[2], cuadrado[3])
         if coord not in coordenadas_repetidas:
             coordenadas_repetidas[coord] = [cuadrado]
         else:
@@ -26,39 +27,39 @@ def agrupar_cuadrados(lista_cuadrados, max_repeticiones=4):
         if max_repeticiones_encontradas == max_repeticiones:
             break
 
-    # Paso 2: Crear grupos de cuadrados con coordenadas repetidas
-    grupos = [cuadrados for cuadrados in coordenadas_repetidas.values() if len(cuadrados) > 1]
+    # Paso 2: Crear un grupo inicial con el cuadrado más repetido
+    grupo_principal = cuadrado_mas_repetido if cuadrado_mas_repetido else []
 
-    # Paso 3: Agregar cuadrados cercanos pero con coordenadas diferentes
-    for grupo in grupos:
-        cuadrados_no_agrupados = [cuadrado for cuadrado in lista_cuadrados if cuadrado not in sum(grupos, [])]
+    # Paso 3: Agregar cuadrados cercanos al grupo principal de manera iterativa
+    while True:
+        nuevos_agregados = False
         
-        for cuadrado in cuadrados_no_agrupados[:]:  # Copia de la lista para evitar modificaciones mientras iteramos
-            if any(son_cercanos(cuadrado, otro_cuadrado) for otro_cuadrado in grupo):
-                grupo.append(cuadrado)
-                cuadrados_no_agrupados.remove(cuadrado)
+        # Verificamos cada cuadrado en el grupo actual
+        for cuadrado in grupo_principal[:]:  # Hacemos una copia para evitar modificar mientras iteramos
+            for cuadrado_otro in lista_cuadrados:
+                # Asegurarnos de que cuadrado_otro no esté ya en grupo_principal
+                if cuadrado_otro not in grupo_principal:
+                    if son_cercanos(cuadrado_otro, cuadrado):
+                        grupo_principal.append(cuadrado_otro)
+                        nuevos_agregados = True  # Marcar que hemos hecho una adición
 
-    # Paso 4: Fusionar grupos que tengan cuadrados cercanos en común
-    grupos_fusionados = []
+        # Si no se han agregado nuevos cuadrados, terminamos
+        if not nuevos_agregados:
+            break
 
-    while grupos:
-        grupo_actual = grupos.pop(0)
-        fusionado = True
+    # Crear un conjunto para almacenar coordenadas únicas
+    coordenadas_unicas = set()
+    for cuadrado in grupo_principal:
+        coord = (cuadrado[0].item(), cuadrado[1].item())
+        coordenadas_unicas.add(coord)
 
-        while fusionado:
-            fusionado = False
-            for otro_grupo in grupos[:]:
-                if any(son_cercanos(cuadrado, otro_cuadrado) for cuadrado in grupo_actual for otro_cuadrado in otro_grupo):
-                    grupo_actual.extend(otro_grupo)
-                    grupos.remove(otro_grupo)
-                    fusionado = True
-        
-        grupos_fusionados.append(grupo_actual)
+    # Enviar coordenadas únicas al final
+    return list(coordenadas_unicas)  # Convertir de nuevo a lista si es necesario
 
-    # Paso 5: Retornar el grupo que contiene el cuadrado más repetido
-    for grupo in grupos_fusionados:
-        if cuadrado_mas_repetido[0] in grupo:
-            return grupo
+# Ejemplo de uso
+lista_cuadrados = [
+    # Aquí deberías incluir tus coordenadas
+]
 
-    # Si no se encuentra el grupo, retornar el más grande por defecto
-    return max(grupos_fusionados, key=len, default=None)
+resultado = agrupar_cuadrados(lista_cuadrados)
+print("Coordenadas únicas agrupadas:", resultado)

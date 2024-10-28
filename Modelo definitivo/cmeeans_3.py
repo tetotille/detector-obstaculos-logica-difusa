@@ -187,7 +187,6 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     # Paso 5: Calcular la frecuencia de cada cluster
 
     fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
-    fila_interes=50
     # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
     _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
     image3_np=cp.asnumpy(image3)
@@ -282,7 +281,6 @@ def fcm2(resized_image, num_clusters, m=2.0, metric='euclidean'):
     # Paso 5: Calcular la frecuencia de cada cluster
 
     fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
-    fila_interes=50
     # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
     _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
     image3_np=cp.asnumpy(image3)

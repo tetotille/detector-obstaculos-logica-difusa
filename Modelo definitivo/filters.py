@@ -106,7 +106,7 @@ def filter_h(img):
     h=(h_filtrada)
 # Suponiendo que `image` es tu imagen en formato RGB cargada como un array de CuPy
 # Reshape para convertir la imagen en una lista de colores (cada color es una tupla de 3 valores)
-    print(h.shape)
+    #print(h.shape)
 
     fila_interes, imagen = detectar_horizonte2.find_horizontal_line(img)
     _, image3 = utils.crop_horizontal(h, fila_interes)

@@ -38,3 +38,4 @@ def normalize_columns(u):
     column_sums = cp.sum(u, axis=0)
     normalized_u = u / column_sums
     return normalized_u
+

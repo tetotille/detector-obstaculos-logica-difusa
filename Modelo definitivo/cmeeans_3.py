@@ -1,7 +1,6 @@
 import cupy as cp
 import time
 from normalize_columns2 import normalize_columns, normalize_power_columns
-import detectar_horizonte2
 import utils 
 import cv2
 from os.path import join, dirname, abspath
@@ -134,7 +133,7 @@ def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None)
     
     return cntr, u, u0, d, jm, p, fpc
 
-def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
+def fcm(resized_image, num_clusters, fila_interes, m=2.0, metric='euclidean'):
     """
     Cargar la imagen, aplicar Fuzzy C-Means clustering y devolver la imagen segmentada.
 
@@ -180,15 +179,14 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     # Ejemplo de generación de un array normalizado (si es necesario)
     #segmented_image_normalized = cp.random.rand(100, 100)  # Ejemplo de array normalizado
     segmented_image_normalized = (segmented_image_normalized * 255).astype(cp.uint8)
-    segmented_image_normalized_np = cp.asnumpy(segmented_image_normalized)
+
+    _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
     """cv2.imshow("segmentado", segmented_image_normalized_np)
     cv2.waitKey(0)
     cv2.destroyAllWindows()"""
     # Paso 5: Calcular la frecuencia de cada cluster
 
-    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
-    # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
-    _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
+
     """image3_np=cp.asnumpy(image3)
     cv2.imshow("cortado", image3_np)
     cv2.waitKey(0)
@@ -228,7 +226,7 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
 
     return mask_min_clusters, fila_interes
 
-def fcm2(resized_image, num_clusters, m=2.0, metric='euclidean'):
+def fcm2(resized_image, num_clusters, fila_interes, m=2.0, metric='euclidean'):
     """
     Cargar la imagen, aplicar Fuzzy C-Means clustering y devolver la imagen segmentada.
 
@@ -279,8 +277,6 @@ def fcm2(resized_image, num_clusters, m=2.0, metric='euclidean'):
     cv2.waitKey(0)
     cv2.destroyAllWindows()"""
     # Paso 5: Calcular la frecuencia de cada cluster
-
-    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
     # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
     _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
     """image3_np=cp.asnumpy(image3)

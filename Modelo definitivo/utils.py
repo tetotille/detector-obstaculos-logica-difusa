@@ -161,18 +161,15 @@ def resize_image_bgr(image, new_shape):
         )
 
     resized_image = cp.clip(resized_image, 0, 255)
+
     return resized_image.astype(cp.uint8)
 # Usar la función con la ruta de la imagen, la máscara y la imagen original en forma de array de CuPy
 
-def hacer_mascara2(image3, fila_interes):
+def hacer_mascara2(image3, mask2):
     # Leer la máscara (suponiendo que ya está en la GPU como array de CuPy)
-    mask = cp.asarray(cv2.imread("imagen_umbral.png", cv2.IMREAD_GRAYSCALE))
 
     # Obtener las dimensiones de la máscara
-    x, y = mask.shape
-
-    # Asumiendo que `crop_horizontal` también está en CuPy y devuelve un array de CuPy
-    _, mask2 = crop_horizontal(mask, fila_interes)
+    x, y = mask2.shape
 
     image3_cupy = cp.asarray(image3)
 
@@ -223,7 +220,7 @@ def hacer_mascara2(image3, fila_interes):
     mask2_colored = cp.zeros((mask2.shape[0], mask2.shape[1], 3), dtype=original.dtype)  # Crear imagen vacía con 3 canales
 
     # Asignar verde a donde mask2 es blanco
-    mask2_colored[mask2 == 255] = green_color
+    mask2_colored[mask2 != 0] = green_color
 
     # Obtener dimensiones y verificar
     if original.ndim == 3:
@@ -240,12 +237,12 @@ def hacer_mascara2(image3, fila_interes):
         mask2 = cp.asarray(resize_image_bgr(mask2, (width, height)))
         if mask2.ndim == 2:
             mask2_colored = cp.zeros((mask2.shape[0], mask2.shape[1], 3), dtype=original.dtype)
-            mask2_colored[mask2 == 255] = green_color
+            mask2_colored[mask2 != 0] = green_color
     else:
         #print("Las dimensiones de la máscara ya coinciden con las dimensiones de la imagen original.")
         if mask2.ndim == 2:
             mask2_colored = cp.zeros((mask2.shape[0], mask2.shape[1], 3), dtype=original.dtype)
-            mask2_colored[mask2 == 255] = green_color
+            mask2_colored[mask2 != 0] = green_color
     """
     # Mostrar las imágenes
     cv2.imshow("original", result.get())

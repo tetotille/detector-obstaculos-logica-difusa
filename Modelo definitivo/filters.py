@@ -4,7 +4,6 @@ from os.path import dirname, abspath, join
 from sys import argv
 import detectar_horizonte2
 import utils
-import cupy as cp
 
 def bgr_to_hsv(img):
     """
@@ -75,7 +74,7 @@ def trapmf(x, a, b, c, d):
     y = cp.where((x > c) & (x <= d), (d - x) / (d - c + 1e-6), y)
     return y
 
-def filter_h(img):
+def filter_h(img, fila_interes):
 
     h, _, _ = bgr_to_hsv(img)
     
@@ -108,11 +107,10 @@ def filter_h(img):
 # Reshape para convertir la imagen en una lista de colores (cada color es una tupla de 3 valores)
     #print(h.shape)
 
-    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(img)
     _, image3 = utils.crop_horizontal(h, fila_interes)
     return image3, fila_interes
 
-def filter_s(img):
+def filter_s(img, fila_interes):
 
     _, s, _ = bgr_to_hsv(img)
     
@@ -126,7 +124,7 @@ def filter_s(img):
     s_filtrada = cp.copy(s)
     s_filtrada[(s >= most_frequent_intensity-10) & (s <= most_frequent_intensity+10)] = 0
     s = (s_filtrada)
-    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(img)
+    
     _, image3 = utils.crop_horizontal(s, fila_interes)
 
     return image3, fila_interes

@@ -27,11 +27,11 @@ def cargar_fila_interes():
             return None
     return None
 
-def procesar_imagen(filename):
+def procesar_imagen(image):
     # Cargar el valor previo de fila_interes si existe
     fila_interes_anterior = cargar_fila_interes()
 
-    image = cv2.imread(filename)
+    #image = cv2.imread(filename)
     image_tensor = torch.tensor(image).cuda()  # Convertir imagen a tensor de PyTorch y mover a GPU
     
     # Redimensionar la imagen

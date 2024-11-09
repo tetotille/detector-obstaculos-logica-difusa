@@ -1,7 +1,6 @@
 import cupy as cp
 import time
 from normalize_columns2 import normalize_columns, normalize_power_columns
-import detectar_horizonte2
 import utils 
 import cv2
 from os.path import join, dirname, abspath
@@ -134,7 +133,7 @@ def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None)
     
     return cntr, u, u0, d, jm, p, fpc
 
-def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
+def fcm(resized_image, num_clusters, fila_interes, m=2.0, metric='euclidean'):
     """
     Cargar la imagen, aplicar Fuzzy C-Means clustering y devolver la imagen segmentada.
 
@@ -165,7 +164,7 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     data = resized_image.reshape(S, N)
 
     # Medir el tiempo de ejecución de la función cmeans
-    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.05, maxiter=10, metric=metric, init=None, seed=None)
+    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.05, maxiter=20, metric=metric, init=None, seed=None)
     u = cp.asarray(u)
     # Reconstruir la imagen segmentada
     cluster_membership = cp.argmax(u, axis=0)
@@ -180,25 +179,24 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     # Ejemplo de generación de un array normalizado (si es necesario)
     #segmented_image_normalized = cp.random.rand(100, 100)  # Ejemplo de array normalizado
     segmented_image_normalized = (segmented_image_normalized * 255).astype(cp.uint8)
-    segmented_image_normalized_np = cp.asnumpy(segmented_image_normalized)
-    cv2.imshow("segmentado", segmented_image_normalized_np)
+
+    _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
+    """cv2.imshow("segmentado", segmented_image_normalized_np)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()"""
     # Paso 5: Calcular la frecuencia de cada cluster
 
-    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
-    # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
-    _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
-    image3_np=cp.asnumpy(image3)
+
+    """image3_np=cp.asnumpy(image3)
     cv2.imshow("cortado", image3_np)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()"""
     # Calcular la frecuencia de cada cluster dentro del área de interés
     unique, counts = cp.unique(image3, return_counts=True)
 
     # Imprimir valores únicos y sus frecuencias
-    print("Unique clusters:", unique)
-    print("Cluster frequencies:", counts)
+    #print("Unique clusters:", unique)
+    #print("Cluster frequencies:", counts)
 
     # Encontrar el cluster con la mayor frecuencia
     """max_cluster_idx = cp.argmin(counts)
@@ -217,18 +215,18 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     mask_min_clusters[cp.isin(image3, two_min_clusters)] = 255
 
     # Convertir a NumPy para visualizar con OpenCV
-    mask_max_cluster_cpu = cp.asnumpy(mask_min_clusters)
+    #mask_max_cluster_cpu = cp.asnumpy(mask_min_clusters)
 
     # Mostrar la imagen utilizando OpenCV
-    cv2.imshow("original_cmeans", mask_max_cluster_cpu)
+    """cv2.imshow("original_cmeans", mask_max_cluster_cpu)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()"""
     # Liberar memoria de GPU al final del script
     cp.get_default_memory_pool().free_all_blocks()
 
-    return mask_max_cluster_cpu, fila_interes
+    return mask_min_clusters, fila_interes
 
-def fcm2(resized_image, num_clusters, m=2.0, metric='euclidean'):
+def fcm2(resized_image, num_clusters, fila_interes, m=2.0, metric='euclidean'):
     """
     Cargar la imagen, aplicar Fuzzy C-Means clustering y devolver la imagen segmentada.
 
@@ -259,7 +257,7 @@ def fcm2(resized_image, num_clusters, m=2.0, metric='euclidean'):
     data = resized_image.reshape(S, N)
 
     # Medir el tiempo de ejecución de la función cmeans
-    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.05, maxiter=10, metric=metric, init=None, seed=None)
+    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.05, maxiter=20, metric=metric, init=None, seed=None)
     u = cp.asarray(u)
     # Reconstruir la imagen segmentada
     cluster_membership = cp.argmax(u, axis=0)
@@ -274,31 +272,29 @@ def fcm2(resized_image, num_clusters, m=2.0, metric='euclidean'):
     # Ejemplo de generación de un array normalizado (si es necesario)
     #segmented_image_normalized = cp.random.rand(100, 100)  # Ejemplo de array normalizado
     segmented_image_normalized = (segmented_image_normalized * 255).astype(cp.uint8)
-    segmented_image_normalized_np = cp.asnumpy(segmented_image_normalized)
+    """segmented_image_normalized_np = cp.asnumpy(segmented_image_normalized)
     cv2.imshow("segmentado", segmented_image_normalized_np)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()"""
     # Paso 5: Calcular la frecuencia de cada cluster
-
-    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
     # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
     _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
-    image3_np=cp.asnumpy(image3)
+    """image3_np=cp.asnumpy(image3)
     cv2.imshow("cortado", image3_np)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()"""
     # Calcular la frecuencia de cada cluster dentro del área de interés
     unique, counts = cp.unique(image3, return_counts=True)
 
     # Imprimir valores únicos y sus frecuencias
-    print("Unique clusters:", unique)
-    print("Cluster frequencies:", counts)
+    """print("Unique clusters:", unique)
+    print("Cluster frequencies:", counts)"""
 
     # Encontrar el cluster con la mayor frecuencia
-    """max_cluster_idx = cp.argmin(counts)
+    max_cluster_idx = cp.argmin(counts)
     max_cluster = unique[max_cluster_idx]
     mask_max_cluster = cp.zeros_like(image3, dtype=cp.uint8)
-    mask_max_cluster[image3 == max_cluster] = 255  # Asignar blanco a los píxeles del cluster menos frecuentes"""
+    mask_max_cluster[image3 == max_cluster] = 255  # Asignar blanco a los píxeles del cluster menos frecuentes
     two_min_clusters_idx = cp.argsort(counts)[:1]  # Ordena y toma los dos primeros índices
 
     # Obtener los valores de los dos clústeres más pequeños
@@ -311,16 +307,16 @@ def fcm2(resized_image, num_clusters, m=2.0, metric='euclidean'):
     mask_min_clusters[cp.isin(image3, two_min_clusters)] = 255
 
     # Convertir a NumPy para visualizar con OpenCV
-    mask_max_cluster_cpu = cp.asnumpy(mask_min_clusters)
+    """mask_max_cluster_cpu = cp.asnumpy(mask_min_clusters)
 
     # Mostrar la imagen utilizando OpenCV
     cv2.imshow("original_cmeans", mask_max_cluster_cpu)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()"""
     # Liberar memoria de GPU al final del script
     cp.get_default_memory_pool().free_all_blocks()
 
-    return mask_max_cluster_cpu, fila_interes
+    return mask_max_cluster, fila_interes
 
 # Ejemplo de uso
 if __name__ == "__main__":
@@ -333,4 +329,4 @@ if __name__ == "__main__":
     resized_image = utils.resize_image_bgr(image_cupy, (new_height, new_width))
     segmented_image = fcm(resized_image, num_clusters=4)
     
-    print(segmented_image)
+    #print(segmented_image)

@@ -287,11 +287,11 @@ def define_rules(antecedents, edge, neighbor_values, universo, output_file="regl
         activation = final_memberships[i] > 0.4
 
         if cp.any(activation):
-            with open(output_file, "a") as f:
+            """with open(output_file, "a") as f:
                 f.write(f"Regla {i + 1} activada con final_membership:\n")
                 np_final_membership = final_memberships[i].get()  # Convertir a NumPy para imprimir
                 np.set_printoptions(precision=10, suppress=False, floatmode='fixed')  # Ajustar precisión decimal
-                f.write(np.array2string(np_final_membership, separator=', ') + "\n")
+                f.write(np.array2string(np_final_membership, separator=', ') + "\n")"""
             
             # Guardar la membresía final y el valor de salida correspondiente
             rules.append((final_memberships[i], outputs[i]))
@@ -299,10 +299,10 @@ def define_rules(antecedents, edge, neighbor_values, universo, output_file="regl
     # Procesar las reglas activadas y realizar la defuzzificación
     final_crisp_values = defuzzify_centroid(rules, universo)
     
-    print(final_crisp_values.get())  # Utiliza .get() para obtener el array en formato NumPy desde CuPy
+    """print(final_crisp_values.get())  # Utiliza .get() para obtener el array en formato NumPy desde CuPy
     
     with open(output_file, "a") as f:
-        f.write(f"Salida defuzzificada por píxel: {final_crisp_values.get()}\n")
+        f.write(f"Salida defuzzificada por píxel: {final_crisp_values.get()}\n")"""
 
     # Retornar la salida defuzzificada
     return final_crisp_values
@@ -356,7 +356,7 @@ def apply_fuzzy_rules_to_image(fuzzy_image, antecedents, edge):
                 # Aplicar la función de membresía a los valores de los vecinos
                 membership_values[label] = antecedents[idx][label](neighbor_values[idx])
             membership_values_list.append(membership_values)
-            write_membership_values_to_file(membership_values_list, filename="membership_values.txt")
+            #write_membership_values_to_file(membership_values_list, filename="membership_values.txt")
 
         except KeyError as e:
             print(f"Error: la clave {str(e)} no se encontró en antecedents para el vecino {idx}.")
@@ -388,12 +388,12 @@ def apply_fuzzy_rules_to_image(fuzzy_image, antecedents, edge):
 
         
 
-    write_fuzzy_image_to_file(fuzzy_image, filename="fuzzy_image_values.txt")
+    #write_fuzzy_image_to_file(fuzzy_image, filename="fuzzy_image_values.txt")
     
     # Actualizar neighbor_values con la nueva fuzzy_image
     expanded_image = cp.pad(fuzzy_image, pad_width=1, mode='constant', constant_values=0)
     neighbor_values = cp.array([expanded_image[i_coords + di[n], j_coords + dj[n]] for n in range(9)])
-    neighbor_values_numpy = neighbor_values.get()
+    #neighbor_values_numpy = neighbor_values.get()
 
     #print("Valores de los vecinos:")
     #print(neighbor_values_numpy)
@@ -475,32 +475,18 @@ def process_image(image):
     # Aplicar las reglas difusas a la imagen
     edge_image = apply_fuzzy_rules_to_image(fuzzy_image, antecedents, edge)
 
-    write_image_to_file(edge_image, filename="edge_image_values.txt")
+    #write_image_to_file(edge_image, filename="edge_image_values.txt")
 
     # Convertir la imagen procesada a formato uint8
     edge_image_uint8 = cp.clip(edge_image * 255, 0, 255).astype(cp.uint8)
-    edge_image_uint8_numpy = edge_image_uint8.get()
+    #edge_image_uint8_numpy = edge_image_uint8.get()
     abs_path = os.path.join(os.getcwd(), "imagen_umbral.png")
     make_contours_white(edge_image_uint8, abs_path)
     cp.get_default_memory_pool().free_all_blocks()
     # Retornar la imagen procesada
-    return edge_image_uint8_numpy
+    return edge_image_uint8
 
 # Umbral adaptativo con CuPy
-def adaptive_threshold(image, block_size, C):
-    if not isinstance(image, cp.ndarray):
-        image = cp.asarray(image)
-
-    if block_size % 2 == 0:
-        raise ValueError("block_size debe ser un número impar.")
-
-    mean_filter = cp.ones((block_size, block_size), dtype=cp.float32) / (block_size * block_size)
-    mean_image = cp.signal.convolve(image, mean_filter, mode='same')
-
-    thresholded_image = image - mean_image - C
-    thresholded_image = cp.where(thresholded_image > 0, 255, 0).astype(cp.uint8)
-
-    return thresholded_image
 
 def make_contours_white(image_cupy, save_path):
     # Cambiar los píxeles grises (no negros) a blancos

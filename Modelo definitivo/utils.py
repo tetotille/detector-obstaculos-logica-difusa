@@ -1,5 +1,6 @@
 import cupy as cp
 import cv2
+from cupyx.scipy.ndimage import convolve
 def crop_horizontal(imagen, indice_vertical):
     """
     Recorta una imagen a color horizontalmente en un índice dado usando CuPy.
@@ -27,7 +28,6 @@ def crop_horizontal(imagen, indice_vertical):
 def segment_and_identify_objects(image_gray, mask_binary, original, block_size=15, threshold_area=60):
     # Paso 2: Analizar bloques de 15x15 píxeles
     height, width = image_gray.shape[:2]
-    
     # Generar índices de los bloques
     y_indices = cp.arange(block_size, height - block_size, block_size)
     x_indices = cp.arange(block_size, width - block_size, block_size)
@@ -40,15 +40,15 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
     block_masks = cp.array([mask_binary[y:y+block_size, x:x+block_size] for y, x in zip(y_grid.ravel(), x_grid.ravel())])
     
     # Contar los píxeles negros en los bloques
-    black_pixel_counts = cp.sum(cp.all(block_images > 200, axis=-1), axis=(1, 2))
+    black_pixel_counts = cp.sum(cp.all(block_images == 0, axis=-1), axis=(1, 2))
     
     # Identificar píxeles verdes en los bloques
     green_pixels = (block_masks[:, :, :, 1] > 100) & (block_masks[:, :, :, 0] < 50) & (block_masks[:, :, :, 2] < 50)
     green_pixel_counts = cp.sum(green_pixels, axis=(1, 2))
-    print(green_pixel_counts)
+    #print(green_pixel_counts)
     # Crear un vector booleano que indique qué bloques cumplen la condición inicial
     valid_blocks = (black_pixel_counts > threshold_area) & (green_pixel_counts <= 30)
-    print(black_pixel_counts)
+    #print(black_pixel_counts)
     # Verificar bloques adyacentes
     rects = []
     for idx, (y, x) in enumerate(zip(y_grid.ravel(), x_grid.ravel())):
@@ -101,35 +101,28 @@ def segment_and_identify_objects(image_gray, mask_binary, original, block_size=1
             green_pixels_up3 = (block_mask_up3[:, :, 1] > 100) & (block_mask_up3[:, :, 0] < 50) & (block_mask_up3[:, :, 2] < 50)
             if cp.sum(green_pixels_up1) > 20 and cp.sum(green_pixels_up2) > 20 and cp.sum(green_pixels_up3) > 20:
                 adyacente_verificado = True
-        
+            # Función para marcar rectángulos en rojo
+        def mark_rect_red(rect):
+            x, y, w, h = rect
+            original[y:y+h, x:x+w, :] = cp.array([0, 0, 255])  # Marcar en rojo
         # Si cualquiera de las direcciones tiene 3 bloques adyacentes con suficientes píxeles verdes
         if adyacente_verificado:
-            rects.append((x, y, block_size, block_size))
-    
+            rects.append((x, y, block_size, block_size))  # Agregar rectángulo
+            mark_rect_red((x, y, block_size, block_size))  # Llamar a la función para marcar en rojo
+            
     n = len(rects)
-    print(n)
+    #print(n)
     
-    # Función para marcar rectángulos en rojo
-    def mark_rect_red(rect):
-        x, y, w, h = rect
-        original[y:y+h, x:x+w, :] = cp.array([0, 0, 255])  # Rojo
 
-    # Marcar el resto de los rectángulos en rojo
-    for rect in rects:
-        x, y, w, h = rect
-        color = original[y, x]
-        if cp.all(color == cp.array([0, 0, 255])) or cp.all(color == cp.array([0, 255, 255])) or cp.all(color == cp.array([255, 0, 0])):
-            continue
-        else:
-            mark_rect_red(rect)
+
     
     # Convertir a un formato que pueda mostrar la imagen
-    image_to_show = cp.asnumpy(original)
+    """image_to_show = cp.asnumpy(original)
 
     # Mostrar la imagen con los bloques marcados
     cv2.imshow('Segmented Image with Detected Objects', image_to_show)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()"""
     return rects, block_size
 
 # Usar la función con la ruta de la imagen, la máscara y la imagen original en forma de array de CuPy
@@ -168,98 +161,118 @@ def resize_image_bgr(image, new_shape):
         )
 
     resized_image = cp.clip(resized_image, 0, 255)
+
     return resized_image.astype(cp.uint8)
 # Usar la función con la ruta de la imagen, la máscara y la imagen original en forma de array de CuPy
 
-def hacer_mascara(image3, fila_interes):
+def hacer_mascara2(image3, mask2):
     # Leer la máscara (suponiendo que ya está en la GPU como array de CuPy)
-    mask = cp.array(cv2.imread("imagen_umbral.png", cv2.IMREAD_GRAYSCALE))
 
     # Obtener las dimensiones de la máscara
-    x, y = mask.shape
+    x, y = mask2.shape
 
-    # Asumiendo que `crop_horizontal` también está en CuPy y devuelve un array de CuPy
-    _, mask2 = crop_horizontal(mask, fila_interes)
-    print(image3.shape)
+    image3_cupy = cp.asarray(image3)
 
-    # Leer la imagen original (suponiendo que ya está en la GPU como array de CuPy)
-    image3_numpy = cp.asnumpy(image3)
+    # Verifica si la imagen tiene 3 canales
+    if image3_cupy.ndim == 3:
+        original = image3_cupy[:, :, ::-1]  # Convertir de BGR a RGB
+    else:
+        original = image3_cupy  # No es necesario cambiar si es escala de grises
 
-# Aplicar cv2.cvtColor en NumPy
-    image3_rgb_numpy = cv2.cvtColor(image3_numpy, cv2.COLOR_BGR2RGB)
+    # Crear la máscara basada en el rango de valores
+    if original.ndim == 3:
+        mask = cp.logical_and(
+            cp.all(original >= 0, axis=-1),
+            cp.all(original <= 15, axis=-1)
+        ).astype(cp.uint8) * 255
+    else:
+        mask = cp.logical_and(
+            original >= 0,
+            original <= 15
+        ).astype(cp.uint8) * 255
 
-# Convertir de nuevo a CuPy si es necesario
-    original = cp.array(image3_rgb_numpy)
+    # Crear imágenes blancas y negras
+    white_image = cp.full(original.shape, cp.array(255, dtype=original.dtype), dtype=original.dtype)
+    black_image = cp.zeros_like(original)  # Asegúrate de que black_image tenga 3 canales
 
-    # Crear una máscara para los píxeles negros
-    mask = cp.logical_and(
-        cp.all(original >= cp.array([0, 0, 0]), axis=-1),
-        cp.all(original <= cp.array([15, 15, 15]), axis=-1)
-    ).astype(cp.uint8) * 255
-
-    # Crear imágenes en negro y blanco
-    white_image = cp.full_like(original, cp.array(255, dtype=original.dtype))
-
-    black_image = cp.zeros_like(original)
-
+    # Ajustar la máscara para que coincida con la imagen original
     if mask.ndim == 2:
-        mask = cp.stack([mask] * 3, axis=-1)  # Convertir a 3 canales si es necesario
-    # Aplicar la máscara para obtener la imagen con negros convertidos a blancos y el resto a negro
-        # Convertir `mask` a un array booleano para la operación bitwise
+        mask = cp.stack([mask] * 3, axis=-1)  # Convertir a 3 canales si es 2D
+
+    # Convertir `mask` a booleano
     mask = mask.astype(cp.bool_)
     mask_invert = cp.invert(mask)
-     # Aplicar la máscara usando operaciones condicionales
+
+    # Asegurarse de que `original`, `white_image` y `black_image` tengan la misma forma
+    if original.ndim == 2:
+        original = cp.stack([original] * 3, axis=-1)  # Convertir a 3 canales si es 2D
+    if white_image.ndim == 2:
+        white_image = cp.stack([white_image] * 3, axis=-1)  # Asegurarse de que white_image tenga 3 canales
+    if black_image.ndim == 2:
+        black_image = cp.stack([black_image] * 3, axis=-1)  # Asegurarse de que black_image tenga 3 canales
+
+    # Aplicar la máscara
     result = cp.where(mask, white_image, original)
     result = cp.where(mask_invert, black_image, result)
-    # Obtener las dimensiones de la imagen original y la máscara recortada
-    height, width, channels = original.shape
+
+    # Crear una imagen verde donde `mask2` es blanco
+    green_color = cp.array([0, 255, 0], dtype=original.dtype)  # Verde en formato RGB
+    mask2_colored = cp.zeros((mask2.shape[0], mask2.shape[1], 3), dtype=original.dtype)  # Crear imagen vacía con 3 canales
+
+    # Asignar verde a donde mask2 es blanco
+    mask2_colored[mask2 != 0] = green_color
+
+    # Obtener dimensiones y verificar
+    if original.ndim == 3:
+        height, width, channels = original.shape
+    else:
+        height, width = original.shape
+        channels = 1
+
     height1, width1 = mask2.shape
 
-    # Verificar las dimensiones de ambas imágenes
+    # Verificar dimensiones
     if (height, width) != (height1, width1):
-        print("Redimensionando la máscara para que coincida con las dimensiones de la imagen original.")
-        mask2 = cp.array(cv2.resize(cp.asnumpy(mask2), (width, height)))
+        #print("Redimensionando la máscara para que coincida con las dimensiones de la imagen original.")
+        mask2 = cp.asarray(resize_image_bgr(mask2, (width, height)))
+        if mask2.ndim == 2:
+            mask2_colored = cp.zeros((mask2.shape[0], mask2.shape[1], 3), dtype=original.dtype)
+            mask2_colored[mask2 != 0] = green_color
     else:
-        print("Las dimensiones de la máscara ya coinciden con las dimensiones de la imagen original.")
+        #print("Las dimensiones de la máscara ya coinciden con las dimensiones de la imagen original.")
+        if mask2.ndim == 2:
+            mask2_colored = cp.zeros((mask2.shape[0], mask2.shape[1], 3), dtype=original.dtype)
+            mask2_colored[mask2 != 0] = green_color
+    """
+    # Mostrar las imágenes
+    cv2.imshow("original", result.get())
+    cv2.imshow("contorno (verde)", mask2_colored.get())
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()"""
 
-    # Asegurarse de que la máscara sea binaria
-    _, mask_binary = cv2.threshold(cp.asnumpy(mask2), 1, 255, cv2.THRESH_BINARY)
-    mask_binary = cp.array(mask_binary)
-
-    # Crear una imagen de contornos verdes (tamaño de la imagen original)
-    contour_image = cp.zeros((original.shape[0], original.shape[1], 3), dtype=cp.uint8)
-
-    # Establecer los contornos en verde (BGR) usando la máscara binaria
-    contour_image[mask_binary > 0] = [0, 255, 0]  # Verde en BGR
-
-    # Crear una imagen RGBA con el fondo transparente
-    rgba_image = cp.zeros((original.shape[0], original.shape[1], 4), dtype=cp.uint8)
-
-    # Copiar la imagen original al canal RGB de la imagen RGBA
-    rgba_image[:, :, :3] = original
-
-    # Crear una máscara para el canal alfa (transparencia)
-    transparency_mask = cp.zeros((original.shape[0], original.shape[1]), dtype=cp.uint8)
-    transparency_mask[mask_binary > 0] = 255  # Píxeles de contorno serán completamente opacos
-
-    # Copiar la máscara de transparencia al canal alfa de la imagen RGBA
-    rgba_image[:, :, 3] = transparency_mask
-
-    # Aplicar la imagen de contornos al canal alfa de la imagen RGBA
-    # Para hacer que los contornos sean visibles, combinamos la imagen original con la imagen de contornos
-    combined_image = original + contour_image
-    # Iterar sobre cada píxel y mostrar sus valores en los tres canales
-    """for i in range(original.shape[0]):
-        for j in range(original.shape[1]):
-            r, g, b = original[i, j]
-            print(f"Píxel ({i}, {j}) - R: {r}, G: {g}, B: {b}")"""
+    return result, mask2_colored  # Devuelve la imagen resultante y la máscara ajustada
 
 
-    #cv2.imshow("original", rgba_image.get())
-    #cv2.imshow("contorno", contour_image.get())
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
-    print(original.shape)
-    print(contour_image.shape)
-    return original, contour_image
+def adaptive_threshold(image, block_size, C):
+    if not isinstance(image, cp.ndarray):
+        image = cp.asarray(image)
 
+    if block_size % 2 == 0:
+        raise ValueError("block_size debe ser un número impar.")
+
+    mean_filter = cp.ones((block_size, block_size), dtype=cp.float32) / (block_size * block_size)
+    mean_image = cp.signal.convolve(image, mean_filter, mode='same')
+
+    thresholded_image = image - mean_image - C
+    thresholded_image = cp.where(thresholded_image > 0, 255, 0).astype(cp.uint8)
+
+    return thresholded_image
+
+def cupy_threshold(image, threshold_value=1, max_value=255):
+    # Crea una nueva imagen binaria con el mismo shape que `image`
+    binary_mask = cp.zeros_like(image, dtype=cp.uint8)
+
+    # Aplica el umbral: establece en `max_value` los valores mayores que `threshold_value`
+    binary_mask[image > threshold_value] = max_value
+
+    return binary_mask

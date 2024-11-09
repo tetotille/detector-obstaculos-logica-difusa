@@ -4,6 +4,8 @@ import cupy as cp
 from matplotlib import pyplot as plt
 
 
+hacer_mascara_kernel = cp.RawKernel(open("kernels/hacer_mascara_kernel.cu").read(), "hacer_mascara_kernel")
+
 class FuzzyImage:
     def __init__(self,img_path:str):
         self.image = cv2.imread(img_path)
@@ -33,7 +35,29 @@ def crop_horizontal(imagen, indice_vertical):
     parte_inferior = imagen[indice_vertical:, :]
     return parte_superior, parte_inferior
 
-def read_image(image_path:str,new_width:int,new_height:int=None,**params) -> cp.array:
+def hacer_mascara(image3, mask):
+    height, width, channels = image3.shape
+    mask_height, mask_width = mask.shape
+
+    # Crear imágenes para almacenar los resultados
+    contour_image = cp.zeros((height, width, channels), dtype=cp.uint8)
+    rgba_image = cp.zeros((height, width, 4), dtype=cp.uint8)
+
+    # Configuración de bloques e hilos para el kernel
+    threads_per_block = (16, 16)
+    blocks_per_grid_x = (width + threads_per_block[0] - 1) // threads_per_block[0]
+    blocks_per_grid_y = (height + threads_per_block[1] - 1) // threads_per_block[1]
+    blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
+
+    # Ejecutar el kernel
+    hacer_mascara_kernel(
+        blocks_per_grid, threads_per_block,
+        (image3, mask, contour_image, rgba_image, width, height, channels, mask_width, mask_height)
+    )
+
+    return contour_image, rgba_image
+
+def read_image(image_path:str,new_width:int,**params) -> cp.array:
     """
     Lee una imagen de un archivo y la convierte en un array de CuPy.
     Args:

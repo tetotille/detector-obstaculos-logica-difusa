@@ -33,7 +33,7 @@ def crop_horizontal(imagen, indice_vertical):
     parte_inferior = imagen[indice_vertical:, :]
     return parte_superior, parte_inferior
 
-def read_image(image_path:str,new_width:int,**params) -> cp.array:
+def read_image(image_path:str,new_width:int,new_height:int=None,**params) -> cp.array:
     """
     Lee una imagen de un archivo y la convierte en un array de CuPy.
     Args:
@@ -42,6 +42,7 @@ def read_image(image_path:str,new_width:int,**params) -> cp.array:
         La imagen como un array de CuPy.
     """
     grayscale = params.get("grayscale", False)
+    normalize = params.get("normalize", False)
     if grayscale:
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     else:
@@ -50,8 +51,11 @@ def read_image(image_path:str,new_width:int,**params) -> cp.array:
         raise ValueError("No se pudo cargar la imagen. Verifique la ruta del archivo y asegúrese de que el archivo exista.")
     
     # Redimensionar la imagen al nuevo ancho
-    new_height = int(image.shape[0] * new_width / image.shape[1])
+    if new_height is not None:
+        new_height = int(image.shape[0] * new_width / image.shape[1])
     image = cv2.resize(image, (new_width, new_height))
+    if normalize:
+        image = image / 255.0
     return cp.asarray(image)
 
 

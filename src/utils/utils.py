@@ -1,10 +1,9 @@
 import numpy as np
 import cv2
 import cupy as cp
-from cupyx import fallback_mode
 
 
-hacer_mascara_kernel = cp.RawKernel(open("kernels/hacer_mascara_kernel.cu").read(), "hacer_mascara_kernel")
+# hacer_mascara_kernel = cp.RawKernel(open("kernels/hacer_mascara_kernel.cu").read(), "hacer_mascara_kernel")
 
 class FuzzyImage:
     def __init__(self,img_path:str):
@@ -50,14 +49,14 @@ def hacer_mascara(image3, mask):
     blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
 
     # Ejecutar el kernel
-    hacer_mascara_kernel(
-        blocks_per_grid, threads_per_block,
-        (image3, mask, contour_image, rgba_image, width, height, channels, mask_width, mask_height)
-    )
+    # hacer_mascara_kernel(
+    #     blocks_per_grid, threads_per_block,
+    #     (image3, mask, contour_image, rgba_image, width, height, channels, mask_width, mask_height)
+    # )
 
     return contour_image, rgba_image
 
-def read_image(image_path:str,new_width:int,**params) -> tuple[np.array,cp.array]:
+def read_image(image:np.array,new_width:int,new_height:int,**params) -> tuple[np.array,cp.array]:
     """
     Lee una imagen de un archivo y la convierte en un array de CuPy.
     Args:
@@ -65,23 +64,17 @@ def read_image(image_path:str,new_width:int,**params) -> tuple[np.array,cp.array
     Returns:
         La imagen como una tupla de arrays de NumPy y CuPy.
     """
-    grayscale = params.get("grayscale", False)
     normalize = params.get("normalize", False)
-    if grayscale:
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    else:
-        image = cv2.imread(image_path)
     if image is None:
         raise ValueError("No se pudo cargar la imagen. Verifique la ruta del archivo y asegúrese de que el archivo exista.")
     
     # Redimensionar la imagen al nuevo ancho
-    if new_height is not None:
+    if new_height is None:
         new_height = int(image.shape[0] * new_width / image.shape[1])
     image = cv2.resize(image, (new_width, new_height))
     if normalize:
         image = image / 255.0
-    with fallback_mode():
-        return image,cp.asarray(image)
+    return image,cp.asarray(image)
 
 
 if __name__ == "__main__":

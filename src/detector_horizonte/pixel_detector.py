@@ -26,6 +26,7 @@ def find_largest_fuzzy_jump_orig(pixels_list):
     return max_jump_index
 
 def find_largest_fuzzy_jump(pixels:np.array):
+    pixels = pixels.astype(np.int16)
     jumps = np.array([fuzzy_difference(pixels[i], pixels[i - 1])
                       for i in range(1, len(pixels))])
 

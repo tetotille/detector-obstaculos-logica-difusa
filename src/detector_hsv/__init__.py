@@ -1,0 +1,1 @@
+from .fuzzy import process_image as detector_hsv

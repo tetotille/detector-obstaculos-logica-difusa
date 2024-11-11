@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import time
-import pickle
+import cupy as cp
 
 # Define los colores de segmentación específicos
 SEGMENTATION_COLORS = np.array([
@@ -74,22 +74,6 @@ def process_image(image):
         'obstacle': SEGMENTATION_COLORS[0],
         'unknown': [0, 0, 0]  # Negro para desconocido
     }
-
-    # hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    # h, s, v = cv2.split(hsv_image)
-    # # Mostrar las imágenes de los canales H, S y V
-    # cv2.imshow("Hue Channel", h)
-    # cv2.imshow("Saturation Channel", s)
-    # cv2.imshow("Value Channel", v)
-
-    #Esperar a que se presione 'q' para cerrar las ventanas y continuar la ejecución
-    # while True:
-    #     if cv2.waitKey(1) & 0xFF == ord('q'):
-    #         cv2.destroyWindow("Hue Channel")
-    #         cv2.destroyWindow("Saturation Channel")
-    #         cv2.destroyWindow("Value Channel")
-    #         break
-
     # Procesar cada píxel
     for y in range(height):
         for x in range(width):
@@ -109,25 +93,77 @@ def process_image(image):
 
     return output_image
 
-# Leer y redimensionar la imagen
-tic = time.time()
-tics = {}
-for i in range(3):
-    tics[f"image_{i+1}"] = []
-    # for j in range(100):
-    tic1 = time.time()
-    image_path = f'/home/tille/Desktop/Tesis/WaSR-T/images/akaso{i+1}.jpeg'  # Ruta de la imagen de ejemplo
-    image = cv2.imread(image_path)
-    resized_image = cv2.resize(image, (256, 192))
+def process_image_cuda(image):
+    """Procesa una imagen para clasificar cada píxel como agua, cielo u obstáculo usando CUDA."""
+    height, width, _ = image.shape
+    output_image = cp.zeros((height, width, 3), dtype=cp.uint8)
 
-    # Procesar la imagen redimensionada
-    classified_image = process_image(resized_image)
+    # Definir colores para cada categoría basados en SEGMENTATION_COLORS
+    colors = cp.array([
+        [35, 195, 249],   # Color para agua
+        [164, 76, 90],
+        [224, 167, 41],   # Color para obstáculo
+        [0, 0, 0]         # Negro para desconocido
+    ], dtype=cp.uint8)
 
-    # Guardar y mostrar el resultado
-    output_path = f'/home/tille/Desktop/Tesis/WaSR-T/images/akaso{i+1}_fuzzy.png'
-    cv2.imwrite(output_path, classified_image)
-    tics[f"image_{i+1}"].append(time.time()-tic1)
-    # print(f"Imagen {i+1} procesada {j+1} veces.")
+    # Convertir la imagen de BGR a HSV
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    hsv_image = cp.asarray(hsv_image)
 
-# with open('times_fuzzy.pickle', 'wb') as f:
-#     pickle.dump(tics, f)
+    # Obtener los canales HSV
+    hue = hsv_image[:, :, 0]
+    saturation = hsv_image[:, :, 1]
+    value = hsv_image[:, :, 2]
+
+    # Calcular la posición relativa
+    y_coords = cp.arange(height).reshape(-1, 1)
+    relative_position = y_coords / height
+
+    # Fuzzificación de intensidad
+    intensity_category = cp.where(value < 50, 'low', cp.where(value < 160, 'medium', 'high'))
+
+    # Fuzzificación de tono y saturación
+    color_category = cp.where((15 <= hue) & (hue <= 50) & (saturation < 30), 'water',
+                    cp.where((90 <= hue) & (hue <= 120) & (saturation < 50), 'sky',
+                    cp.where(((0 <= hue) & (hue <= 20) | (90 <= hue) & (hue <= 120)) & (saturation > 20), 'obstacle', 'unknown')))
+
+    # Fuzzificación de posición
+    position_category = cp.where(relative_position < 0.33, 'top', cp.where(relative_position < 0.66, 'middle', 'bottom'))
+
+    # Clasificación de píxeles
+    classification = cp.where((color_category == 'water') & (position_category == 'bottom') & (intensity_category == 'high'), 'water',
+                    cp.where((color_category == 'sky') & (position_category == 'top') & (intensity_category == 'high'), 'sky',
+                    cp.where((color_category == 'obstacle') & (intensity_category == 'medium') & (position_category == 'middle'), 'obstacle',
+                    cp.where((color_category == 'water') & (position_category == 'middle') & (intensity_category == 'high'), 'water',
+                    cp.where((color_category == 'sky') & (position_category == 'middle') & (intensity_category == 'high'), 'sky',
+                    cp.where((position_category == 'bottom') & (intensity_category == 'high'), 'water',
+                    cp.where((position_category == 'top') & (intensity_category == 'high'), 'sky', 'unknown')))))))
+
+    # Asignar colores basados en la clasificación
+    output_image = colors[classification]
+
+    return cp.asnumpy(output_image)
+
+if __name__ == "__main__":
+    # Leer y redimensionar la imagen
+    tic = time.time()
+    tics = {}
+    for i in range(3):
+        tics[f"image_{i+1}"] = []
+        # for j in range(100):
+        tic1 = time.time()
+        image_path = f'/home/tille/Desktop/Tesis/WaSR-T/images/akaso{i+1}.jpeg'  # Ruta de la imagen de ejemplo
+        image = cv2.imread(image_path)
+        resized_image = cv2.resize(image, (256, 192))
+
+        # Procesar la imagen redimensionada
+        classified_image = process_image(resized_image)
+
+        # Guardar y mostrar el resultado
+        output_path = f'/home/tille/Desktop/Tesis/WaSR-T/images/akaso{i+1}_fuzzy.png'
+        cv2.imwrite(output_path, classified_image)
+        tics[f"image_{i+1}"].append(time.time()-tic1)
+        # print(f"Imagen {i+1} procesada {j+1} veces.")
+
+    # with open('times_fuzzy.pickle', 'wb') as f:
+    #     pickle.dump(tics, f)

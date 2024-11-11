@@ -168,3 +168,4 @@ test_cont_dif.py
 !assets
 result.jpg
 launch.json
+environment.yml

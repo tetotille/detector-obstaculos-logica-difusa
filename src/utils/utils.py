@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import cupy as cp
-from matplotlib import pyplot as plt
+from cupyx import fallback_mode
 
 
 hacer_mascara_kernel = cp.RawKernel(open("kernels/hacer_mascara_kernel.cu").read(), "hacer_mascara_kernel")
@@ -57,13 +57,13 @@ def hacer_mascara(image3, mask):
 
     return contour_image, rgba_image
 
-def read_image(image_path:str,new_width:int,**params) -> cp.array:
+def read_image(image_path:str,new_width:int,**params) -> tuple[np.array,cp.array]:
     """
     Lee una imagen de un archivo y la convierte en un array de CuPy.
     Args:
         image_path: La ruta del archivo de imagen.
     Returns:
-        La imagen como un array de CuPy.
+        La imagen como una tupla de arrays de NumPy y CuPy.
     """
     grayscale = params.get("grayscale", False)
     normalize = params.get("normalize", False)
@@ -80,7 +80,8 @@ def read_image(image_path:str,new_width:int,**params) -> cp.array:
     image = cv2.resize(image, (new_width, new_height))
     if normalize:
         image = image / 255.0
-    return cp.asarray(image)
+    with fallback_mode():
+        return image,cp.asarray(image)
 
 
 if __name__ == "__main__":

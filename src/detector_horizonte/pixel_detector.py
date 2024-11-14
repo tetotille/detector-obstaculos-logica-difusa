@@ -1,11 +1,16 @@
-import cupy as cp
 import numpy as np
 import time
 
 from collections import Counter
 from PIL import Image
 
-from utils import read_image
+from src.utils import read_image
+
+try:
+    import cupy as cp
+except:
+    import numpy as cp
+    print("cuda no está instalado.")
 
 
 def fuzzy_difference(a, b):

@@ -1,6 +1,11 @@
 import numpy as np
 import cv2
-import cupy as cp
+
+try:
+    import cupy as cp
+except:
+    import numpy as cp
+    print("cuda no está instalado.")
 
 
 # hacer_mascara_kernel = cp.RawKernel(open("kernels/hacer_mascara_kernel.cu").read(), "hacer_mascara_kernel")
@@ -76,6 +81,41 @@ def read_image(image:np.array,new_width:int,new_height:int,**params) -> tuple[np
         image = image / 255.0
     return image,cp.asarray(image)
 
+def resize_image_bgr(image, new_shape):
+    orig_height, orig_width, channels = image.shape
+    new_height, new_width = new_shape
+
+    scale_y = orig_height / new_height
+    scale_x = orig_width / new_width
+
+    y = cp.arange(new_height) * scale_y
+    x = cp.arange(new_width) * scale_x
+    x_grid, y_grid = cp.meshgrid(x, y)
+
+    x0 = cp.floor(x_grid).astype(cp.int32)
+    x1 = cp.clip(x0 + 1, 0, orig_width - 1)
+    y0 = cp.floor(y_grid).astype(cp.int32)
+    y1 = cp.clip(y0 + 1, 0, orig_height - 1)
+
+    x_weight = x_grid - x0
+    y_weight = y_grid - y0
+
+    resized_image = cp.zeros((new_height, new_width, channels), dtype=image.dtype)
+    for c in range(channels):
+        Ia = image[y0, x0, c]
+        Ib = image[y1, x0, c]
+        Ic = image[y0, x1, c]
+        Id = image[y1, x1, c]
+
+        resized_image[:, :, c] = (
+            Ia * (1 - x_weight) * (1 - y_weight) +
+            Ib * (1 - x_weight) * y_weight +
+            Ic * x_weight * (1 - y_weight) +
+            Id * x_weight * y_weight
+        )
+
+    resized_image = cp.clip(resized_image, 0, 255)
+    return resized_image.astype(cp.uint8)
 
 if __name__ == "__main__":
     # Leer la imagen y convertirla a un array de CuPy

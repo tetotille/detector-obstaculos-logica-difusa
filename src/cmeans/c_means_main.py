@@ -1,30 +1,339 @@
-import cupy as cp
-from utils import FuzzyDetector
+import numpy as cp
+import time 
+import cv2
+from src.utils import utils
+from src.detector_horizonte import detectar_horizonte2
+from os.path import join, dirname, abspath
 
+def normalize_power_columns(matrix, power):
+    """
+    Normalize columns of the matrix with the given power.
 
-class CMeans:
-    def __init__(self, n_clusters:int=3,**kwargs):
-        super.__init__()
-        self.n_clusters = n_clusters
-        self.fuzziness = 2.0
-        self.metric = "euclidean"
-        
-        seed = kwargs.get("seed", None)
-        init = kwargs.get("init", None)
-        if seed:
+    Parameters
+    ----------
+    matrix : 2d cupy array
+        Matrix to be normalized.
+    power : float
+        Power to which each column is raised.
+
+    Returns
+    -------
+    normalized_matrix : 2d cupy array
+        Column-normalized matrix.
+    """
+    powered_matrix = cp.power(matrix, power)
+    column_sums = cp.sum(powered_matrix, axis=0)
+    normalized_matrix = powered_matrix / column_sums
+    return normalized_matrix
+
+def normalize_columns(u):
+    """
+    Normalize columns of the given matrix.
+    
+    Parameters
+    ----------
+    u : 2d cupy array
+        Matrix to be normalized.
+    
+    Returns
+    -------
+    normalized_u : 2d cupy array
+        Column-normalized matrix.
+    """
+    column_sums = cp.sum(u, axis=0)
+    normalized_u = u / column_sums
+    return normalized_u
+
+def calculate_distances(data, centers, metric='euclidean'):
+    """
+    Calculate distances between data points and cluster centers using Cupy.
+
+    Parameters
+    ----------
+    data : cupy.ndarray
+        Data to be analyzed. Shape is (N, Q) where N is the number of data points and Q is the number of features.
+    centers : cupy.ndarray
+        Cluster centers. Shape is (C, Q) where C is the number of clusters and Q is the number of features.
+    metric : str
+        Metric to use. Currently only 'euclidean' is supported.
+
+    Returns
+    -------
+    cupy.ndarray
+        Distance matrix. Shape is (C, N) where C is the number of clusters and N is the number of data points.
+    """
+    if metric != 'euclidean':
+        raise NotImplementedError(f"Metric '{metric}' not implemented.")
+    # Obtener las dimensiones
+    N, Q = data.shape
+    C = centers.shape[0]
+
+    # Calculate squared differences
+    data_expanded = cp.expand_dims(data, 1)  # Shape (N, 1, Q)
+    centers_expanded = cp.expand_dims(centers, 0)  # Shape (1, C, Q)
+    diff = data_expanded - centers_expanded  # Shape (N, C, Q)
+    
+    # Calculate squared Euclidean distances
+    sq_dists = cp.sum(diff ** 2, axis=2)  # Shape (N, C)
+    
+    # Return the transpose to match the expected output shape (C, N)
+    return cp.transpose(sq_dists)
+
+def _cmeans0(data, u_old, c, m, metric='euclidean'):
+    # Move data to GPU
+    data_gpu = cp.array(data, dtype=cp.float32)
+    u_old_gpu = cp.array(u_old, dtype=cp.float32)
+    
+    # Create events for timing
+    
+
+    # Normalizing, then eliminating any potential zero values.
+    u_old_gpu = normalize_columns(u_old_gpu)
+    u_old_gpu = cp.fmax(u_old_gpu, cp.finfo(cp.float32).eps)
+
+    um_gpu = u_old_gpu ** m
+
+    # Calculate cluster centers
+    data_gpu = data_gpu.T  # Now data_gpu has shape (N, S)
+    um_sum = cp.atleast_2d(um_gpu.sum(axis=1)).T  # um_sum has shape (c, 1)
+    cntr = (um_gpu @ data_gpu) / um_sum  # cntr_gpu has shape (c, N)
+    
+    d_gpu = calculate_distances(data_gpu, cntr, metric)  # data_gpu.T has shape (S, N), cntr_gpu has shape (c, N)
+    d = cp.fmax(d_gpu, cp.finfo(cp.float32).eps)
+
+    jm = cp.sum(um_gpu * (d_gpu ** 2))
+
+    u = normalize_power_columns(d_gpu, -2. / (m - 1))
+
+    # Move results back to CPU
+    
+    jm = jm
+
+    # Free GPU memory    
+    return cntr, u, jm, d
+
+def _fp_coeff(u):
+    """
+    Fuzzy partition coefficient fpc relative to fuzzy c-partitioned
+    matrix u. Measures 'fuzziness' in partitioned clustering.
+
+    Parameters
+    ----------
+    u : 2d array (C, N)
+        Fuzzy c-partitioned matrix; N = number of data points and C = number
+        of clusters.
+
+    Returns
+    -------
+    fpc : float
+        Fuzzy partition coefficient.
+    """
+    u_gpu = cp.array(u, dtype=cp.float32)
+    n = u_gpu.shape[1]
+
+    # Compute the fuzzy partition coefficient on GPU
+    trace_u_ut = cp.trace(cp.dot(u_gpu, u_gpu.T))
+    fpc = trace_u_ut / float(n)
+    
+    return fpc
+
+def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None):
+    """
+    Perform Fuzzy C-Means clustering on the given data.
+    Parameters:
+    -----------
+    data : array-like, shape (n_samples, n_features)
+        The input data to be clustered.
+    c : int
+        The number of clusters.
+    m : float
+        Fuzziness parameter. Must be greater than 1.
+    error : float
+        Stopping criterion; stop early if the norm of (u - u2) is less than this value.
+    maxiter : int
+        Maximum number of iterations.
+    metric : str, optional, default='euclidean'
+        The distance metric to use. Default is 'euclidean'.
+    init : array-like, shape (c, n_samples), optional, default=None
+        Initial fuzzy partition matrix. If None, a random matrix is generated.
+    seed : int, optional, default=None
+        Random seed for reproducibility.
+    Returns:
+    --------
+    cntr : array-like, shape (c, n_features)
+        Cluster centers.
+    u : array-like, shape (c, n_samples)
+        Final fuzzy partition matrix.
+    u0 : array-like, shape (c, n_samples)
+        Initial fuzzy partition matrix.
+    d : array-like, shape (c, n_samples)
+        Final distance matrix.
+    jm : array-like
+        Objective function values over iterations.
+    p : int
+        Number of iterations run.
+    fpc : float
+        Fuzzy partition coefficient.
+    Notes:
+    ------
+    The function measures the elapsed time for the clustering process.
+    """
+    if init is None:
+        if seed is not None:
             cp.random.seed(seed=seed)
-        if init:
-            self.init = init
+        n = data.shape[1]
+        u0 = cp.random.rand(c, n)
+        u0 = normalize_columns(u0)
+        init = u0.copy()
+    else:
+        u0 = cp.array(init)
+    u = cp.fmax(u0, cp.finfo(cp.float32).eps)
 
-    def cmeans(self,frame):
-        if self.init:
-            u0 = cp.array(self.init)
-        else:
-            n = frame.shape[1]
-            u0 = cp.random.rand(self.n_clusters,n)
-        
-    def process_frame(self):
-        # El frame es de 3 colores
-        frame_color,color = self.frame.shape[0] * self.frame.shape[1], self.frame.shape[2]
-        frame = cp.reshape(self.frame, (frame_color, color))
-        
+    jm = cp.zeros(0)
+    p = 0
+
+    while p < maxiter - 1:
+        u2 = u.copy()
+        cntr, u, Jjm, d = _cmeans0(data, u2, c, m, metric)
+        jm = cp.hstack((jm, Jjm))
+        p += 1
+
+        if cp.linalg.norm(u - u2) < error:
+            break
+
+    error = cp.linalg.norm(u - u2)
+    fpc = _fp_coeff(u)
+
+    return cntr, u, u0, d, jm, p, fpc
+
+def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
+    """
+    Cargar la imagen, aplicar Fuzzy C-Means clustering y devolver la imagen segmentada.
+
+    Parameters
+    ----------
+    image_path : str
+        Ruta del archivo de imagen a cargar.
+    num_clusters : int
+        Número de clusters para el algoritmo Fuzzy C-Means.
+    m : float, optional
+        Parámetro de fuzziness. Default es 2.0.
+    metric : str, optional
+        Métrica para el cálculo de distancias. Default es 'euclidean'.
+
+    Returns
+    -------
+    numpy.ndarray
+        Imagen segmentada como un array de NumPy.
+    """
+    # Cargar y redimensionar la imagen
+    # Convertir la imagen a float32 y normalizar
+    resized_image = cp.array(resized_image, dtype=cp.float32)
+    # Normalizar la imagen dividiéndola por 255.0
+    resized_image /= 255.0
+    
+    # Reconfigurar la imagen al formato (S, N) en la GPU
+    S, N = resized_image.shape[0] * resized_image.shape[1], resized_image.shape[2]
+    data = resized_image.reshape(S, N)
+
+    # Medir el tiempo de ejecución de la función cmeans
+    cntr, u, u0, d, jm, p, fpc = cmeans(data.T, num_clusters, m, error=0.05, maxiter=10, metric=metric, init=None, seed=None)
+    u = cp.asarray(u)
+    # Reconstruir la imagen segmentada
+    cluster_membership = cp.argmax(u, axis=0)
+    # Supongamos que cluster_membership es un array de CuPy
+# Reshape del array cluster_membership para formar la imagen segmentada
+    segmented_image = cp.reshape(cluster_membership, (resized_image.shape[0], resized_image.shape[1])).astype(cp.uint8)
+
+    # Normalizar la imagen segmentada
+    max_val_gpu = cp.max(segmented_image)
+    segmented_image_normalized = (segmented_image * (255 / max_val_gpu)).astype(cp.uint8)
+
+    # Ejemplo de generación de un array normalizado (si es necesario)
+    #segmented_image_normalized = cp.random.rand(100, 100)  # Ejemplo de array normalizado
+    segmented_image_normalized = (segmented_image_normalized * 255).astype(cp.uint8)
+    segmented_image_normalized_np = segmented_image_normalized
+    cv2.imshow("segmentado", segmented_image_normalized_np)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    # Paso 5: Calcular la frecuencia de cada cluster
+
+    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
+    
+    # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
+    _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
+    image3_np=image3
+    cv2.imshow("cortado", image3_np)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    # Calcular la frecuencia de cada cluster dentro del área de interés
+    unique, counts = cp.unique(image3, return_counts=True)
+
+    # Imprimir valores únicos y sus frecuencias
+    print("Unique clusters:", unique)
+    print("Cluster frequencies:", counts)
+
+    # Encontrar el cluster con la mayor frecuencia
+    max_cluster_idx = cp.argmin(counts)
+    max_cluster = unique[max_cluster_idx]
+    mask_max_cluster = cp.zeros_like(image3, dtype=cp.uint8)
+    mask_max_cluster[image3 == max_cluster] = 255  # Asignar blanco a los píxeles del cluster menos frecuentes
+
+    # Convertir a NumPy para visualizar con OpenCV
+    mask_max_cluster_cpu = mask_max_cluster
+
+    # Mostrar la imagen utilizando OpenCV
+    cv2.imshow("original_cmeans", mask_max_cluster_cpu)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    # Liberar memoria de GPU al final del script
+    # cp.get_default_memory_pool().free_all_blocks()
+    mask_matrix = cp.zeros((8,16), dtype=cp.uint8)
+    height, width = mask_max_cluster_cpu.shape
+    cuadros = []
+    for y in range(8):
+        for x in range(16):
+            mask_matrix[y,x] = cp.count_nonzero(mask_max_cluster_cpu[y*(height//8):(y+1)*(height//8),x*(width//16):(x+1)*(width//16)])
+            if mask_matrix[y,x] > 20:
+                tiene_vecino = False
+                for cuadro in cuadros:
+                    if (y,x) in cuadro["vecinos"]:
+                        nuevos_vecinos = {(y-1,x),(y+1,x),(y,x-1),(y,x+1)}
+                        cuadro["vecinos"] = cuadro["vecinos"].union(nuevos_vecinos)
+                        cuadro["x_init"] = min(cuadro["x_init"],x*(width//16))
+                        cuadro["x_end"] = max(cuadro["x_end"],(x+1)*(width//16))
+                        cuadro["y_init"] = min(cuadro["y_init"],y*(height//8))
+                        cuadro["y_end"] = max(cuadro["y_end"],(y+1)*(height//8))
+                        cuadro["centroid"] = (cuadro["x_init"]+cuadro["x_end"])//2,(cuadro["y_init"]+cuadro["y_end"])//2
+                        cuadro["weight"] = cuadro["weight"] + mask_matrix[y,x]
+
+                        tiene_vecino = True
+                if not tiene_vecino:
+                    cuadros.append({"vecinos":{(y-1,x),(y+1,x),(y,x-1),(y,x+1)},"x_init":x*(width//16),"x_end":(x+1)*(width//16),"y_init":y*(height//8),"y_end":(y+1)*(height//8),
+                                    "centroid":((x*(width//16)+(x+1)*(width//16))//2,(y*(height//8)+(y+1)*(height//8))//2),"weight":mask_matrix[y,x]})
+
+    return mask_max_cluster_cpu, fila_interes,cuadros
+
+# Ejemplo de uso
+if __name__ == "__main__":
+    filename = join(dirname(dirname(dirname(abspath(__file__)))), "assets/images/barco.jpg")
+    image = cv2.imread(filename)
+    image_cupy = cp.array(image, dtype=cp.float32)
+    new_width = 256
+    orig_height, orig_width, channels = image_cupy.shape
+    new_height = 192
+    resized_image = utils.resize_image_bgr(image_cupy, (new_height, new_width))
+    segmented_image = fcm(resized_image, num_clusters=4)
+
+    encuadrar = True
+    if encuadrar:
+        for cuadro in segmented_image[2]:
+            ajuste_x = resized_image.shape[1] - segmented_image[0].shape[1] 
+            ajuste_y = resized_image.shape[0] - segmented_image[0].shape[0]
+            cv2.rectangle(resized_image, (cuadro["x_init"]+ajuste_x,cuadro["y_init"]+ajuste_y), (cuadro["x_end"]+ajuste_x,cuadro["y_end"]+ajuste_y), (0, 0, 255), 2)
+
+        cv2.imwrite(f"output_cmeans.png", resized_image)
+    else:
+        cv2.imwrite(f"output_cmeans.png", resized_image)
+    
+    print(segmented_image)

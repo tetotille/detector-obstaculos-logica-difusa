@@ -1,2 +1,2 @@
 # from .deteccion_color import detectar_color
-import detector_horizonte
+#import detector_horizonte

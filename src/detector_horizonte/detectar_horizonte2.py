@@ -1,9 +1,9 @@
-import cupy as cp
+import numpy as cp
 import cv2
 import numpy as np
 from os.path import dirname, abspath, join
 from sys import argv
-import utils
+from src.utils import utils
 
 def find_horizontal_line(imagen_cp):
     # Si la imagen está en color, convertirla a escala de grises
@@ -11,14 +11,14 @@ def find_horizontal_line(imagen_cp):
         image = imagen_cp
 
     # Detectar bordes en la imagen usando edge detector
-    edges = cp.array(cv2.imread("imagen_umbral.png", cv2.IMREAD_GRAYSCALE))
+    edges = cp.array(cv2.imread("src/detector_horizonte/imagen_umbral.png", cv2.IMREAD_GRAYSCALE))
   # Asegúrate de que `process_image` también funcione con CuPy
 
     # Definir el kernel para la operación de dilatación horizontal
     horizontal_kernel = cp.ones((2, 3), cp.uint8)
 
     # Dilatar los bordes detectados horizontalmente 3 veces
-    dilated_edges_horizontal = cv2.dilate(cp.asnumpy(edges), cp.asnumpy(horizontal_kernel), iterations=3)
+    dilated_edges_horizontal = cv2.dilate(edges, horizontal_kernel, iterations=3)
     dilated_edges_horizontal = cp.array(dilated_edges_horizontal)
 
     height, width = imagen_cp.shape[:2]
@@ -26,7 +26,7 @@ def find_horizontal_line(imagen_cp):
     max_line_gap = int(width * 0.1)     # Espacio máximo entre líneas relativo 0.1
 
     # Hough Transform para detectar líneas
-    lines = cv2.HoughLinesP(cp.asnumpy(dilated_edges_horizontal), 5, np.pi/60, 100, minLineLength=min_line_length, maxLineGap=max_line_gap)
+    lines = cv2.HoughLinesP(dilated_edges_horizontal, 5, np.pi/60, 100, minLineLength=min_line_length, maxLineGap=max_line_gap)
 
     if lines is not None:
         lines = cp.array(lines)
@@ -53,7 +53,7 @@ def find_horizontal_line(imagen_cp):
         yn = int(y0 + ((y2 - y1) * (xn - x0)) / (x2 - x1))  # Calcular la coordenada y en x = ancho de la imagen
 
         # Dibujar la línea horizontal en la imagen
-        image = cp.asnumpy(image)
+        image = image
         cv2.line(image, (x0, y0), (xn, yn), (0, 0, 255), 2)
         image = cp.array(image)
 

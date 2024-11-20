@@ -127,9 +127,9 @@ def process_image(image):
     g_mode = np.bincount(image_flatten[1::3][image_flatten[1::3] != 255]).argmax()
     r_mode = np.bincount(image_flatten[2::3][image_flatten[2::3] != 0]).argmax()
     
-    print("blue:",b_mode)
-    print("green:",g_mode)
-    print("red:",r_mode)
+    # print("blue:",b_mode)
+    # print("green:",g_mode)
+    # print("red:",r_mode)
 
     # Procesar cada píxel
     for y in range(height):
@@ -147,29 +147,30 @@ def process_image(image):
             output_image[y, x] = colors[classification]  # Asignar color basado en la clasificación
             binary_image[y, x] = 1 if classification == "obstacle" else 0
 
-    
-    mask_matrix = np.zeros((8,16), dtype=np.uint8)
+    y_block = 6
+    x_block = 20
+    mask_matrix = np.zeros((y_block,x_block), dtype=np.uint8)
     cuadros = []
-    for y in range(8):
-        for x in range(16):
-            mask_matrix[y,x] = np.count_nonzero(binary_image[y*(height//8):(y+1)*(height//8),x*(width//16):(x+1)*(width//16)])
+    for y in range(y_block):
+        for x in range(x_block):
+            mask_matrix[y,x] = np.count_nonzero(binary_image[y*(height//y_block):(y+1)*(height//y_block),x*(width//x_block):(x+1)*(width//x_block)])
             if mask_matrix[y,x] > 20:
                 tiene_vecino = False
                 for cuadro in cuadros:
                     if (y,x) in cuadro["vecinos"]:
                         nuevos_vecinos = {(y-1,x),(y+1,x),(y,x-1),(y,x+1)}
                         cuadro["vecinos"] = cuadro["vecinos"].union(nuevos_vecinos)
-                        cuadro["x_init"] = min(cuadro["x_init"],x*(width//16))
-                        cuadro["x_end"] = max(cuadro["x_end"],(x+1)*(width//16))
-                        cuadro["y_init"] = min(cuadro["y_init"],y*(height//8))
-                        cuadro["y_end"] = max(cuadro["y_end"],(y+1)*(height//8))
+                        cuadro["x_init"] = min(cuadro["x_init"],x*(width//x_block))
+                        cuadro["x_end"] = max(cuadro["x_end"],(x+1)*(width//x_block))
+                        cuadro["y_init"] = min(cuadro["y_init"],y*(height//y_block))
+                        cuadro["y_end"] = max(cuadro["y_end"],(y+1)*(height//y_block))
                         cuadro["centroid"] = (cuadro["x_init"]+cuadro["x_end"])//2,(cuadro["y_init"]+cuadro["y_end"])//2
                         cuadro["weight"] = cuadro["weight"] + mask_matrix[y,x]
 
                         tiene_vecino = True
                 if not tiene_vecino:
-                    cuadros.append({"vecinos":{(y-1,x),(y+1,x),(y,x-1),(y,x+1)},"x_init":x*(width//16),"x_end":(x+1)*(width//16),"y_init":y*(height//8),"y_end":(y+1)*(height//8),
-                                    "centroid":((x*(width//16)+(x+1)*(width//16))//2,(y*(height//8)+(y+1)*(height//8))//2),"weight":mask_matrix[y,x]})
+                    cuadros.append({"vecinos":{(y-1,x),(y+1,x),(y,x-1),(y,x+1)},"x_init":x*(width//x_block),"x_end":(x+1)*(width//x_block),"y_init":y*(height//y_block),"y_end":(y+1)*(height//y_block),
+                                    "centroid":((x*(width//x_block)+(x+1)*(width//x_block))//2,(y*(height//y_block)+(y+1)*(height//y_block))//2),"weight":mask_matrix[y,x]})
 
     return output_image,cuadros
 

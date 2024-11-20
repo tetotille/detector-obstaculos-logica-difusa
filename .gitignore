@@ -169,3 +169,6 @@ test_cont_dif.py
 result.jpg
 launch.json
 environment.yml
+main_output/
+*.pkl
+imagen_umbral.png

@@ -206,7 +206,7 @@ def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None)
 
     return cntr, u, u0, d, jm, p, fpc
 
-def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
+def fcm(resized_image, num_clusters, m=2.0, metric='euclidean',show_images=False):
     """
     Cargar la imagen, aplicar Fuzzy C-Means clustering y devolver la imagen segmentada.
 
@@ -253,9 +253,10 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     #segmented_image_normalized = cp.random.rand(100, 100)  # Ejemplo de array normalizado
     segmented_image_normalized = (segmented_image_normalized * 255).astype(cp.uint8)
     segmented_image_normalized_np = segmented_image_normalized
-    cv2.imshow("segmentado", segmented_image_normalized_np)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    if show_images:
+        cv2.imshow("segmentado", segmented_image_normalized_np)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
     # Paso 5: Calcular la frecuencia de cada cluster
 
     fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
@@ -263,15 +264,17 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
     _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
     image3_np=image3
-    cv2.imshow("cortado", image3_np)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    if show_images:
+        cv2.imshow("cortado", image3_np)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
     # Calcular la frecuencia de cada cluster dentro del área de interés
     unique, counts = cp.unique(image3, return_counts=True)
 
     # Imprimir valores únicos y sus frecuencias
-    print("Unique clusters:", unique)
-    print("Cluster frequencies:", counts)
+    if show_images:
+        print("Unique clusters:", unique)
+        print("Cluster frequencies:", counts)
 
     # Encontrar el cluster con la mayor frecuencia
     max_cluster_idx = cp.argmin(counts)
@@ -283,34 +286,37 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean'):
     mask_max_cluster_cpu = mask_max_cluster
 
     # Mostrar la imagen utilizando OpenCV
-    cv2.imshow("original_cmeans", mask_max_cluster_cpu)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    if show_images:
+        cv2.imshow("original_cmeans", mask_max_cluster_cpu)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
     # Liberar memoria de GPU al final del script
     # cp.get_default_memory_pool().free_all_blocks()
-    mask_matrix = cp.zeros((8,16), dtype=cp.uint8)
+    x_block = 20
+    y_block = 6
+    mask_matrix = cp.zeros((y_block,x_block), dtype=cp.uint8)
     height, width = mask_max_cluster_cpu.shape
     cuadros = []
-    for y in range(8):
-        for x in range(16):
-            mask_matrix[y,x] = cp.count_nonzero(mask_max_cluster_cpu[y*(height//8):(y+1)*(height//8),x*(width//16):(x+1)*(width//16)])
+    for y in range(y_block):
+        for x in range(x_block):
+            mask_matrix[y,x] = cp.count_nonzero(mask_max_cluster_cpu[y*(height//y_block):(y+1)*(height//y_block),x*(width//x_block):(x+1)*(width//x_block)])
             if mask_matrix[y,x] > 20:
                 tiene_vecino = False
                 for cuadro in cuadros:
                     if (y,x) in cuadro["vecinos"]:
                         nuevos_vecinos = {(y-1,x),(y+1,x),(y,x-1),(y,x+1)}
                         cuadro["vecinos"] = cuadro["vecinos"].union(nuevos_vecinos)
-                        cuadro["x_init"] = min(cuadro["x_init"],x*(width//16))
-                        cuadro["x_end"] = max(cuadro["x_end"],(x+1)*(width//16))
-                        cuadro["y_init"] = min(cuadro["y_init"],y*(height//8))
-                        cuadro["y_end"] = max(cuadro["y_end"],(y+1)*(height//8))
+                        cuadro["x_init"] = min(cuadro["x_init"],x*(width//x_block))
+                        cuadro["x_end"] = max(cuadro["x_end"],(x+1)*(width//x_block))
+                        cuadro["y_init"] = min(cuadro["y_init"],y*(height//y_block))
+                        cuadro["y_end"] = max(cuadro["y_end"],(y+1)*(height//y_block))
                         cuadro["centroid"] = (cuadro["x_init"]+cuadro["x_end"])//2,(cuadro["y_init"]+cuadro["y_end"])//2
                         cuadro["weight"] = cuadro["weight"] + mask_matrix[y,x]
 
                         tiene_vecino = True
                 if not tiene_vecino:
-                    cuadros.append({"vecinos":{(y-1,x),(y+1,x),(y,x-1),(y,x+1)},"x_init":x*(width//16),"x_end":(x+1)*(width//16),"y_init":y*(height//8),"y_end":(y+1)*(height//8),
-                                    "centroid":((x*(width//16)+(x+1)*(width//16))//2,(y*(height//8)+(y+1)*(height//8))//2),"weight":mask_matrix[y,x]})
+                    cuadros.append({"vecinos":{(y-1,x),(y+1,x),(y,x-1),(y,x+1)},"x_init":x*(width//x_block),"x_end":(x+1)*(width//x_block),"y_init":y*(height//y_block),"y_end":(y+1)*(height//y_block),
+                                    "centroid":((x*(width//x_block)+(x+1)*(width//x_block))//2,(y*(height//y_block)+(y+1)*(height//y_block))//2),"weight":mask_matrix[y,x]})
 
     return mask_max_cluster_cpu, fila_interes,cuadros
 

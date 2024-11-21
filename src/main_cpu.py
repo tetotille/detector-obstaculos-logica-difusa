@@ -2,8 +2,11 @@ import cv2
 
 from os.path import dirname, abspath,join
 
-from src.cmeans import fcm
-from src.detector_horizonte import find_largest_fuzzy_jump, separate_pixels
+#from src.cmeans import fcm
+from src.cmeans import c_means_main
+#from src.detector_horizonte import find_largest_fuzzy_jump, separate_pixels
+from src.detector_horizonte import pixel_detector
+#from src.detector_hsv import detector_hsv,detector_rgb
 from src.detector_hsv import detector_hsv,detector_rgb
 from src.utils import read_image
 

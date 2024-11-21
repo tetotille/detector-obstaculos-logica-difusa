@@ -1,6 +1,5 @@
 import numpy as cp
 import cv2
-import numpy as np
 from os.path import dirname, abspath, join
 from sys import argv
 from src.utils import utils

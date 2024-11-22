@@ -13,7 +13,7 @@ image_folder = join(dirname(dirname(abspath(__file__))),"assets/images")
 image_set = {f"{join(image_folder,'akaso1.jpeg')}",
              f"{join(image_folder,'akaso2.jpeg')}",
             #  f"{join(image_folder,'ypacarai.jpeg')}",
-            #  f"{join(image_folder,'barco.jpg')}",
+             f"{join(image_folder,'barco.jpg')}",
             #  f"{join(image_folder,'lago-ypacarai (6).jpg')}",
             #  f"{join(image_folder,'IMG_6830.jpeg')}",
              f"{join(image_folder,'akaso3.jpeg')}",}
@@ -80,6 +80,15 @@ def main():
             cmeans_image, cmeans_fila_interes, cuadros_cmeans = fcm(image_np,4)
             tic4 = time()
             encuadrar = True
+            for cuadro in cuadros_rgb:
+                cuadro["y_centroid"] = cuadro["y_centroid"] + ajuste - (a+b)//2
+            j = 0
+            for i in range(len(cuadros_cmeans)):
+                j = j + i
+                cuadros_cmeans[j]["y_centroid"] = cuadros_cmeans[j]["y_centroid"] + cmeans_fila_interes - (a+b)//2
+                if cuadros_cmeans[j]["y_centroid"] < 0:
+                    del cuadros_cmeans[j]
+                    j -= 1
             if encuadrar:
                 for cuadro in cuadros_rgb:
                     cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+ajuste), (cuadro["x_end"],cuadro["y_end"]+ajuste), (0, 0, 255), 2)
@@ -95,6 +104,9 @@ def main():
             tics[filename]["rgb"].append(tic3-tic2)
             tics[filename]["cmeans"].append(tic4-tic3)
             
+            
+
+
             # print("RGB Detector")
             # print(cuadros_rgb)
             # print("\n\nCmeans Detector")

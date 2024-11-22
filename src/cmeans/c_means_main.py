@@ -1,9 +1,10 @@
 import numpy as cp
 import time 
 import cv2
-from src.utils import utils
+from src.utils import utils, block_framed, neighbor_framed, neighbor_framed_np
 from src.detector_horizonte import detectar_horizonte2
 from os.path import join, dirname, abspath
+from scipy.ndimage import label
 
 def normalize_power_columns(matrix, power):
     """
@@ -292,32 +293,19 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean',show_images=False
         cv2.destroyAllWindows()
     # Liberar memoria de GPU al final del script
     # cp.get_default_memory_pool().free_all_blocks()
-    x_block = 20
-    y_block = 6
-    mask_matrix = cp.zeros((y_block,x_block), dtype=cp.uint8)
-    height, width = mask_max_cluster_cpu.shape
-    cuadros = []
-    for y in range(y_block):
-        for x in range(x_block):
-            mask_matrix[y,x] = cp.count_nonzero(mask_max_cluster_cpu[y*(height//y_block):(y+1)*(height//y_block),x*(width//x_block):(x+1)*(width//x_block)])
-            if mask_matrix[y,x] > 20:
-                tiene_vecino = False
-                for cuadro in cuadros:
-                    if (y,x) in cuadro["vecinos"]:
-                        nuevos_vecinos = {(y-1,x),(y+1,x),(y,x-1),(y,x+1)}
-                        cuadro["vecinos"] = cuadro["vecinos"].union(nuevos_vecinos)
-                        cuadro["x_init"] = min(cuadro["x_init"],x*(width//x_block))
-                        cuadro["x_end"] = max(cuadro["x_end"],(x+1)*(width//x_block))
-                        cuadro["y_init"] = min(cuadro["y_init"],y*(height//y_block))
-                        cuadro["y_end"] = max(cuadro["y_end"],(y+1)*(height//y_block))
-                        cuadro["centroid"] = (cuadro["x_init"]+cuadro["x_end"])//2,(cuadro["y_init"]+cuadro["y_end"])//2
-                        cuadro["weight"] = cuadro["weight"] + mask_matrix[y,x]
+    
+    t1 = time.time()
+    cuadros = block_framed(mask_max_cluster_cpu)
+    t2 = time.time()
+    cuadros = neighbor_framed(mask_max_cluster_cpu)
+    t3 = time.time()
+    cuadros = neighbor_framed_np(mask_max_cluster_cpu)
+    t4 = time.time()
 
-                        tiene_vecino = True
-                if not tiene_vecino:
-                    cuadros.append({"vecinos":{(y-1,x),(y+1,x),(y,x-1),(y,x+1)},"x_init":x*(width//x_block),"x_end":(x+1)*(width//x_block),"y_init":y*(height//y_block),"y_end":(y+1)*(height//y_block),
-                                    "centroid":((x*(width//x_block)+(x+1)*(width//x_block))//2,(y*(height//y_block)+(y+1)*(height//y_block))//2),"weight":mask_matrix[y,x]})
 
+    print("Block framed:",t2-t1)
+    print("Neighbor framed:",t3-t2)
+    print("Neighbor framed np:",t4-t3)
     return mask_max_cluster_cpu, fila_interes,cuadros
 
 # Ejemplo de uso

@@ -1,4 +1,8 @@
-import numpy as cp
+try:
+    import cupy as cp
+except:
+    print("cuda no está instalado.")
+    import numpy as cp
 import time 
 import cv2
 from src.utils import utils, block_framed, neighbor_framed, neighbor_framed_np
@@ -294,18 +298,18 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean',show_images=False
     # Liberar memoria de GPU al final del script
     # cp.get_default_memory_pool().free_all_blocks()
     
-    t1 = time.time()
-    cuadros = block_framed(mask_max_cluster_cpu)
-    t2 = time.time()
-    cuadros = neighbor_framed(mask_max_cluster_cpu)
-    t3 = time.time()
+    # t1 = time.time()
+    # cuadros = block_framed(mask_max_cluster_cpu)
+    # t2 = time.time()
+    # cuadros = neighbor_framed(mask_max_cluster_cpu)
+    # t3 = time.time()
     cuadros = neighbor_framed_np(mask_max_cluster_cpu)
     t4 = time.time()
 
 
-    print("Block framed:",t2-t1)
-    print("Neighbor framed:",t3-t2)
-    print("Neighbor framed np:",t4-t3)
+    # print("Block framed:",t2-t1)
+    # print("Neighbor framed:",t3-t2)
+    # print("Neighbor framed np:",t4-t3)
     return mask_max_cluster_cpu, fila_interes,cuadros
 
 # Ejemplo de uso

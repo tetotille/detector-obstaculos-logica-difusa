@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 import time
 from utils import neighbor_framed_np
 
@@ -10,11 +9,11 @@ except:
     import numpy as cp
 
 # Define los colores de segmentación específicos
-SEGMENTATION_COLORS = np.array([
+SEGMENTATION_COLORS = cp.array([
     [35, 195, 249],   # Color para agua
     # [164, 76, 90],
     [224, 167, 41]     # Color para obstáculo
-], np.uint8)
+], cp.uint8)
 
 
 def view_images(image):
@@ -109,8 +108,8 @@ def classify_pixel(red_category, blue_category, green_category):
 def process_image(image):
     """Procesa una imagen para clasificar cada píxel como agua, cielo u obstáculo."""
     height, width, _ = image.shape
-    output_image = np.zeros((height, width, 3), dtype=np.uint8)
-    binary_image = np.zeros((height, width), dtype=np.uint8)
+    output_image = cp.zeros((height, width, 3), dtype=cp.uint8)
+    binary_image = cp.zeros((height, width), dtype=cp.uint8)
 
     # Definir colores para cada categoría basados en SEGMENTATION_COLORS
     colors = {
@@ -124,9 +123,9 @@ def process_image(image):
     # view_images(image)
     #################
     image_flatten = image.flatten()
-    b_mode = np.bincount(image_flatten[0::3][image_flatten[0::3] != 0]).argmax()
-    g_mode = np.bincount(image_flatten[1::3][image_flatten[1::3] != 255]).argmax()
-    r_mode = np.bincount(image_flatten[2::3][image_flatten[2::3] != 0]).argmax()
+    b_mode = cp.bincount(image_flatten[0::3][image_flatten[0::3] != 0]).argmax()
+    g_mode = cp.bincount(image_flatten[1::3][image_flatten[1::3] != 255]).argmax()
+    r_mode = cp.bincount(image_flatten[2::3][image_flatten[2::3] != 0]).argmax()
     
     # print("blue:",b_mode)
     # print("green:",g_mode)
@@ -152,9 +151,9 @@ def process_image(image):
     return output_image,cuadros
 
 
-def get_orientation(image:np.array):
+def get_orientation(image:cp.array):
     # Convertir la imagen a un formato binario basado en el color del obstáculo
-    obstacle_color = np.array([224, 167, 41], dtype=np.uint8)
+    obstacle_color = cp.array([224, 167, 41], dtype=cp.uint8)
     mask = cv2.inRange(image, obstacle_color, obstacle_color)
     
     # Encontrar contornos en la máscara binaria

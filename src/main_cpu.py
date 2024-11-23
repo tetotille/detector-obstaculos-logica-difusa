@@ -6,6 +6,7 @@ from src.cmeans import fcm
 from src.detector_horizonte import find_largest_fuzzy_jump, separate_pixels
 from src.detector_hsv import detector_hsv,detector_rgb
 from src.utils import read_image
+from src.fuzzy_union.fuzzy_union import fuzzy_union
 
 
 
@@ -105,13 +106,14 @@ def main():
             tics[filename]["cmeans"].append(tic4-tic3)
             
             
-
-
+            fuzzy_frames = fuzzy_union([cuadros_rgb, cuadros_cmeans])
+            tic_final = time()
             # print("RGB Detector")
-            # print(cuadros_rgb)
+            # print(cuadros_rgb)g
             # print("\n\nCmeans Detector")
             # print(cuadros_cmeans)
-            print(f"Processing\t{i}/100",end="\r")
+            print(fuzzy_frames)
+            print(f"Tiempo total: {time()-init}")
     pickle.dump(tics,open("main_output/tics.pkl","wb"))
 
 

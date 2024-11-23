@@ -25,7 +25,7 @@ def find_horizontal_line(imagen_cp):
     max_line_gap = int(width * 0.1)     # Espacio máximo entre líneas relativo 0.1
 
     # Hough Transform para detectar líneas
-    lines = cv2.HoughLinesP(dilated_edges_horizontal, 5, np.pi/60, 100, minLineLength=min_line_length, maxLineGap=max_line_gap)
+    lines = cv2.HoughLinesP(dilated_edges_horizontal, 5, cp.pi/60, 100, minLineLength=min_line_length, maxLineGap=max_line_gap)
 
     if lines is not None:
         lines = cp.array(lines)

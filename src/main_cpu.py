@@ -115,7 +115,51 @@ def main():
             print(fuzzy_frames)
             print(f"Tiempo total: {time()-init}")
     pickle.dump(tics,open("main_output/tics.pkl","wb"))
+    
+def main_video():
+    while True:
+        frame = get_video_stream()
+        image_np,image_cp = read_image(frame,256,192)
+        left,center,right = separate_pixels(image_np)
+        left = find_largest_fuzzy_jump(left)
+        center = find_largest_fuzzy_jump(center)
+        right = find_largest_fuzzy_jump(right)
 
+        tic1 = time()
+        if abs(center - left) < abs(right - center) and abs(center - left) < abs(right - left):
+            a,b = left,center
+        elif abs(center - left) > abs(right - center) and abs(right - center) < abs(right - left):
+            a,b = center,right
+        else:
+            a,b = left,right
+        
+        cropped_image_np = image_np[(a+b)//2:,:]
+        cropped_image_cp = image_cp[(a+b)//2:,:]
+        
+        ajuste = (a+b)//2
+        
+        ##### DETECTOR 1 ######
+        hsv_np, cuadros_rgb = detector_rgb(cropped_image_np)
+        
+        ##### DETECTOR 2 ######
+        cmeans_image, cmeans_fila_interes, cuadros_cmeans = fcm(image_np,4)
+        
+        ###### DETECTOR LIDAR ######
+        lidar:tuple[float,float] = (3.3,20.2) # Acá se define la función
+        
+        for cuadro in cuadros_rgb:
+            cuadro["y_centroid"] = cuadro["y_centroid"] + ajuste - (a+b)//2
+        
+        for i in range(len(cuadros_cmeans)):
+            j = j + i
+            cuadros_cmeans[j]["y_centroid"] = cuadros_cmeans[j]["y_centroid"] + cmeans_fila_interes - (a+b)//2
+            if cuadros_cmeans[j]["y_centroid"] < 0:
+                del cuadros_cmeans[j]
+                j -= 1
+        
+        ###### UNION DETECTORES ######
+        fuzzy_frames = fuzzy_union([cuadros_rgb, cuadros_cmeans],lidar)
+        
 
 if __name__ == "__main__":
 

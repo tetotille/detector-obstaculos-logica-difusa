@@ -82,7 +82,7 @@ def apply_rules(distancia, y_centroid, weight):
 
     return fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(rule1, rule2), rule3), rule4), rule5), rule6), rule7), rule8), rule9)
 
-def fuzzy_union(cuadros_list):
+def fuzzy_union(cuadros_list,lidar=(0.0,0.0)):
     """
     Función que recibe una lista de cuadros y devuelve la unión difusa de los cuadros
 
@@ -93,6 +93,7 @@ def fuzzy_union(cuadros_list):
             weight: int
         },...
     ],...]
+    lidar: [float,float]
     """
     for _ in range(len(cuadros_list)):
         cuadros = cuadros_list.pop(0)

@@ -6,9 +6,19 @@ from src.cmeans import fcm
 from src.detector_horizonte import find_largest_fuzzy_jump, separate_pixels
 from src.detector_hsv import detector_hsv,detector_rgb
 from src.utils import read_image
+import serial
+import struct
+import time
+
 from src.fuzzy_union.fuzzy_union import fuzzy_union
 
 
+    # Configura el puerto serial donde está conectado tu sensor LiDAR
+ser = serial.Serial(
+    port='COM3',  # Cambia esto al puerto UART de tu TX2
+    baudrate=115200,
+    timeout=1
+    )
 
 image_folder = join(dirname(dirname(abspath(__file__))),"assets/images")
 image_set = {f"{join(image_folder,'akaso1.jpeg')}",
@@ -18,6 +28,27 @@ image_set = {f"{join(image_folder,'akaso1.jpeg')}",
             #  f"{join(image_folder,'lago-ypacarai (6).jpg')}",
             #  f"{join(image_folder,'IMG_6830.jpeg')}",
              f"{join(image_folder,'akaso3.jpeg')}",}
+
+def send_command(command):
+    """Envía un comando al sensor."""
+    ser.write((command + '\n').encode('ascii'))
+
+def read_data_block():
+    """Lee un bloque de datos del sensor (7 bytes)."""
+    data = ser.read(7)
+    if len(data) == 7:
+        # Asumiendo que los datos siguen el formato: <BHHBB>
+        sync, azimuth, distance, strength, checksum = struct.unpack('<BHHBB', data)
+        return {
+            'sync': sync,
+            'azimuth': azimuth / 100.0,  # Conversión a grados
+            'distance': distance,          # Distancia en cm
+            'strength': strength,          # Intensidad de la señal
+            'checksum': checksum
+        }
+    else:
+        return None
+
 
 def get_video_stream():
     cap = cv2.VideoCapture(0)
@@ -115,6 +146,7 @@ def main():
             print(fuzzy_frames)
             print(f"Tiempo total: {time()-init}")
     pickle.dump(tics,open("main_output/tics.pkl","wb"))
+    send_command('DS')
     
 def main_video():
     while True:
@@ -159,10 +191,24 @@ def main_video():
         
         ###### UNION DETECTORES ######
         fuzzy_frames = fuzzy_union([cuadros_rgb, cuadros_cmeans],lidar)
-        
+
+        data_block = read_data_block()
+        if data_block:
+            azimuth = data_block['azimuth']
+            distance = data_block['distance']
+            strength = data_block['strength']
+
+            # Filtrar los datos por el rango de ángulo -90 a 90 grados
+            if -90 <= azimuth <= 90 and distance < 40 :
+                lidar=(f"Ángulo: {azimuth:.2f}°, Distancia: {distance} cm, Intensidad: {strength}")
+            else:
+                print("No se pudo leer un bloque de datos. Verifique la conexión.")
+            
 
 if __name__ == "__main__":
 
     from time import time
 
     main()
+
+

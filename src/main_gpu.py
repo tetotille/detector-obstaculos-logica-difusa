@@ -168,8 +168,9 @@ def main():
 def main_video():
     while True:
         frame = get_video_stream()
-        image_np,image_cp = read_image(frame,256,192)
-        left,center,right = separate_pixels(image_np)
+        frame_gpu = cp.asarray(frame)
+        left,center,right = separate_pixels(frame_gpu)
+            
         left = find_largest_fuzzy_jump(left)
         center = find_largest_fuzzy_jump(center)
         right = find_largest_fuzzy_jump(right)
@@ -182,16 +183,15 @@ def main_video():
         else:
             a,b = left,right
         
-        cropped_image_np = image_np[(a+b)//2:,:]
-        cropped_image_cp = image_cp[(a+b)//2:,:]
+        cropped_image_cp = frame_gpu[(a+b)//2:,:]
         
         ajuste = (a+b)//2
         
         ##### DETECTOR 1 ######
-        hsv_np, cuadros_rgb = detector_rgb_gpu(cropped_image_cp)
+        hsv_cp, cuadros_rgb = detector_rgb_gpu(cropped_image_cp)
         
         ##### DETECTOR 2 ######
-        cmeans_image, cmeans_fila_interes, cuadros_cmeans = fcm(image_np,4)
+        cmeans_image, cmeans_fila_interes, cuadros_cmeans = fcm(frame_gpu,4,punto_horizonte=ajuste-20)
         
         ###### DETECTOR LIDAR ######
         lidar:tuple[float,float] = (3.3,20.2) # Acá se define la función

@@ -1,7 +1,12 @@
+import sys
+import os
+
+# Añadir el directorio raíz del proyecto al sys.path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
+
 import cv2
-
 from os.path import dirname, abspath,join
-
 from src.cmeans import fcm
 from src.detector_horizonte import find_largest_fuzzy_jump, separate_pixels
 from src.detector_hsv import detector_hsv,detector_rgb
@@ -14,11 +19,14 @@ from src.fuzzy_union.fuzzy_union import fuzzy_union
 
 
     # Configura el puerto serial donde está conectado tu sensor LiDAR
-ser = serial.Serial(
-    port='COM3',  # Cambia esto al puerto UART de tu TX2
-    baudrate=115200,
-    timeout=1
-    )
+try:
+    ser = serial.Serial(
+        port='COM3',  # Cambia esto al puerto UART de tu TX2
+        baudrate=115200,
+        timeout=1
+        )
+except:
+    print("Lidar no detectado")
 
 image_folder = join(dirname(dirname(abspath(__file__))),"assets/images")
 image_set = {f"{join(image_folder,'akaso1.jpeg')}",
@@ -107,7 +115,7 @@ def main():
 
             ajuste = (a+b)//2
             tic2 = time()
-            hsv_np, cuadros_rgb = detector_rgb(cropped_image_np)
+            hsv_np, cuadros_rgb = detector_rgb(cropped_image_cp)
             tic3 = time()
             cmeans_image, cmeans_fila_interes, cuadros_cmeans = fcm(image_np,4)
             tic4 = time()
@@ -171,7 +179,7 @@ def main_video():
         ajuste = (a+b)//2
         
         ##### DETECTOR 1 ######
-        hsv_np, cuadros_rgb = detector_rgb(cropped_image_np)
+        hsv_np, cuadros_rgb = detector_rgb(cropped_image_np,cpu=True)
         
         ##### DETECTOR 2 ######
         cmeans_image, cmeans_fila_interes, cuadros_cmeans = fcm(image_np,4)

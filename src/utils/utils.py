@@ -148,22 +148,22 @@ def block_framed(mask_max_cluster_cpu):
 
 def neighbor_framed_np(mask_max_cluster_cpu):
     # Identificar regiones conectadas usando etiquetado
-    structure = cp.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])  # Conexión 8
+    structure = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])  # Conexión 8
     labeled, num_features = label(mask_max_cluster_cpu != 0, structure=structure)
     
     cuadros = []
     for label_id in range(1, num_features + 1):
         # Extraer región con la etiqueta actual
         region_mask = (labeled == label_id)
-        indices = cp.argwhere(region_mask)  # Obtener índices de los píxeles no cero
+        indices = np.argwhere(region_mask)  # Obtener índices de los píxeles no cero
         
         if indices.shape[0] >= 30:  # Filtrar regiones pequeñas
             y_coords, x_coords = indices[:, 0], indices[:, 1]
-            x_init, x_end = cp.min(x_coords), cp.max(x_coords)
-            y_init, y_end = cp.min(y_coords), cp.max(y_coords)
+            x_init, x_end = np.min(x_coords), np.max(x_coords)
+            y_init, y_end = np.min(y_coords), np.max(y_coords)
             weight = indices.shape[0]
-            x_centroid = cp.mean(x_coords)
-            y_centroid = cp.mean(y_coords)
+            x_centroid = np.mean(x_coords)
+            y_centroid = np.mean(y_coords)
             
             cuadro = {
                 "puntos": None,  # Si necesitas puntos específicos, usar `indices.tolist()` (costoso en memoria)
@@ -171,8 +171,8 @@ def neighbor_framed_np(mask_max_cluster_cpu):
                 "x_end": x_end,
                 "y_init": y_init,
                 "y_end": y_end,
-                "x": cp.sum(x_coords),
-                "y": cp.sum(y_coords),
+                "x": np.sum(x_coords),
+                "y": np.sum(y_coords),
                 "weight": weight,
                 "x_centroid": int(x_centroid),
                 "y_centroid": int(y_centroid),

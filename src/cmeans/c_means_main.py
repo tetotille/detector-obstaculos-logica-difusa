@@ -211,7 +211,7 @@ def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None)
 
     return cntr, u, u0, d, jm, p, fpc
 
-def fcm(resized_image, num_clusters, m=2.0, metric='euclidean',show_images=False):
+def fcm(resized_image, num_clusters, m=2.0, metric='euclidean',show_images=False,punto_horizonte=0):
     """
     Cargar la imagen, aplicar Fuzzy C-Means clustering y devolver la imagen segmentada.
 
@@ -264,10 +264,10 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean',show_images=False
         cv2.destroyAllWindows()
     # Paso 5: Calcular la frecuencia de cada cluster
 
-    fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
+    # fila_interes, imagen = detectar_horizonte2.find_horizontal_line(resized_image)
     
     # Recortar la imagen horizontalmente (supongamos que crop_horizontal también trabaja con CuPy)
-    _, image3 = utils.crop_horizontal(segmented_image_normalized, fila_interes)
+    _, image3 = utils.crop_horizontal(segmented_image_normalized, punto_horizonte)
     image3_np=image3
     if show_images:
         cv2.imshow("cortado", image3_np)
@@ -303,14 +303,14 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean',show_images=False
     # t2 = time.time()
     # cuadros = neighbor_framed(mask_max_cluster_cpu)
     # t3 = time.time()
-    cuadros = neighbor_framed_np(mask_max_cluster_cpu)
+    cuadros = neighbor_framed_np(mask_max_cluster_cpu.get())
     t4 = time.time()
 
 
     # print("Block framed:",t2-t1)
     # print("Neighbor framed:",t3-t2)
     # print("Neighbor framed np:",t4-t3)
-    return mask_max_cluster_cpu, fila_interes,cuadros
+    return mask_max_cluster_cpu, punto_horizonte,cuadros
 
 # Ejemplo de uso
 if __name__ == "__main__":

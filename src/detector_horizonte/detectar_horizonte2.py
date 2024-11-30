@@ -1,4 +1,5 @@
-import numpy as cp
+import numpy as np
+import cupy as cp
 import cv2
 from os.path import dirname, abspath, join
 from sys import argv

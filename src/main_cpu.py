@@ -49,7 +49,7 @@ def read_data_block():
         sync, azimuth, distance, strength, checksum = struct.unpack('<BHHBB', data)
         return {
             'sync': sync,
-            'azimuth': azimuth / 100.0,  # Conversión a grados
+            'azimuth': azimuth / 100.0,    # Conversión a grados
             'distance': distance,          # Distancia en cm
             'strength': strength,          # Intensidad de la señal
             'checksum': checksum
@@ -123,11 +123,11 @@ def main():
             for cuadro in cuadros_rgb:
                 cuadro["y_centroid"] = cuadro["y_centroid"] + ajuste - (a+b)//2
             j = 0
-            for i in range(len(cuadros_cmeans)):
-                j = j + i
-                cuadros_cmeans[j]["y_centroid"] = cuadros_cmeans[j]["y_centroid"] + cmeans_fila_interes - (a+b)//2
-                if cuadros_cmeans[j]["y_centroid"] < 0:
-                    del cuadros_cmeans[j]
+            for k in range(len(cuadros_cmeans)):
+                index = j + k
+                cuadros_cmeans[index]["y_centroid"] = cuadros_cmeans[index]["y_centroid"] + cmeans_fila_interes - (a+b)//2
+                if cuadros_cmeans[index]["y_centroid"] < 0:
+                    del cuadros_cmeans[index]
                     j -= 1
             if encuadrar:
                 for cuadro in cuadros_rgb:

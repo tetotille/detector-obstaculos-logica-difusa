@@ -23,6 +23,12 @@ class FrameMemory:
         self._frames[index] = None
         return result
 
+    def get_point(self):
+        return self._frames[self._last]["x_centroid"],self._frames[self._last]["y_centroid"]
+    
+    def get_weight(self):
+        return self._frames[self._last]["weight"]
+
     def score(self):
         return sum(1 for frame in self._frames if frame is not None)
     

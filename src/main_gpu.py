@@ -197,9 +197,11 @@ def main():
 def main_video():
     video_memory:list[FrameMemory] = []
     memory_limit = 5 # cantidad de frames de memoria
+    max_x = 256
+    max_y = 192
     while True:
         frame = get_video_stream()
-        frame_gpu = cp.asarray(frame)
+        image_np,frame_gpu = read_image(frame,max_x,max_y)
         left,center,right = separate_pixels(frame_gpu)
             
         left = find_largest_fuzzy_jump(left)
@@ -278,14 +280,33 @@ def main_video():
                 video_memory.append(memory)
 
         # Limpiado de memoria
+        max_weight = 0
+        max_score = 0
+        final_score = 0
         for memory in video_memory[:]:
             if not memory.modified:
                 memory.add(None)
             memory.modified = False
             if memory.empty():
                 video_memory.remove(memory)
+            max_weight = max(max_weight,memory.get_weight())     # Peso (cantidad de pixeles) del obstáculo
+            max_score = max(max_score,memory.score())           # Cantidad de frames en los que se detectó el obstáculo
+            if final_score < max_weight * (max_score/2):
+                x,y = memory.get_point()         # Coordenadas del centroide del obstáculo
 
         #########################################################
+
+        ######## UTILIZACIÓN DE RESULTADOS ###########
+        """
+           Se puede obtener los puntos x e y de cada obstáculo detectado de la siguiente forma:
+           suponiendo que se recorre video_memory
+
+           Para este caso solo se tiene en cuenta el obstáculo con el score más alto, es decir el que tenga el final_score más alto
+           x,y: son el centroide del obstáculo que debe ser tomado mayormente en cuenta
+        """
+        # Resultado te dice si el objeto está a la izquierda, derecha o centro
+        resultado = "Izquierda" if x < max_x//2 else "Derecha" if x > max_x//2 else "Centro"
+        ##############################################
 
         data_block = read_data_block()
         if data_block:

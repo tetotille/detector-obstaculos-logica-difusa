@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Nombre de la interfaz de WireGuard
-WG_INTERFACE="wg0"
+WG_INTERFACE="peer_tx2"
 
 # Verificar si la interfaz está activa
 if ip a show "$WG_INTERFACE" up &>/dev/null; then
@@ -16,4 +16,6 @@ if ip a show "$WG_INTERFACE" up &>/dev/null; then
     fi
 else
     echo "No estás conectado a la VPN de WireGuard."
+    wg-quick up $WG_INTERFACE
+    echo "Ahora estás conectado a $WG_INTERFACE"
 fi

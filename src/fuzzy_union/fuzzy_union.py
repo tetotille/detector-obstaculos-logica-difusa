@@ -106,8 +106,9 @@ def fuzzy_union(cuadros_list,lidar=(0.0,0.0)):
                     cuadro["distancia_minima"] = min(cuadro["distancia_minima"], distancia,100)
         cuadros_list.append(cuadros)
 
-    for cuadros in cuadros_list:
-        for cuadro in cuadros:
+    for i in range(len(cuadros_list)):
+        max_cuadro = None
+        for cuadro in cuadros_list[i]:
             near = triangular(cuadro["distancia_minima"], 0, 0, 20)
             average = triangular(cuadro["distancia_minima"], 10, 25, 40)
             far = triangular(cuadro["distancia_minima"], 30, 100, 100)
@@ -129,6 +130,11 @@ def fuzzy_union(cuadros_list,lidar=(0.0,0.0)):
                                                   {"big":big,
                                                    "medium":medium,
                                                    "small":small,})
+            if max_cuadro is not None:
+                max_cuadro = cuadro if cuadro["fuzzy_union"] > max_cuadro["fuzzy_union"] else max_cuadro
+            else:
+                max_cuadro = cuadro
+        cuadros_list[i] = max_cuadro
     return cuadros_list
 
 if __name__ == "__main__":

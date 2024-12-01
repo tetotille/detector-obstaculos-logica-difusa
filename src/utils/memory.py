@@ -51,7 +51,19 @@ class FrameMemory:
             self._index = index
 
     def __contains__(self,frame_data):
-        return (frame_data["x_init"] >= self._frames[self._last]["x_init"]) and (frame_data["x_end"] <= self._frames[self._last]["x_end"]) and (frame_data["y_init"] >= self._frames[self._last]["y_init"]) and (frame_data["y_end"] <= self._frames[self._last]["y_end"])
-
+        xi1 = self._frames[self._last]["x_init"]
+        xi2 = frame_data["x_init"]
+        xe1 = self._frames[self._last]["x_end"]
+        xe2 = frame_data["x_end"]
+        yi1 = self._frames[self._last]["y_init"]
+        yi2 = frame_data["y_init"]
+        ye1 = self._frames[self._last]["y_end"]
+        ye2 = frame_data["y_end"]
+        return not (xe1 < xi2 or xe2 < xi1 or ye1 < yi2 or ye2 < yi1)
+    
     def __eq__(self,other):
         return self._id == other._id
+    
+    def __str__(self):
+        points = sum([f"P{x}:{self._frames[x]['x_centroid'],self._frames[x]['y_centroid']}" if self._frames[x] is not None else None for x in range(self._cantidad)])
+        return f"FrameMemory(id:{self._id},{points})"

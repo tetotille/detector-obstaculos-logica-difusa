@@ -199,8 +199,7 @@ def main_video():
     memory_limit = 5 # cantidad de frames de memoria
     max_x = 256
     max_y = 192
-    while True:
-        frame = get_video_stream()
+    for frame in get_video_stream():
         image_np,frame_gpu = read_image(frame,max_x,max_y)
         left,center,right = separate_pixels(frame_gpu)
             
@@ -231,12 +230,12 @@ def main_video():
         
         for cuadro in cuadros_rgb:
             cuadro["y_centroid"] = cuadro["y_centroid"] + ajuste - (a+b)//2
-        
-        for i in range(len(cuadros_cmeans)):
-            j = j + i
-            cuadros_cmeans[j]["y_centroid"] = cuadros_cmeans[j]["y_centroid"] + cmeans_fila_interes - (a+b)//2
-            if cuadros_cmeans[j]["y_centroid"] < 0:
-                del cuadros_cmeans[j]
+        j = 0
+        for k in range(len(cuadros_cmeans)):
+            index = j + k
+            cuadros_cmeans[index]["y_centroid"] = cuadros_cmeans[index]["y_centroid"] + cmeans_fila_interes - (a+b)//2
+            if cuadros_cmeans[index]["y_centroid"] < 0:
+                del cuadros_cmeans[index]
                 j -= 1
         
         ###### UNION DETECTORES ######
@@ -269,6 +268,7 @@ def main_video():
         """
         # Agregado a la memoria
         for fuzzy_frame in fuzzy_frames:
+            if fuzzy_frame is None: continue
             in_memory = False
             for memory in video_memory:
                 if fuzzy_frame in memory:
@@ -289,10 +289,13 @@ def main_video():
             memory.modified = False
             if memory.empty():
                 video_memory.remove(memory)
+                continue
             max_weight = max(max_weight,memory.get_weight())     # Peso (cantidad de pixeles) del obstáculo
             max_score = max(max_score,memory.score())           # Cantidad de frames en los que se detectó el obstáculo
             if final_score < max_weight * (max_score/2):
+                final_score = max_weight * (max_score/2)
                 x,y = memory.get_point()         # Coordenadas del centroide del obstáculo
+                y += ajuste
 
         #########################################################
 
@@ -305,9 +308,11 @@ def main_video():
            x,y: son el centroide del obstáculo que debe ser tomado mayormente en cuenta
         """
         # Resultado te dice si el objeto está a la izquierda, derecha o centro
-        resultado = "Izquierda" if x < max_x//2 else "Derecha" if x > max_x//2 else "Centro"
+        resultado = "Libre"
+        if max_score == 5 and max_weight > 200:
+            resultado = "Izquierda" if x < max_x//2 else "Derecha" if x > max_x//2 else "Centro"
         ##############################################
-
+        
         data_block = read_data_block()
         if data_block:
             azimuth = data_block['azimuth']
@@ -324,8 +329,9 @@ def main_video():
 if __name__ == "__main__":
 
     from time import time
+    import asyncio
 
     # HAY QUE CAMBIAR EL MAIN POR main_video() PARA LAS PRUEBAS FINALES
-    main()
+    asyncio.run(main_video())
 
 

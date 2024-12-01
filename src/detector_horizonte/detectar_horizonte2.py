@@ -1,5 +1,8 @@
 import numpy as np
-import cupy as cp
+try:
+    import cupy as cp
+except ImportError:
+    print("cuda no está instalado.")
 import cv2
 from os.path import dirname, abspath, join
 from sys import argv

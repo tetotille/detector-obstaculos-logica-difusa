@@ -303,7 +303,11 @@ def fcm(resized_image, num_clusters, m=2.0, metric='euclidean',show_images=False
     # t2 = time.time()
     # cuadros = neighbor_framed(mask_max_cluster_cpu)
     # t3 = time.time()
-    cuadros = neighbor_framed_np(mask_max_cluster_cpu.get())
+    try:
+        cuadros = neighbor_framed_np(mask_max_cluster_cpu.get())
+    except AttributeError:
+        print("use CPU")
+        cuadros = neighbor_framed_np(mask_max_cluster_cpu)
     t4 = time.time()
 
 

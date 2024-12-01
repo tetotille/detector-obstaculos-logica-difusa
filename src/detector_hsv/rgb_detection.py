@@ -1,7 +1,7 @@
 import cv2
 import time
 from utils import neighbor_framed_np
-import numpy as np
+import numpy as cp
 try:
     import cupy as cp
 except:
@@ -171,7 +171,7 @@ def process_image_cpu(image):
         'water': SEGMENTATION_COLORS[1],
         # 'sky': SEGMENTATION_COLORS[1],
         'obstacle': SEGMENTATION_COLORS[0],
-        'unknown': cp.array(0, 0, 0)  # Negro para desconocido
+        'unknown': cp.array([0, 0, 0])  # Negro para desconocido
     }
 
     # # TEST ONLY # #
@@ -240,7 +240,10 @@ def process_image_gpu(image: cp.ndarray):
     binary_image[classifications == 1] = 1
 
     # Obtener cuadros basados en vecinos
-    cuadros = neighbor_framed_np(binary_image.get())
+    try:
+        cuadros = neighbor_framed_np(binary_image.get())
+    except:
+        cuadros = neighbor_framed_np(binary_image)
 
     return output_image, cuadros
 

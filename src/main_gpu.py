@@ -1,6 +1,9 @@
 import sys
 import os
-import cupy as cp
+try:
+    import cupy as cp
+except:
+    import numpy as cp
 
 # Añadir el directorio raíz del proyecto al sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -11,7 +14,7 @@ from os.path import dirname, abspath,join
 from src.cmeans import fcm
 from src.detector_horizonte import find_largest_fuzzy_jump, separate_pixels
 from src.detector_hsv import detector_hsv,detector_rgb_gpu
-from src.utils import read_image
+from src.utils import read_image,FrameMemory
 import serial
 import struct
 import time
@@ -141,8 +144,12 @@ def main():
                     cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+cmeans_fila_interes), (cuadro["x_end"],cuadro["y_end"]+cmeans_fila_interes), (0, 255, 0), 2)
 
                 cv2.imwrite("main_output/" + filename.split(".")[0] + ".png", image_np)
-                cv2.imwrite("main_output/rgb_" + filename.split(".")[0] + ".png", hsv_cp.get())
-                cv2.imwrite("main_output/cmeans_" + filename.split(".")[0] + ".png", cmeans_image.get())
+                try:
+                    cv2.imwrite("main_output/rgb_" + filename.split(".")[0] + ".png", hsv_cp.get())
+                    cv2.imwrite("main_output/cmeans_" + filename.split(".")[0] + ".png", cmeans_image.get())
+                except:
+                    cv2.imwrite("main_output/rgb_" + filename.split(".")[0] + ".png", hsv_cp)
+                    cv2.imwrite("main_output/cmeans_" + filename.split(".")[0] + ".png", cmeans_image)
             
             tics[filename]["total"].append(time()-init)
             tics[filename]["horizon"].append(tic1-init)
@@ -151,6 +158,28 @@ def main():
             
             
             fuzzy_frames = fuzzy_union([cuadros_rgb, cuadros_cmeans])
+            """Explicación de fuzzy_union
+            fuzzy_frames:list[dict] = [
+                {
+                    "puntos": [...],        # lista de puntos que compete al obstáculo
+                    "x_init": int,          # límite izquierdo del obstáculo
+                    "x_end": int,           # límite derecho del obstáculo
+                    "y_init": int,          # límite superior del obstáculo
+                    "y_end": int,           # límite inferior del obstáculo
+                    "x": int,               # sumatoria de todos los valores de x de cada punto
+                    "y": int,               # sumatoria de todos los valores de y de cada punto
+                    "weight": int,          # peso del obstáculo
+                    "x_centroid": int,      # centro de masa del obstáculo en el eje x
+                    "y_centroid": int,      # centro de masa del obstáculo en el eje y
+                    "distancia_minima": int,# distancia mínima al obstáculo detectado en otro detector
+                    "fuzzy_union": int      # puntaje de 0 a 1 de la unión de los detectores
+                },
+                {...},
+                ...
+            ]
+            
+            
+            """
             tic_final = time()
             # print("RGB Detector")
             # print(cuadros_rgb)g
@@ -166,6 +195,8 @@ def main():
         print("No hay sensor")
     
 def main_video():
+    video_memory:list[FrameMemory] = []
+    memory_limit = 5 # cantidad de frames de memoria
     while True:
         frame = get_video_stream()
         frame_gpu = cp.asarray(frame)
@@ -208,6 +239,53 @@ def main_video():
         
         ###### UNION DETECTORES ######
         fuzzy_frames = fuzzy_union([cuadros_rgb, cuadros_cmeans],lidar)
+        """Explicación de fuzzy_union
+            fuzzy_frames:list[dict] = [
+                {
+                    "puntos": [...],        # lista de puntos que compete al obstáculo
+                    "x_init": int,          # límite izquierdo del obstáculo
+                    "x_end": int,           # límite derecho del obstáculo
+                    "y_init": int,          # límite superior del obstáculo
+                    "y_end": int,           # límite inferior del obstáculo
+                    "x": int,               # sumatoria de todos los valores de x de cada punto
+                    "y": int,               # sumatoria de todos los valores de y de cada punto
+                    "weight": int,          # peso del obstáculo
+                    "x_centroid": int,      # centro de masa del obstáculo en el eje x
+                    "y_centroid": int,      # centro de masa del obstáculo en el eje y
+                    "distancia_minima": int,# distancia mínima al obstáculo detectado en otro detector
+                    "fuzzy_union": int      # puntaje de 0 a 1 de la unión de los detectores
+                },
+                {...},
+                ...
+            ]
+        """
+        ############## IMPLEMENTACIÓN DE MEMORIA ################
+        """
+            Se utiliza fuzzy_union, y generalmente éste tiene pocos valores, 1 o 2 por frame, por lo que un for no
+            va a ser prácticamente una carga para la cpu
+
+        """
+        # Agregado a la memoria
+        for fuzzy_frame in fuzzy_frames:
+            in_memory = False
+            for memory in video_memory:
+                if fuzzy_frame in memory:
+                    memory.add(fuzzy_frame)
+                    memory.modified= True
+                    in_memory = True
+            if not in_memory:
+                memory = FrameMemory(memory_limit,fuzzy_frame)
+                video_memory.append(memory)
+
+        # Limpiado de memoria
+        for memory in video_memory[:]:
+            if not memory.modified:
+                memory.add(None)
+            memory.modified = False
+            if memory.empty():
+                video_memory.remove(memory)
+
+        #########################################################
 
         data_block = read_data_block()
         if data_block:
@@ -226,6 +304,7 @@ if __name__ == "__main__":
 
     from time import time
 
+    # HAY QUE CAMBIAR EL MAIN POR main_video() PARA LAS PRUEBAS FINALES
     main()
 
 

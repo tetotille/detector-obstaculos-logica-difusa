@@ -1,7 +1,7 @@
 import sys
 import os
 #import subprocess
-#import requests
+import requests
 
 try:
     import cupy as cp

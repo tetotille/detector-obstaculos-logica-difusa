@@ -397,7 +397,7 @@ if __name__ == "__main__":
     # HAY QUE CAMBIAR EL MAIN POR main_video() PARA LAS PRUEBAS FINALES
     resultado = main_video()
     if resultado == "libre":
-        cambiar_estado_obstaculo([0,0,0])
+        cambiar_estado_obstaculos([0,0,0])
     if resultado == "centro":
         cambiar_estado_obstaculos([0,1,0])
     if resultado == "izquierda":

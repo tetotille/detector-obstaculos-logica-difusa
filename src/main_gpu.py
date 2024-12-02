@@ -15,7 +15,7 @@ sys.path.append(project_root)
 # Configuración del programa
 server_url = 'http://localhost:5000'  # URL del servidor Flask
 endpoint = '/obstaculos'               # Ruta del endpoint
-TEST = True
+TEST = False
 
 import cv2
 from os.path import dirname, abspath,join
@@ -223,7 +223,7 @@ def main_video():
         center = find_largest_fuzzy_jump(center)
         right = find_largest_fuzzy_jump(right)
         tic5 = time.time()
-			
+            
         if abs(center - left) < abs(right - center) and abs(center - left) < abs(right - left):
             a,b = left,center
         elif abs(center - left) > abs(right - center) and abs(right - center) < abs(right - left):
@@ -292,14 +292,15 @@ def main_video():
             if fuzzy_frame is None: continue
             in_memory = False
             for memory in video_memory:
-                if fuzzy_frame in memory:
-                    memory.add(fuzzy_frame)
-                    memory.modified= True
-                    in_memory = True
+                if fuzzy_frame["weight"] > 100:
+                    if fuzzy_frame in memory:
+                        memory.add(fuzzy_frame)
+                        memory.modified= True
+                        in_memory = True
             if not in_memory:
                 memory = FrameMemory(memory_limit,fuzzy_frame)
                 video_memory.append(memory)
-		
+        
         # Limpiado de memoria
         max_weight = 0
         max_score = 0
@@ -320,7 +321,7 @@ def main_video():
                 y += ajuste
                 P1[1] += ajuste
                 P2[1] += ajuste
-		
+        
         #########################################################
         tic12 = time.time()
         ######## UTILIZACIÓN DE RESULTADOS ###########
@@ -343,7 +344,7 @@ def main_video():
                 distance = data_block['distance']
                 strength = data_block['strength']
 
-    	        # Filtrar los datos por el rango de ángulo -90 a 90 grados
+                # Filtrar los datos por el rango de ángulo -90 a 90 grados
                 if -90 <= azimuth <= 90 and distance < 40 :
                     lidar=(f"Ángulo: {azimuth:.2f}°, Distancia: {distance} cm, Intensidad: {strength}")
                 else:
@@ -351,7 +352,7 @@ def main_video():
         
         
         if TEST:
-			# Muestra el frame
+            # Muestra el frame
             if resultado != "Libre":
                 cv2.rectangle(image_np,P1,P2,(0,0,255),2)
                 # for cuadro in cuadros_rgb:
@@ -364,19 +365,29 @@ def main_video():
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         tic13 = time.time()
-        print(f"""get video stream: {tic2-tic1}s       \n
-        read image: {tic3-tic2}s        \n
-        separate pixel: {tic4-tic3}s       \n
-        find horizon: {tic5-tic4}s         \n
-        crop: {tic6-tic5}s       \n
-        detector rgb: {tic7-tic6}s         \n
-        detector cmeans: {tic8-tic7}s        \n
-        cuadros rgb centroides: {tic9-tic8}s         \n
-        cuadros cmeans centroides: {tic10-tic9}s          \n
-        union: {tic11-tic10}s           \n
-        memoria: {tic12-tic11}s           \n
-        mostrar: {tic13-tic12}s            \n""",end="\r")
+        if TEST:
+            print(f"""get video stream: {tic2-tic1}s       \n
+            read image: {tic3-tic2}s        \n
+            separate pixel: {tic4-tic3}s       \n
+            find horizon: {tic5-tic4}s         \n
+            crop: {tic6-tic5}s       \n
+            detector rgb: {tic7-tic6}s         \n
+            detector cmeans: {tic8-tic7}s        \n
+            cuadros rgb centroides: {tic9-tic8}s         \n
+            cuadros cmeans centroides: {tic10-tic9}s          \n
+            union: {tic11-tic10}s           \n
+            memoria: {tic12-tic11}s           \n
+            mostrar: {tic13-tic12}s            \n""",end="\r")
+        print(resultado+"        ",end="\r")
         
+        if resultado == "libre":
+            cambiar_estado_obstaculos([0,0,0])
+        if resultado == "centro":
+            cambiar_estado_obstaculos([0,1,0])
+        if resultado == "izquierda":
+            cambiar_estado_obstaculos([0,1,1])
+        if resultado == "derecha":
+            cambiar_estado_obstaculos([1,1,0])
     if TEST:
         cv2.destroyAllWindows()
 
@@ -407,13 +418,6 @@ if __name__ == "__main__":
 
     # HAY QUE CAMBIAR EL MAIN POR main_video() PARA LAS PRUEBAS FINALES
     resultado = main_video()
-    if resultado == "libre":
-        cambiar_estado_obstaculos([0,0,0])
-    if resultado == "centro":
-        cambiar_estado_obstaculos([0,1,0])
-    if resultado == "izquierda":
-        cambiar_estado_obstaculos([0,1,1])
-    if resultado == "derecha":
-        cambiar_estado_obstaculos([1,1,0])
+    
 
 

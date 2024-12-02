@@ -28,6 +28,9 @@ class FrameMemory:
     
     def get_weight(self):
         return self._frames[self._last]["weight"]
+    
+    def get_rectangle(self):
+        return [self._frames[self._last]["x_init"],self._frames[self._last]["y_init"]],[self._frames[self._last]["x_end"],self._frames[self._last]["y_end"]]
 
     def score(self):
         return sum(1 for frame in self._frames if frame is not None)

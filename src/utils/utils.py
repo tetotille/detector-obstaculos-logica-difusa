@@ -11,6 +11,32 @@ except:
 
 # hacer_mascara_kernel = cp.RawKernel(open("kernels/hacer_mascara_kernel.cu").read(), "hacer_mascara_kernel")
 
+import cv2
+from threading import Thread
+
+class VideoStream:
+    def __init__(self, src=0):
+        self.capture = cv2.VideoCapture(src)
+        self.ret = False
+        self.frame = None
+        self.stopped = False
+
+        # Inicia el hilo para leer frames
+        Thread(target=self.update, args=(), daemon=True).start()
+
+    def update(self):
+        while not self.stopped:
+            if self.capture.isOpened():
+                self.ret, self.frame = self.capture.read()
+
+    def read(self):
+        return self.ret, self.frame
+
+    def stop(self):
+        self.stopped = True
+        self.capture.release()
+
+
 class FuzzyImage:
     def __init__(self,img_path:str):
         self.image = cv2.imread(img_path)

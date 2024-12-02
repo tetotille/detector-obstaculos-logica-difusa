@@ -22,7 +22,7 @@ from os.path import dirname, abspath,join
 from src.cmeans import fcm
 from src.detector_horizonte import find_largest_fuzzy_jump, separate_pixels
 from src.detector_hsv import detector_hsv,detector_rgb_gpu
-from src.utils import read_image,FrameMemory
+from src.utils import read_image,FrameMemory,VideoStream
 import serial 
 import struct
 import time
@@ -64,15 +64,13 @@ def cambiar_estado_obstaculos(nuevo_estado):
     else:
         print("Error al cambiar el estado de los obstáculos")
 
-def get_video_stream():
-    cap = cv2.VideoCapture("rtsp://192.168.1.1:554/live",cv2.CAP_FFMPEG)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,360)
+def get_video_stream(cap):
     print(f"Res: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}x{cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
-
-    ret, frame = cap.read()
-    if not ret:
-        return
+    while cap.grab():
+        
+        ret, frame = cap.retrieve()
+        if ret:
+            break
 
     return frame
 
@@ -203,13 +201,22 @@ def main_video():
     memory_limit = 5 # cantidad de frames de memoria
     max_x = 256
     max_y = 192
+    stream = VideoStream("rtsp://192.168.1.1:554/live")
+    # cap = cv2.VideoCapture("rtsp://192.168.1.1:554/live",cv2.CAP_FFMPEG)
+    # cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
     while True:
         tic1 = time.time()
-        frame = get_video_stream()
+        ret, frame = stream.read()
+        if not ret or frame is None:
+            continue
         tic2 = time.time()
         image_np,frame_gpu = read_image(frame,max_x,max_y)
         tic3 = time.time()
-        left,center,right = separate_pixels(frame_gpu.get())
+        try:
+            left,center,right = separate_pixels(frame_gpu.get())
+        except:
+            left,center,right = separate_pixels(frame_gpu)
         tic4 = time.time()
             
         left = find_largest_fuzzy_jump(left)
@@ -308,8 +315,11 @@ def main_video():
             max_score = max(max_score,memory.score())           # Cantidad de frames en los que se detectó el obstáculo
             if final_score < max_weight * (max_score/2):
                 final_score = max_weight * (max_score/2)
-                x,y = memory.get_point()         # Coordenadas del centroide del obstáculo
+                x,y = memory.get_point() 
+                P1,P2 = memory.get_rectangle()        # Coordenadas del centroide del obstáculo
                 y += ajuste
+                P1[1] += ajuste
+                P2[1] += ajuste
 		
         #########################################################
         tic12 = time.time()
@@ -323,7 +333,7 @@ def main_video():
         """
         # Resultado te dice si el objeto está a la izquierda, derecha o centro
         resultado = "Libre"
-        if max_score >= 3 and max_weight > 200:
+        if max_score >= 5 and max_weight > 200:
             resultado = "Izquierda" if x < max_x//2 else "Derecha" if x > max_x//2 else "Centro"
         ##############################################
         if LIDAR:
@@ -343,10 +353,11 @@ def main_video():
         if TEST:
 			# Muestra el frame
             if resultado != "Libre":
-                for cuadro in cuadros_rgb:
-                    cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+ajuste), (cuadro["x_end"],cuadro["y_end"]+ajuste), (0, 0, 255), 2)
-                for cuadro in cuadros_cmeans:
-                    cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+cmeans_fila_interes), (cuadro["x_end"],cuadro["y_end"]+cmeans_fila_interes), (0, 255, 0), 2)
+                cv2.rectangle(image_np,P1,P2,(0,0,255),2)
+                # for cuadro in cuadros_rgb:
+                #     cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+ajuste), (cuadro["x_end"],cuadro["y_end"]+ajuste), (0, 0, 255), 2)
+                # for cuadro in cuadros_cmeans:
+                #     cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+cmeans_fila_interes), (cuadro["x_end"],cuadro["y_end"]+cmeans_fila_interes), (0, 255, 0), 2)
             cv2.line(image_np,(0,a),(max_x-1,b),(255,0,0),2)
             cv2.imshow('Frame', image_np)
 

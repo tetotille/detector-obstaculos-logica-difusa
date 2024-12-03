@@ -53,16 +53,55 @@ image_set = {f"{join(image_folder,'akaso1.jpeg')}",
              }
 
 
+def verificar_conexion(server_url, endpoint="/"):
+    """Verifica si el servidor Flask está activo."""
+    try:
+        response = requests.get(server_url + endpoint, timeout=5)
+        if response.status_code == 200:
+            print("Servidor Flask activo.")
+            return True
+        else:
+            print(f"Servidor respondió con código: {response.status_code}")
+            return False
+    except requests.exceptions.RequestException as e:
+        print(f"Error al conectar con el servidor Flask: {e}")
+        return False
 
-def cambiar_estado_obstaculos(nuevo_estado):
-    payload = {"estado": nuevo_estado}
+def cambiar_estado_obstaculos(server_url, endpoint, nuevo_estado, reintentos=5, espera=5):
+    """
+    Cambia el estado de los obstáculos después de verificar que el servidor Flask está activo.
+    
+    server_url: URL del servidor Flask (por ejemplo, 'http://localhost:5000')
+    endpoint: Endpoint para realizar el POST (por ejemplo, '/cambiar_estado')
+    nuevo_estado: Estado que se desea establecer.
+    reintentos: Número de intentos para conectar al servidor antes de rendirse.
+    espera: Tiempo en segundos entre reintentos.
+    """
+    intentos = 0
+    while intentos < reintentos:
+        if verificar_conexion(server_url):
+            payload = {"estado": nuevo_estado}
+            try:
+                response = requests.post(server_url + endpoint, json=payload)
+                if response.status_code == 200:
+                    print("Estado de los obstáculos cambiado con éxito.")
+                    return True
+                else:
+                    print(f"Error al cambiar el estado: {response.status_code} - {response.text}")
+                    return False
+            except requests.exceptions.RequestException as e:
+                print(f"Error durante el POST: {e}")
+                return False
+        else:
+            print(f"Intento {intentos + 1}/{reintentos} fallido. Reintentando en {espera} segundos...")
+            time.sleep(espera)
+            intentos += 1
+    
+    print("No se pudo conectar al servidor Flask después de varios intentos.")
+    return False
 
-    response = requests.post(server_url + endpoint, json=payload)
 
-    if response.status_code == 200:
-        print("Estado de los obstáculos cambiado con éxito")
-    else:
-        print("Error al cambiar el estado de los obstáculos")
+
 
 def get_video_stream(cap):
     print(f"Res: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}x{cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")

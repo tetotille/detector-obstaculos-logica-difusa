@@ -172,3 +172,5 @@ environment.yml
 main_output/
 *.pkl
 imagen_umbral.png
+*.mov
+*.MOV

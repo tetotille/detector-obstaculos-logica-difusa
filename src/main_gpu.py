@@ -240,10 +240,22 @@ def main_video():
     memory_limit = 5 # cantidad de frames de memoria
     max_x = 256
     max_y = 192
-    video_path = "/home/tille/Proyectos/Tesis/code/assets/videos/20240213_121205.MOV"
-    stream = cv2.VideoCapture(video_path)
-    # cap = cv2.VideoCapture("rtsp://192.168.1.1:554/live",cv2.CAP_FFMPEG)
-    # cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
+    device = 1
+    width = 1920
+    height = 1080
+    framerate = 30
+    format_code = "MJPG"
+
+    cap = cv2.VideoCapture(device, cv2.CAP_V4L2)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    cap.set(cv2.CAP_PROP_FPS, framerate)
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*format_code))
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    if TEST:
+        video_path = "/home/tille/Proyectos/Tesis/code/assets/videos/20240213_121205.MOV"
+        stream = cv2.VideoCapture(video_path)
 
     while True:
         tic1 = time.time()

@@ -240,7 +240,8 @@ def main_video():
     memory_limit = 5 # cantidad de frames de memoria
     max_x = 256
     max_y = 192
-    stream = VideoStream("rtsp://192.168.1.1:554/live")
+    video_path = "/home/tille/Proyectos/Tesis/code/assets/videos/20240213_121205.MOV"
+    stream = cv2.VideoCapture(video_path)
     # cap = cv2.VideoCapture("rtsp://192.168.1.1:554/live",cv2.CAP_FFMPEG)
     # cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
@@ -392,17 +393,38 @@ def main_video():
         
         if TEST:
             # Muestra el frame
+            for cuadro in cuadros_rgb:
+                cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+ajuste), (cuadro["x_end"],cuadro["y_end"]+ajuste), (255, 0, 0), 2)
+            for cuadro in cuadros_cmeans:
+                cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+cmeans_fila_interes), (cuadro["x_end"],cuadro["y_end"]+cmeans_fila_interes), (0, 255, 0), 2)
             if resultado != "Libre":
-                cv2.rectangle(image_np,P1,P2,(0,0,255),2)
-                # for cuadro in cuadros_rgb:
-                #     cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+ajuste), (cuadro["x_end"],cuadro["y_end"]+ajuste), (0, 0, 255), 2)
-                # for cuadro in cuadros_cmeans:
-                #     cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+cmeans_fila_interes), (cuadro["x_end"],cuadro["y_end"]+cmeans_fila_interes), (0, 255, 0), 2)
-            cv2.line(image_np,(0,a),(max_x-1,b),(255,0,0),2)
+                cv2.rectangle(image_np,tuple(P1),tuple(P2),(0,0,255),2)
+            cv2.line(image_np,(0,a),(max_x-1,b),(255,255,0),2)
             cv2.imshow('Frame', image_np)
+            
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
+            if (len(cuadros_rgb) >= 10 or resultado != "Libre") and TEST:
+                import matplotlib.pyplot as plt
+                color = ('b', 'g', 'r')  # Colores en OpenCV
+                for i, col in enumerate(color):
+                    hist = cv2.calcHist([frame], [i], None, [256], [0, 256])
+                    plt.plot(hist, color=col)
+
+                plt.title('Histogramas de los canales de color')
+                plt.xlabel('Intensidad de píxel')
+                plt.ylabel('Frecuencia')
+                print("Red promedio: ",frame[:,:,2].mean())
+                print("Green promedio: ",frame[:,:,1].mean())
+                print("Blue promedio: ",frame[:,:,0].mean())
+                print("Red moda: ",cv2.calcHist([frame], [2], None, [256], [0, 256]).argmax())
+                print("Green moda: ",cv2.calcHist([frame], [1], None, [256], [0, 256]).argmax())
+                print("Blue moda: ",cv2.calcHist([frame], [0], None, [256], [0, 256]).argmax())
+                # plt.show()
+                print("HOla")
+
         tic13 = time.time()
         if TEST:
             print(f"""get video stream: {tic2-tic1}s       \n

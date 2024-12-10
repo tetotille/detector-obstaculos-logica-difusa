@@ -87,29 +87,31 @@ def green_intensity(g,mode):
 def blue_intensity_vectorized(b, mode):
     """Fuzzifica la intensidad del canal azul en bloques."""
     categories = cp.zeros(b.shape, dtype=cp.int8)  # Inicializar como 'low' (0)
-    categories[b >= mode - 70] = 1  # Asignar 'medium' (1)
-    categories[b >= mode] = 2  # Asignar 'high' (2)
+    categories[b >= max(mode-130,60)] = 1  # Asignar 'medium' (1)
+    categories[b >= min(mode - 30,193)] = 2  # Asignar 'high' (2)
     return categories
 
 def red_intensity_vectorized(r, mode):
     """Fuzzifica la intensidad del canal rojo en bloques."""
     categories = cp.zeros(r.shape, dtype=cp.int8)  # Inicializar como 'low' (0)
-    categories[r >= mode - 20] = 1  # Asignar 'medium' (1)
-    categories[r >= mode] = 2  # Asignar 'high' (2)
+    categories[r >= max(mode-130,60)] = 1  # Asignar 'medium' (1)
+    categories[r >= min(mode - 30,193)] = 2  # Asignar 'high' (2)
     return categories
 
 def green_intensity_vectorized(g, mode):
     """Fuzzifica la intensidad del canal verde en bloques."""
     categories = cp.zeros(g.shape, dtype=cp.int8)  # Inicializar como 'low' (0)
-    categories[g >= mode - 50] = 1  # Asignar 'medium' (1)
-    categories[g >= mode] = 2  # Asignar 'high' (2)
+    categories[g >= max(mode-130,60)] = 1  # Asignar 'medium' (1)
+    categories[g >= min(mode - 30,193)] = 2  # Asignar 'high' (2)
     return categories
 
 
 def classify_pixel(red_category, blue_category, green_category):
     """Clasifica un píxel basado en reglas difusas con valores HSV ajustados."""
     if red_category == "low" and blue_category == "low" and green_category == "low":
-        return 'obstacle'
+        return 'water'
+    elif red_category == "medium" and blue_category == "medium" and green_category == "medium":
+        return 'water'
     elif red_category == "high" and blue_category == "high" and green_category == "high":
         return 'water'
     elif red_category == "high" and blue_category == "high" and green_category == "medium":
@@ -118,11 +120,23 @@ def classify_pixel(red_category, blue_category, green_category):
         return 'water'
     elif red_category == "medium" and blue_category == "high" and green_category == "high":
         return 'water'
+    elif red_category == "low" and blue_category == "low" and green_category == "high":
+        return 'obstacle'
+    elif red_category == "low" and blue_category == "high" and green_category == "low":
+        return 'obstacle'
+    elif red_category == "high" and blue_category == "low" and green_category == "low":
+        return 'obstacle'
     elif red_category == "low" and blue_category == "low" and green_category == "medium":
         return 'obstacle'
     elif red_category == "low" and blue_category == "medium" and green_category == "low":
         return 'obstacle'
     elif red_category == "medium" and blue_category == "low" and green_category == "low":
+        return 'obstacle'
+    elif red_category == "low" and blue_category == "high" and green_category == "high":
+        return 'obstacle'
+    elif red_category == "high" and blue_category == "high" and green_category == "low":
+        return 'obstacle'
+    elif red_category == "high" and blue_category == "low" and green_category == "high":
         return 'obstacle'
     else:
         return 'unknown'
@@ -134,19 +148,31 @@ def classify_pixel_vectorized(red_category, blue_category, green_category):
 
     # Aplicar reglas difusas en paralelo
     obstacle_mask = (
-        (red_category == 0) & (blue_category == 0) & (green_category == 0)
+        (red_category == 0) & (blue_category == 0) & (green_category == 2)
+    ) | (
+        (red_category == 0) & (blue_category == 2) & (green_category == 0)
+    ) | (
+        (red_category == 2) & (blue_category == 0) & (green_category == 0)
     ) | (
         (red_category == 0) & (blue_category == 0) & (green_category == 1)
     ) | (
         (red_category == 0) & (blue_category == 1) & (green_category == 0)
     ) | (
         (red_category == 1) & (blue_category == 0) & (green_category == 0)
+    ) | (
+        (red_category == 0) & (blue_category == 2) & (green_category == 2)
+    ) | (
+        (red_category == 2) & (blue_category == 2) & (green_category == 0)
+    ) | (
+        (red_category == 2) & (blue_category == 0) & (green_category == 2)
     )
 
     water_mask = (
-        (red_category == 2) & (blue_category == 2) & (green_category == 2)
+        (red_category == 0) & (blue_category == 0) & (green_category == 0)
     ) | (
-        (red_category == 2) & (blue_category == 2) & (green_category == 1)
+        (red_category == 1) & (blue_category == 1) & (green_category == 1)
+    ) | (
+        (red_category == 2) & (blue_category == 2) & (green_category == 2)
     ) | (
         (red_category == 2) & (blue_category == 1) & (green_category == 2)
     ) | (

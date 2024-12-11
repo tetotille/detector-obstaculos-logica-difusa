@@ -77,12 +77,6 @@ def cambiar_estado_obstaculos(server_url, endpoint, nuevo_estado, reintentos=5, 
     reintentos: Número de intentos para conectar al servidor antes de rendirse.
     espera: Tiempo en segundos entre reintentos.
     """
-    try:
-        requests.post(server_url+endpoint, json=nuevo_estado)
-        return True
-    except Exception as e:
-        print("No se pudo conectar al servidor", e)
-        return False
     intentos = 0
     while intentos < reintentos:
         if verificar_conexion(server_url):
@@ -247,18 +241,8 @@ def main_video():
     max_x = 256
     max_y = 192
 
-    device = 1
-    width = 1920
-    height = 1080
-    framerate = 30
-    format_code = "MJPG"
 
-    # cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture(device, cv2.CAP_V4L2)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    cap.set(cv2.CAP_PROP_FPS, framerate)
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*format_code))
+    cap = cv2.VideoCapture("rtsp://192.168.1.1:554/live")
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     if TEST:
         video_path = "/home/tille/Proyectos/Tesis/code/assets/videos/20240213_121205.MOV"
@@ -266,7 +250,7 @@ def main_video():
 
     while True:
         tic1 = time.time()
-        ret, frame = cap.read()
+        ret, frame = stream.read()
         if not ret or frame is None:
             continue
         tic2 = time.time()
@@ -460,14 +444,14 @@ def main_video():
             mostrar: {tic13-tic12}s            \n""",end="\r")
         print(resultado+"        ",end="\r")
         
-        if resultado == "Libre":
-            cambiar_estado_obstaculos("http://127.0.0.1:8000","/obstaculos",[0,0,0])
-        if resultado == "Centro":
-            cambiar_estado_obstaculos("http://127.0.0.1:8000","/obstaculos"[0,1,0])
-        if resultado == "Izquierda":
-            cambiar_estado_obstaculos("http://127.0.0.1:8000","/obstaculos"[0,1,1])
-        if resultado == "Derecha":
-            cambiar_estado_obstaculos("http://127.0.0.1:8000","/obstaculos"[1,1,0])
+        if resultado == "libre":
+            cambiar_estado_obstaculos([0,0,0])
+        if resultado == "centro":
+            cambiar_estado_obstaculos([0,1,0])
+        if resultado == "izquierda":
+            cambiar_estado_obstaculos([0,1,1])
+        if resultado == "derecha":
+            cambiar_estado_obstaculos([1,1,0])
     if TEST:
         cv2.destroyAllWindows()
 

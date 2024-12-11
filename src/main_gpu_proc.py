@@ -15,7 +15,7 @@ sys.path.append(project_root)
 # Configuración del programa
 server_url = 'http://localhost:5000'  # URL del servidor Flask
 endpoint = '/obstaculos'               # Ruta del endpoint
-TEST = False
+TEST = True
 
 import cv2
 from os.path import dirname, abspath,join
@@ -77,12 +77,6 @@ def cambiar_estado_obstaculos(server_url, endpoint, nuevo_estado, reintentos=5, 
     reintentos: Número de intentos para conectar al servidor antes de rendirse.
     espera: Tiempo en segundos entre reintentos.
     """
-    try:
-        requests.post(server_url+endpoint, json=nuevo_estado)
-        return True
-    except Exception as e:
-        print("No se pudo conectar al servidor", e)
-        return False
     intentos = 0
     while intentos < reintentos:
         if verificar_conexion(server_url):
@@ -247,26 +241,32 @@ def main_video():
     max_x = 256
     max_y = 192
 
-    device = 1
-    width = 1920
-    height = 1080
-    framerate = 30
-    format_code = "MJPG"
 
-    # cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture(device, cv2.CAP_V4L2)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    cap.set(cv2.CAP_PROP_FPS, framerate)
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*format_code))
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     if TEST:
         video_path = "/home/tille/Proyectos/Tesis/code/assets/videos/20240213_121205.MOV"
         stream = cv2.VideoCapture(video_path)
+    else:
+        cap = cv2.VideoCapture("rtsp://192.168.1.1:554/live")
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
+    ret, frame = stream.read()
+    x_orig,y_orig = frame.shape[1],frame.shape[0]
+    ajuste_x = x_orig//max_x
+    ajuste_y = y_orig//max_y
+    frame_width = max_x
+    frame_height = max_y
+    fps = 30
+
+    output_video = "output_video.avi"
+    # Inicializar el escritor de video
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec (usa 'mp4v' para MP4)
+    out = cv2.VideoWriter(output_video, fourcc, fps, (256, 192))
 
     while True:
         tic1 = time.time()
-        ret, frame = cap.read()
+        ret, frame = stream.read()
+        frame_orig = frame.copy()
+        
         if not ret or frame is None:
             continue
         tic2 = time.time()
@@ -413,13 +413,18 @@ def main_video():
         if TEST:
             # Muestra el frame
             for cuadro in cuadros_rgb:
+                cv2.rectangle(frame_orig, (cuadro["x_init"]*ajuste_x,(cuadro["y_init"]+ajuste)*ajuste_y), (cuadro["x_end"]*ajuste_x,(cuadro["y_end"]+ajuste)*ajuste_y), (255, 0, 0), 2)
                 cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+ajuste), (cuadro["x_end"],cuadro["y_end"]+ajuste), (255, 0, 0), 2)
             for cuadro in cuadros_cmeans:
+                cv2.rectangle(frame_orig, (cuadro["x_init"]*ajuste_x,(cuadro["y_init"]+cmeans_fila_interes)*ajuste_y), (cuadro["x_end"]*ajuste_x,(cuadro["y_end"]+cmeans_fila_interes)*ajuste_y), (0, 255, 0), 2)
                 cv2.rectangle(image_np, (cuadro["x_init"],cuadro["y_init"]+cmeans_fila_interes), (cuadro["x_end"],cuadro["y_end"]+cmeans_fila_interes), (0, 255, 0), 2)
             if resultado != "Libre":
+                cv2.rectangle(frame_orig,(P1[0]*ajuste_x,P1[1]*ajuste_y),(P2[0]*ajuste_x,P2[1]*ajuste_y),(0,0,255),2)
                 cv2.rectangle(image_np,tuple(P1),tuple(P2),(0,0,255),2)
             cv2.line(image_np,(0,a),(max_x-1,b),(255,255,0),2)
             cv2.imshow('Frame', image_np)
+            out.write(image_np)
+
             
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -460,17 +465,21 @@ def main_video():
             mostrar: {tic13-tic12}s            \n""",end="\r")
         print(resultado+"        ",end="\r")
         
-        if resultado == "Libre":
-            cambiar_estado_obstaculos("http://127.0.0.1:8000","/obstaculos",[0,0,0])
-        if resultado == "Centro":
-            cambiar_estado_obstaculos("http://127.0.0.1:8000","/obstaculos"[0,1,0])
-        if resultado == "Izquierda":
-            cambiar_estado_obstaculos("http://127.0.0.1:8000","/obstaculos"[0,1,1])
-        if resultado == "Derecha":
-            cambiar_estado_obstaculos("http://127.0.0.1:8000","/obstaculos"[1,1,0])
+        if resultado == "libre":
+            cambiar_estado_obstaculos([0,0,0])
+        if resultado == "centro":
+            cambiar_estado_obstaculos([0,1,0])
+        if resultado == "izquierda":
+            cambiar_estado_obstaculos([0,1,1])
+        if resultado == "derecha":
+            cambiar_estado_obstaculos([1,1,0])
+        
+    out.release()
     if TEST:
         cv2.destroyAllWindows()
 
+
+    
     return resultado
 
 def send_command(command):

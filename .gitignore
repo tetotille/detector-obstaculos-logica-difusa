@@ -163,3 +163,14 @@ config.json
 .tesis
 Showcase.ipynb
 test_cont_dif.py
+
+
+!assets
+result.jpg
+launch.json
+environment.yml
+main_output/
+*.pkl
+imagen_umbral.png
+*.mov
+*.MOV

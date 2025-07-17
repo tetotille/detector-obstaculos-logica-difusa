@@ -93,8 +93,10 @@ def fuzzy_union(cuadros_list,lidar=(0.0,0.0)):
             weight: int
         },...
     ],...]
-    lidar: [float,float]
+    lidar: [float,float] ángulo y distancia del lidar
     """
+
+
     for _ in range(len(cuadros_list)):
         cuadros = cuadros_list.pop(0)
         for cuadro in cuadros:
@@ -102,7 +104,11 @@ def fuzzy_union(cuadros_list,lidar=(0.0,0.0)):
                 cuadro["distancia_minima"] = float('inf')
             for cuadros2 in cuadros_list:
                 for cuadro2 in cuadros2:
-                    distancia = cp.sqrt((cuadro["x"] - cuadro2["x"])**2 + (cuadro["y"] - cuadro2["y"])**2)
+                    if lidar != (0.0, 0.0):
+                        if lidar[0] - cp.atan2(cuadro["y"], cuadro["x"]) < 0.1 or lidar[0] - cp.atan2(cuadro2["y"], cuadro2["x"]) < 0.1:
+                            distancia = 0
+                    else:
+                        distancia = cp.sqrt((cuadro["x"] - cuadro2["x"])**2 + (cuadro["y"] - cuadro2["y"])**2)
                     cuadro["distancia_minima"] = min(cuadro["distancia_minima"], distancia,100)
         cuadros_list.append(cuadros)
 

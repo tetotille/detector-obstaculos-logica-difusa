@@ -3,13 +3,16 @@
 ## Detección de Línea del horizonte
 
 ### Horizonte mar rojo cielo azul
+
 #### Referencias
+
 - https://docs.opencv.org/3.4/d8/d01/group__imgproc__color__conversions.html
 - https://docs.opencv.org/4.x/d4/d13/tutorial_py_filtering.html
 - https://numpy.org/doc/stable/reference/generated/numpy.gradient.html
 - https://docs.opencv.org/4.x/dc/da5/tutorial_py_drawing_functions.html
 - https://docs.python.org/3/library/json.html
-#### Status
+  
+  #### Status
 
 Funcionó para todas las imágenes menos para la inclinada
 
@@ -51,7 +54,9 @@ def detectar_horizonte(image):
 ---
 
 ### Imagen Inclinada
+
 #### Referencias
+
 - https://docs.opencv.org/4.x/
 - https://numpy.org/doc/
 - https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html
@@ -84,13 +89,13 @@ Funcionó para alguna que otra imagen, no es muy preciso.
 ### Rotación Imagen
 
 #### Referencias
+
 - https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html
 - https://omes-va.com/operadores-bitwise/
 - https://note.nkmk.me/en/python-opencv-hconcat-vconcat-np-tile/
 - https://numpy.org/doc/
 - https://www.geeksforgeeks.org/python-opencv-cv2-imread-method/
 - https://www.geeksforgeeks.org/python-opencv-cv2-imshow-method/
-
 
 #### Status
 
@@ -174,8 +179,9 @@ Funciona a medias
 - https://pyimagesearch.com/2021/02/22/opencv-connected-component-labeling-and-analysis/
 - https://www.simplilearn.com/image-processing-article
 - https://docs.opencv.org/4.x/d3/db4/tutorial_py_watershed.html
-|
-#### Status
+  |
+  
+  #### Status
 
 Funciona
 

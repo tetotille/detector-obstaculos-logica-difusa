@@ -2,11 +2,6 @@ import cv2
 import time
 from utils import neighbor_framed_np
 import numpy as cp
-try:
-    import cupy as cp
-except:
-    print("cuda no está instalado.")
-    # import numpy as cp
 
 # Define los colores de segmentación específicos
 SEGMENTATION_COLORS = cp.array([
@@ -186,65 +181,10 @@ def classify_pixel_vectorized(red_category, blue_category, green_category):
     return classification
 
 def process_image_cpu(image):
-    """Procesa una imagen para clasificar cada píxel como agua, cielo u obstáculo."""
+    """Procesa una imagen para clasificar cada píxel como agua, cielo u obstáculo, optimizando con NumPy."""
 
     height, width, _ = image.shape
-    output_image = cp.zeros((height, width, 3), dtype=cp.uint8)
-    binary_image = cp.zeros((height, width), dtype=cp.uint8)
-
-    # Definir colores para cada categoría basados en SEGMENTATION_COLORS
-    colors = {
-        'water': SEGMENTATION_COLORS[1],
-        # 'sky': SEGMENTATION_COLORS[1],
-        'obstacle': SEGMENTATION_COLORS[0],
-        'unknown': cp.array([0, 0, 0])  # Negro para desconocido
-    }
-
-    # # TEST ONLY # #
-    # view_images(image)
-    #################
-    image_flatten = image.flatten()
-    b_mode = cp.bincount(image_flatten[0::3][image_flatten[0::3] != 0]).argmax()
-    g_mode = cp.bincount(image_flatten[1::3][image_flatten[1::3] != 255]).argmax()
-    r_mode = cp.bincount(image_flatten[2::3][image_flatten[2::3] != 0]).argmax()
     
-    # print("blue:",b_mode)
-    # print("green:",g_mode)
-    # print("red:",r_mode)
-
-    # Procesar cada píxel
-    for y in range(height):
-        for x in range(width):
-            # Convertir de BGR a HSV y obtener los valores HSV
-            b, g, r = image[y, x]
-            f = (192 - y)/117
-            # saturation = saturation if f >= 1 else saturation * f
-
-            # Aplicar fuzzificación y clasificación
-            red_category = red_intensity(r,r_mode)
-            green_category = green_intensity(g,g_mode)
-            blue_category = blue_intensity(b,b_mode)
-            classification = classify_pixel(red_category,blue_category,green_category)
-            output_image[y, x] = colors[classification]  # Asignar color basado en la clasificación
-            binary_image[y, x] = 1 if classification == "obstacle" else 0
-
-    cuadros = neighbor_framed_np(binary_image)
-    return output_image,cuadros
-
-def process_image_gpu(image: cp.ndarray):
-    """Procesa una imagen para clasificar cada píxel como agua, cielo u obstáculo, optimizando con CuPy."""
-
-    height, width, _ = image.shape
-    output_image = cp.zeros((height, width, 3), dtype=cp.uint8)
-    binary_image = cp.zeros((height, width), dtype=cp.uint8)
-
-    # Colores de clasificación
-    colors = {
-        'water': SEGMENTATION_COLORS[1],
-        'obstacle': SEGMENTATION_COLORS[0],
-        'unknown': (0, 0, 0)  # Negro para desconocido
-    }
-
     # Calcular modos de los canales (sin los valores extremos)
     b_mode = cp.bincount(image[:, :, 0][image[:, :, 0] != 0].flatten()).argmax()
     g_mode = cp.bincount(image[:, :, 1][image[:, :, 1] != 255].flatten()).argmax()
@@ -259,19 +199,18 @@ def process_image_gpu(image: cp.ndarray):
     classifications = classify_pixel_vectorized(red_categories, blue_categories, green_categories)
 
     # Mapear resultados a colores y binarios
-    
-    color_map = SEGMENTATION_COLORS
-    output_image = color_map[classifications]
-
+    output_image = SEGMENTATION_COLORS[classifications]
+    binary_image = cp.zeros((height, width), dtype=cp.uint8)
     binary_image[classifications == 1] = 1
 
     # Obtener cuadros basados en vecinos
-    try:
-        cuadros = neighbor_framed_np(binary_image.get())
-    except:
-        cuadros = neighbor_framed_np(binary_image)
+    cuadros = neighbor_framed_np(binary_image)
 
     return output_image, cuadros
+
+def process_image_gpu(image):
+    # Fallback to CPU if requested or if GPU fails
+    return process_image_cpu(image)
 
 def get_orientation(image:cp.array):
     # Convertir la imagen a un formato binario basado en el color del obstáculo
@@ -299,77 +238,23 @@ def get_orientation(image:cp.array):
 
     return obstacle_coords, positions
 
-def process_image_cuda(image):
-    """Procesa una imagen para clasificar cada píxel como agua, cielo u obstáculo usando CUDA."""
-    height, width, _ = image.shape
-    output_image = cp.zeros((height, width, 3), dtype=cp.uint8)
-
-    # Definir colores para cada categoría basados en SEGMENTATION_COLORS
-    colors = cp.array([
-        [35, 195, 249],   # Color para agua
-        [164, 76, 90],
-        [224, 167, 41],   # Color para obstáculo
-        [0, 0, 0]         # Negro para desconocido
-    ], dtype=cp.uint8)
-
-    # Convertir la imagen de BGR a HSV
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    hsv_image = cp.asarray(hsv_image)
-
-    # Obtener los canales HSV
-    hue = hsv_image[:, :, 0]
-    saturation = hsv_image[:, :, 1]
-    value = hsv_image[:, :, 2]
-
-    # Calcular la posición relativa
-    y_coords = cp.arange(height).reshape(-1, 1)
-    relative_position = y_coords / height
-
-    # Fuzzificación de intensidad
-    intensity_category = cp.where(value < 50, 'low', cp.where(value < 160, 'medium', 'high'))
-
-    # Fuzzificación de tono y saturación
-    color_category = cp.where((15 <= hue) & (hue <= 50) & (saturation < 30), 'water',
-                    cp.where((90 <= hue) & (hue <= 120) & (saturation < 50), 'sky',
-                    cp.where(((0 <= hue) & (hue <= 20) | (90 <= hue) & (hue <= 120)) & (saturation > 20), 'obstacle', 'unknown')))
-
-    # Fuzzificación de posición
-    position_category = cp.where(relative_position < 0.33, 'top', cp.where(relative_position < 0.66, 'middle', 'bottom'))
-
-    # Clasificación de píxeles
-    classification = cp.where((color_category == 'water') & (position_category == 'bottom') & (intensity_category == 'high'), 'water',
-                    cp.where((color_category == 'sky') & (position_category == 'top') & (intensity_category == 'high'), 'sky',
-                    cp.where((color_category == 'obstacle') & (intensity_category == 'medium') & (position_category == 'middle'), 'obstacle',
-                    cp.where((color_category == 'water') & (position_category == 'middle') & (intensity_category == 'high'), 'water',
-                    cp.where((color_category == 'sky') & (position_category == 'middle') & (intensity_category == 'high'), 'sky',
-                    cp.where((position_category == 'bottom') & (intensity_category == 'high'), 'water',
-                    cp.where((position_category == 'top') & (intensity_category == 'high'), 'sky', 'unknown')))))))
-
-    # Asignar colores basados en la clasificación
-    output_image = colors[classification]
-
-    return cp.asnumpy(output_image)
-
 if __name__ == "__main__":
     # Leer y redimensionar la imagen
     tic = time.time()
     tics = {}
     for i in range(3):
         tics[f"image_{i+1}"] = []
-        # for j in range(100):
         tic1 = time.time()
-        image_path = f'/home/tille/Desktop/Tesis/WaSR-T/images/akaso{i+1}.jpeg'  # Ruta de la imagen de ejemplo
+        image_path = f'assets/images/akaso{i+1}.jpeg' 
         image = cv2.imread(image_path)
+        if image is None: continue
         resized_image = cv2.resize(image, (256, 192))
 
         # Procesar la imagen redimensionada
-        classified_image = process_image_cpu(resized_image)
+        classified_image, _ = process_image_cpu(resized_image)
 
         # Guardar y mostrar el resultado
-        output_path = f'/home/tille/Desktop/Tesis/WaSR-T/images/output_{i+1}.png'
+        output_path = f'main_output/output_{i+1}.png'
+        os.makedirs("main_output", exist_ok=True)
         cv2.imwrite(output_path, classified_image)
         tics[f"image_{i+1}"].append(time.time()-tic1)
-        # print(f"Imagen {i+1} procesada {j+1} veces.")
-
-    # with open('times_fuzzy.pickle', 'wb') as f:
-    #     pickle.dump(tics, f)

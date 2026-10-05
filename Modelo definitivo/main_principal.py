@@ -1,29 +1,41 @@
 import cv2
+import os
 from os.path import join, dirname, abspath
 from cp_contorno_difuso import process_image
-import cupy as cp
+import numpy as np
 
 def main():
-    print("Script iniciado")
-    filename = join(dirname(dirname(abspath(__file__))), "img/barco.jpg")
-    print(filename)  # Esto te permitirá verificar la ruta completa
+    print("Script iniciado (Adaptado para CPU)")
+    
+    # Path de la imagen
+    base_path = dirname(dirname(abspath(__file__)))
+    filename = join(base_path, "assets/images/barco.jpg")
+    
+    # Fallback al path absoluto si es necesario
+    if not os.path.exists(filename):
+        filename = "/home/tetotille/Proyectos/detector-obstaculos-logica-difusa/assets/images/barco.jpg"
+    
+    print(f"Buscando imagen en: {filename}")
 
-    # Cargar y mostrar la imagen original
+    if not os.path.exists(filename):
+        print(f"Error: No se encontró la imagen en {filename}")
+        return
+
+    # Cargar la imagen
     image = cv2.imread(filename)
-    cv2.imshow('Original Image', image)
-    cv2.waitKey(0)
+    if image is None:
+        print(f"Error: No se pudo cargar la imagen {filename}")
+        return
+        
+    print("Imagen cargada con éxito. Procesando en CPU...")
 
-    # Llamar a la función de procesamiento y obtener la imagen procesada
+    # Procesar imagen
     processed_image = process_image(image)
-        # Convertir la imagen de CuPy a NumPy
-    processed_image_np = cp.asnumpy(processed_image)
-    # Mostrar la imagen procesada
-    cv2.imshow('Imagen Umbral', processed_image_np)
-    cv2.waitKey(0)
-
-    # Guardar la imagen procesada
-    cv2.imwrite("imagen_umbral.png", processed_image_np)
-    cv2.destroyAllWindows()
+    
+    # Guardar resultado (en lugar de cv2.imshow para evitar problemas sin display)
+    output_name = "imagen_umbral.png"
+    cv2.imwrite(output_name, processed_image)
+    print(f"Procesamiento completado. Imagen guardada como: {output_name}")
 
 if __name__ == "__main__":
     main()

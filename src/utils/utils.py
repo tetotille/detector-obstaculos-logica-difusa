@@ -1,12 +1,13 @@
+import numpy as cp
 import numpy as np
 import cv2
 from scipy.ndimage import label
 
-try:
-    import cupy as cp
-except:
-    import numpy as cp
-    print("cuda no está instalado.")
+# try:
+#     import cupy as cp
+# except:
+#     import numpy as cp
+#     print("cuda no está instalado.")
 
 
 # hacer_mascara_kernel = cp.RawKernel(open("kernels/hacer_mascara_kernel.cu").read(), "hacer_mascara_kernel")

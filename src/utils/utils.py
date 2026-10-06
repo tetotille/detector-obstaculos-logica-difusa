@@ -1,7 +1,10 @@
 import numpy as cp
 import numpy as np
 import cv2
-from scipy.ndimage import label
+try:
+    from scipy.ndimage import label
+except ImportError:
+    label = None
 
 # try:
 #     import cupy as cp
@@ -234,6 +237,78 @@ def neighbor_framed(mask_max_cluster_cpu):
         cuadros.append(cuadro)
         cuadros = [cuadro for cuadro in cuadros if cuadro["weight"] > 100]
     return cuadros
+
+def mask_to_bounding_boxes(binary_mask, min_area=30, max_area=None, filter_noise=True):
+    """
+    Algoritmo de encuadre sencillo para convertir una máscara binaria (ej. de WaSR-T)
+    en una lista estructurada de cuadros delimitadores (bounding boxes) compatibles con el sistema.
+    
+    Args:
+        binary_mask (np.ndarray): Máscara binaria 2D donde >0 indica obstáculo.
+        min_area (int): Umbral de área mínima en píxeles para filtrar ruido/reflejos.
+        max_area (int, optional): Umbral de área máxima opcional.
+        filter_noise (bool): Si es True, aplica apertura morfológica 3x3 para eliminar salt-noise.
+        
+    Returns:
+        list[dict]: Lista de diccionarios con formato:
+                    {
+                        "x_init": int, "y_init": int,
+                        "x_end": int, "y_end": int,
+                        "width": int, "height": int,
+                        "weight": int,
+                        "x_centroid": int, "y_centroid": int
+                    }
+    """
+    mask_u8 = (binary_mask > 0).astype(np.uint8) * 255
+    if filter_noise:
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        mask_u8 = cv2.morphologyEx(mask_u8, cv2.MORPH_OPEN, kernel)
+        
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask_u8, connectivity=8)
+    
+    cuadros = []
+    for label_id in range(1, num_labels):
+        area = int(stats[label_id, cv2.CC_STAT_AREA])
+        if area < min_area:
+            continue
+        if max_area is not None and area > max_area:
+            continue
+            
+        x_init = int(stats[label_id, cv2.CC_STAT_LEFT])
+        y_init = int(stats[label_id, cv2.CC_STAT_TOP])
+        w = int(stats[label_id, cv2.CC_STAT_WIDTH])
+        h = int(stats[label_id, cv2.CC_STAT_HEIGHT])
+        x_end = x_init + w
+        y_end = y_init + h
+        x_cen, y_cen = centroids[label_id]
+        
+        cuadros.append({
+            "x_init": x_init,
+            "y_init": y_init,
+            "x_end": x_end,
+            "y_end": y_end,
+            "width": w,
+            "height": h,
+            "weight": area,
+            "x_centroid": int(x_cen),
+            "y_centroid": int(y_cen)
+        })
+        
+    return cuadros
+
+def draw_bounding_boxes(image, cuadros, color=(0, 0, 255), thickness=2, label_prefix=""):
+    """
+    Dibuja los cuadros delimitadores sobre una imagen.
+    """
+    img_out = image.copy()
+    for c in cuadros:
+        if c is None: continue
+        cv2.rectangle(img_out, (c["x_init"], c["y_init"]), (c["x_end"], c["y_end"]), color, thickness)
+        if label_prefix:
+            txt = f"{label_prefix}: {c.get('weight', 0)}px"
+            cv2.putText(img_out, txt, (c["x_init"], max(15, c["y_init"] - 5)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
+    return img_out
 
 if __name__ == "__main__":
     # Leer la imagen y convertirla a un array de CuPy

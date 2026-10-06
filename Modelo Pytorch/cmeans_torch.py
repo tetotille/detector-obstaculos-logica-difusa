@@ -48,12 +48,12 @@ def calculate_distances(data, centers, metric='euclidean'):
 
 def _cmeans0(data, u_old, c, m, metric='euclidean'):
     # Mover datos a GPU
-    data_gpu = torch.tensor(data, dtype=torch.float32).cuda()
-    u_old_gpu = torch.tensor(u_old, dtype=torch.float32).cuda()
+    data_gpu = data.clone().detach().float().cuda() if isinstance(data, torch.Tensor) else torch.tensor(data, dtype=torch.float32).cuda()
+    u_old_gpu = u_old.clone().detach().float().cuda() if isinstance(u_old, torch.Tensor) else torch.tensor(u_old, dtype=torch.float32).cuda()
 
     # Normalizar y eliminar cualquier valor cero potencial
     u_old_gpu = normalize_columns(u_old_gpu)
-    u_old_gpu = torch.fmax(u_old_gpu, torch.finfo(torch.float32).eps)
+    u_old_gpu = torch.clamp(u_old_gpu, min=1e-7)
 
     # Elevar a la potencia de m
     um_gpu = u_old_gpu ** m
@@ -65,7 +65,7 @@ def _cmeans0(data, u_old, c, m, metric='euclidean'):
     
     # Calcular distancias usando la función calculate_distances adaptada a PyTorch
     d_gpu = calculate_distances(data_gpu, cntr, metric)
-    d_gpu = torch.fmax(d_gpu, torch.finfo(torch.float32).eps)
+    d_gpu = torch.clamp(d_gpu, min=1e-7)
 
     # Calcular jm
     jm = torch.sum(um_gpu * (d_gpu ** 2))
@@ -73,66 +73,42 @@ def _cmeans0(data, u_old, c, m, metric='euclidean'):
     # Actualizar la matriz de pertenencias u usando normalize_power_columns adaptada a PyTorch
     u = normalize_power_columns(d_gpu, -2. / (m - 1))
 
-    # Pasar los resultados a la CPU si es necesario
-    cntr = cntr.cpu().numpy()
-    u = u.cpu().numpy()
-    jm = jm.item()
-    d = d_gpu.cpu().numpy()
-
-    # Devolver los resultados
-    return cntr, u, jm, d
+    # Mantener tensores en GPU
+    return cntr, u, jm, d_gpu
 
 def _fp_coeff(u):
     """
-    Fuzzy partition coefficient fpc relative to fuzzy c-partitioned
-    matrix u. Measures 'fuzziness' in partitioned clustering.
-
-    Parameters
-    ----------
-    u : 2d array (C, N)
-        Fuzzy c-partitioned matrix; N = number of data points and C = number
-        of clusters.
-
-    Returns
-    -------
-    fpc : float
-        Fuzzy partition coefficient.
+    Fuzzy partition coefficient fpc relative to fuzzy c-partitioned matrix u.
     """
-    # Convertir u a un tensor de PyTorch y moverlo a la GPU
-    u_gpu = torch.tensor(u, dtype=torch.float32).cuda()
-    n = u_gpu.shape[1]
-
-    # Calcular el coeficiente de partición difuso en la GPU
-    trace_u_ut = torch.trace(torch.matmul(u_gpu, u_gpu.T))
-    fpc = trace_u_ut.item() / float(n)
-    
-    return fpc
+    n = u.shape[1]
+    trace_u_ut = torch.trace(torch.matmul(u, u.T))
+    return trace_u_ut.item() / float(n)
 
 def cmeans(data, c, m, error, maxiter, metric='euclidean', init=None, seed=None):
     start_time = time.time()
     
     # Convertir datos a tensor en la GPU
-    data = torch.tensor(data, dtype=torch.float32).cuda()
+    data = data.clone().detach().float().cuda() if isinstance(data, torch.Tensor) else torch.tensor(data, dtype=torch.float32).cuda()
 
     # Inicialización aleatoria de u0
     if init is None:
         if seed is not None:
             torch.manual_seed(seed)
         n = data.shape[1]
-        u0 = torch.rand(c, n, dtype=torch.float32).cuda()
+        u0 = torch.rand(c, n, dtype=torch.float32, device="cuda")
         u0 = normalize_columns(u0)
         init = u0.clone()
     else:
-        u0 = torch.tensor(init, dtype=torch.float32).cuda()
+        u0 = init.clone().detach().float().cuda() if isinstance(init, torch.Tensor) else torch.tensor(init, dtype=torch.float32).cuda()
 
-    u = torch.fmax(u0, torch.finfo(torch.float32).eps)
-    jm = torch.tensor([], dtype=torch.float32).cuda()
+    u = torch.clamp(u0, min=1e-7)
+    jm = torch.tensor([], dtype=torch.float32, device="cuda")
     p = 0
 
     while p < maxiter - 1:
         u2 = u.clone()
         cntr, u, Jjm, d = _cmeans0(data, u2, c, m, metric)
-        jm = torch.cat((jm, Jjm.view(-1)))
+        jm = torch.cat((jm, torch.as_tensor(Jjm, device="cuda").view(-1)))
         p += 1
 
         # Condición de parada

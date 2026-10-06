@@ -21,8 +21,12 @@ def crop_horizontal(imagen, indice_vertical):
     if indice_vertical < 0 or indice_vertical >= imagen.shape[0]:
         raise ValueError("El índice vertical está fuera de los límites de la imagen.")
     
-    parte_superior = imagen[:indice_vertical, :, :]
-    parte_inferior = imagen[indice_vertical:, :, :]
+    if imagen.ndim == 3:
+        parte_superior = imagen[:indice_vertical, :, :]
+        parte_inferior = imagen[indice_vertical:, :, :]
+    else:
+        parte_superior = imagen[:indice_vertical, :]
+        parte_inferior = imagen[indice_vertical:, :]
     
     return parte_superior, parte_inferior
 
@@ -128,49 +132,14 @@ def resize_image_bgr(image, new_shape):
     torch.Tensor
         Imagen redimensionada en formato BGR.
     """
-    orig_height, orig_width, channels = image.shape
     new_height, new_width = new_shape
-
-    # Calcular factores de escala
-    scale_y = orig_height / new_height
-    scale_x = orig_width / new_width
-
-    # Crear rejillas de coordenadas para la nueva imagen
-    y = torch.arange(new_height, dtype=torch.float32) * scale_y
-    x = torch.arange(new_width, dtype=torch.float32) * scale_x
-    x_grid, y_grid = torch.meshgrid(x, y, indexing='ij')
-
-    # Obtener las coordenadas de los píxeles de la imagen original
-    x0 = x_grid.floor().long()
-    x1 = torch.clamp(x0 + 1, 0, orig_width - 1)
-    y0 = y_grid.floor().long()
-    y1 = torch.clamp(y0 + 1, 0, orig_height - 1)
-
-    # Calcular los pesos de interpolación
-    x_weight = x_grid - x0.float()
-    y_weight = y_grid - y0.float()
-
-    # Crear la imagen redimensionada
-    resized_image = torch.zeros((new_height, new_width, channels), dtype=image.dtype)
-
-    for c in range(channels):
-        # Realizar la interpolación bilineal
-        Ia = image[y0, x0, c]
-        Ib = image[y1, x0, c]
-        Ic = image[y0, x1, c]
-        Id = image[y1, x1, c]
-
-        resized_image[:, :, c] = (
-            Ia * (1 - x_weight) * (1 - y_weight) +
-            Ib * (1 - x_weight) * y_weight +
-            Ic * x_weight * (1 - y_weight) +
-            Id * x_weight * y_weight
-        )
-
-    # Limitar los valores a un rango válido
-    resized_image = torch.clamp(resized_image, 0, 255)
-    
-    return resized_image.to(torch.uint8)
+    # image: (H, W, C) -> (1, C, H, W)
+    img_perm = image.permute(2, 0, 1).unsqueeze(0).float()
+    resized = torch.nn.functional.interpolate(
+        img_perm, size=(new_height, new_width), mode='bilinear', align_corners=False
+    )
+    # (1, C, H, W) -> (H, W, C)
+    return resized.squeeze(0).permute(1, 2, 0).clamp(0, 255).to(image.dtype)
 
 
 def hacer_mascara2(image3, mask2):

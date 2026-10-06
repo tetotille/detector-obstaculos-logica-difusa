@@ -75,13 +75,12 @@ def cmeans_torch(
         # Centros de clusters: (c, S)
         centers = (um @ data) / um_sum
 
-        # Distancias euclídeas: (c, N)
-        # data: (N, 1, S), centers: (1, c, S)
+        # Distancias euclídeas exactas L2: (c, N)
         diff = data.unsqueeze(1) - centers.unsqueeze(0)  # (N, c, S)
-        dists = torch.sum(diff ** 2, dim=2).T            # (c, N)
-        dists = torch.clamp(dists, min=1e-7)
+        dists = torch.norm(diff, dim=2).T                # (c, N)
+        dists = torch.clamp(dists, min=1e-6)
 
-        # Actualización de matriz de pertenencia
+        # Actualización de matriz de pertenencia: d ** (-2 / (m - 1))
         u = normalize_power_columns_torch(dists, -2.0 / (m - 1.0))
 
         if torch.norm(u - u_old) < error:
@@ -94,42 +93,58 @@ def fcm_gpu(
     image_np: np.ndarray,
     num_clusters: int = 4,
     punto_horizonte: int = 0,
+    min_contrast: float = 0.20,
     device: str = "cuda"
 ) -> Tuple[np.ndarray, int, List[Dict[str, Any]]]:
     """
-    Segmentación FCM en GPU y extracción de regiones bajo el horizonte.
+    Segmentación FCM en GPU en dos etapas:
+    1. Segmentación semántica de agua y obstáculos a nivel de píxel (sin encuadrar primero).
+    2. Algoritmo de encuadre aplicado posteriormente sobre la máscara de obstáculos limpia.
     """
     dev = torch.device(device if torch.cuda.is_available() else "cpu")
     h, w, c = image_np.shape
-
-    # Normalizar a [0, 1] en GPU
-    img_t = torch.from_numpy(image_np).to(dev, dtype=torch.float32) / 255.0
-    data = img_t.view(-1, c)  # (h*w, 3)
-
-    _, u = cmeans_torch(data, c=num_clusters, maxiter=10)
+    punto_horizonte = max(0, min(punto_horizonte, h - 5))
     
-    # Asignación de clusters (argmax)
-    cluster_membership = torch.argmax(u, dim=0).view(h, w)  # (h, w)
-    
-    # Recorte bajo el horizonte (zona de agua)
-    water_membership = cluster_membership[punto_horizonte:, :]
-    
-    # El cluster minoritario en el área de agua corresponde al obstáculo
-    unique_clusters, counts = torch.unique(water_membership, return_counts=True)
-    if len(counts) > 1:
-        min_idx = torch.argmin(counts)
-        obstacle_cluster = unique_clusters[min_idx].item()
-    else:
-        obstacle_cluster = unique_clusters[0].item()
+    water_np = image_np[punto_horizonte:, :]
+    H_w, W_w, _ = water_np.shape
+    if H_w < 5 or W_w < 5:
+        empty = np.zeros((H_w, W_w), dtype=np.uint8)
+        return empty, punto_horizonte, []
 
-    # Generar máscara binaria del obstáculo
-    obstacle_mask_t = (water_membership == obstacle_cluster).to(torch.uint8) * 255
+    # 1. Normalización de fondo / supresión de degradado vertical
+    water_filtered = cv2.bilateralFilter(water_np, 5, 50, 50)
+    row_med = np.median(water_filtered, axis=1, keepdims=True)
+    row_smooth = cv2.GaussianBlur(row_med.astype(np.float32), (1, 15), 0)
+    res = water_filtered.astype(np.float32) - row_smooth + 128.0
+    res_norm = np.clip(res, 0, 255) / 255.0
+
+    # 2. Transferir a GPU y ejecutar FCM
+    water_t = torch.from_numpy(res_norm).to(dev, dtype=torch.float32)
+    data = water_t.view(-1, c)  # (H_w * W_w, 3)
+
+    centers, u = cmeans_torch(data, c=num_clusters, maxiter=20)
+    labels = torch.argmax(u, dim=0).view(H_w, W_w)
+
+    # 3. Encontrar cluster dominante de agua (el más cercano al residuo neutro 0.5)
+    neutral_t = torch.tensor([0.5, 0.5, 0.5], device=dev)
+    dists_neutral = torch.norm(centers - neutral_t, dim=1)
+    water_cluster_id = torch.argmin(dists_neutral).item()
+
+    # 4. Máscara semántica de obstáculos a nivel de píxel
+    obstacle_mask_t = torch.zeros((H_w, W_w), dtype=torch.uint8, device=dev)
+    for c_id in range(num_clusters):
+        if c_id == water_cluster_id:
+            continue
+        contrast = torch.norm(centers[c_id] - centers[water_cluster_id]).item()
+        if contrast >= min_contrast:
+            obstacle_mask_t[labels == c_id] = 255
+
     obstacle_mask_np = obstacle_mask_t.cpu().numpy()
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    obstacle_mask_np = cv2.morphologyEx(obstacle_mask_np, cv2.MORPH_OPEN, kernel)
 
-    # Extracción de cuadros delimitadores sobre la máscara recortada
-    boxes = mask_to_bounding_boxes(obstacle_mask_np, min_area=30)
-    
-    # Formatear cuadros con campos requeridos por fuzzy_union
+    # 5. Algoritmo de encuadre posterior sobre la máscara limpia
+    boxes = mask_to_bounding_boxes(obstacle_mask_np, min_area=35)
     formatted_boxes = []
     for b in boxes:
         formatted_boxes.append({
@@ -146,6 +161,7 @@ def fcm_gpu(
         })
 
     return obstacle_mask_np, punto_horizonte, formatted_boxes
+
 
 
 def detect_obstacles_gpu(
@@ -189,11 +205,12 @@ def detect_obstacles_gpu(
         c_comp["_compensated"] = True
         cuadros_rgb.append(c_comp)
 
-    # 3. FCM en GPU (PyTorch CUDA)
-    _, _, cuadros_cmeans_raw = fcm_gpu(
+    # 3. FCM en GPU (PyTorch CUDA) en dos etapas
+    obs_mask_gpu, _, cuadros_cmeans_raw = fcm_gpu(
         image_np,
         num_clusters=4,
         punto_horizonte=ajuste,
+        min_contrast=0.20,
         device=device
     )
 
@@ -216,5 +233,7 @@ def detect_obstacles_gpu(
         "has_obstacle": len(confirmed_boxes) > 0,
         "horizon": {"a": int(a), "b": int(b), "ajuste": int(ajuste)},
         "boxes_rgb": cuadros_rgb,
-        "boxes_fcm": cuadros_cmeans
+        "boxes_fcm": cuadros_cmeans,
+        "mask_obstaculos": obs_mask_gpu
     }
+

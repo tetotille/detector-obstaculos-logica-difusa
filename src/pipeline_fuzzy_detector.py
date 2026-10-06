@@ -26,8 +26,9 @@ if str(project_root) not in sys.path:
 from src.utils.utils import read_image
 from src.detector_horizonte.pixel_detector import separate_pixels, find_largest_fuzzy_jump
 from src.detector_hsv.rgb_detection import process_image_cpu as detector_rgb_cpu
-from src.cmeans.c_means_main import fcm
+from src.cmeans.c_means_main import fcm, segment_fcm_pixel_level, extract_boxes_from_mask
 from src.fuzzy_union.fuzzy_union import fuzzy_union
+
 
 
 def detect_obstacles(
@@ -90,22 +91,21 @@ def detect_obstacles(
         c_comp["_compensated"] = True
         cuadros_rgb.append(c_comp)
 
-    # 3. Detector FCM con 4 clusters sobre la imagen completa recortando bajo horizonte
-    _, cmeans_fila_interes, cuadros_cmeans_raw = fcm(
-        image_np,
+    # 3. Detector FCM en dos etapas:
+    # 3.1. Segmentación semántica a nivel de píxel (agua y obstáculos) SIN encuadrar primero
+    mask_agua, mask_obstaculos, fcm_info = segment_fcm_pixel_level(
+        cropped_image_np,
         num_clusters=4,
-        punto_horizonte=ajuste
+        m=2.0,
+        min_contrast=0.20
     )
 
-    # Compensar coordenadas de FCM hacia la imagen completa
-    cuadros_cmeans = []
-    for c in cuadros_cmeans_raw:
-        c_comp = dict(c)
-        c_comp["y_init"] = int(c["y_init"] + ajuste)
-        c_comp["y_end"] = int(c["y_end"] + ajuste)
-        c_comp["y_centroid"] = int(c["y_centroid"] + ajuste)
-        c_comp["_compensated"] = True
-        cuadros_cmeans.append(c_comp)
+    # 3.2. Algoritmo de encuadre aplicado posteriormente sobre la máscara de obstáculos limpia
+    cuadros_cmeans = extract_boxes_from_mask(
+        mask_obstaculos,
+        y_offset=ajuste,
+        min_area=35
+    )
 
     # 4. Fusión difusa (Fuzzy Union)
     # Recibe ambos conjuntos de candidatos ya compensados
@@ -127,8 +127,11 @@ def detect_obstacles(
             "ajuste": int(ajuste)
         },
         "boxes_rgb": cuadros_rgb,
-        "boxes_fcm": cuadros_cmeans
+        "boxes_fcm": cuadros_cmeans,
+        "mask_agua": mask_agua,
+        "mask_obstaculos": mask_obstaculos
     }
+
 
 
 def process_video_headless(

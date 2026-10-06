@@ -172,6 +172,8 @@ main_output/*
 !main_output/tabla_rendimiento.*
 !main_output/etiquetas_evaluacion_video.*
 !main_output/benchmark_jetson_*
+!main_output/wasrt_reference_validation.*
+
 *.pkl
 imagen_umbral.png
 *.mov

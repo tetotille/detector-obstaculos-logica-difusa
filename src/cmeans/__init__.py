@@ -1,1 +1,1 @@
-from .c_means_main import fcm
+from .c_means_main import fcm, segment_fcm_pixel_level, extract_boxes_from_mask, fcm_semantic

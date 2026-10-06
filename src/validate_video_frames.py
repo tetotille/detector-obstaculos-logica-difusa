@@ -1,6 +1,7 @@
+import os
+os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
 import cv2
 import numpy as np
-import os
 import sys
 import json
 from pathlib import Path

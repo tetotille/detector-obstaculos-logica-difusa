@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+\centering
+\caption{Comparación Cuantitativa de Detección de Obstáculos en Video Real (Evaluación de Presencia por Frame)}
+\label{tab:video_performance_comparison}
+\begin{tabular}{lcccccccc}
+\toprule
+Método & Frames & TP & FP & FN & TN & Precisión & Recall & F1-Score \\
+\midrule
+WaSR-T & 181 & 124 & 3 & 28 & 26 & \textbf{0.976} & \textbf{0.816} & \textbf{0.889} \\
+Ours (Difuso sin memoria) & 181 & 59 & 9 & 93 & 20 & 0.868 & 0.388 & 0.536 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Benchmark de Velocidad y Eficiencia en Plataforma Embebida NVIDIA Jetson Orin Nano (Modo 25W)}
+\label{tab:jetson_speed_benchmark}
+\begin{tabular}{llccc}
+\toprule
+Método & Dispositivo / Backend & Resolución & Tiempo Medio por Frame (ms) & Throughput (FPS) \\
+\midrule
+\textbf{Ours (Fuzzy Logic)} & \textbf{GPU (PyTorch CUDA)} & \textbf{256$\times$192} & \textbf{24.86 $\pm$ 2.0} & \textbf{40.23} \\
+Ours (Fuzzy Logic) & CPU (ARM Cortex-A78AE) & 256$\times$192 & 188.10 $\pm$ 8.8 & 5.32 \\
+WaSR-T & GPU (NVIDIA Ampere CUDA) & 512$\times$384 & 841.99 $\pm$ 18.4 & 1.19 \\
+WaSR-T & CPU (ARM Cortex-A78AE) & 512$\times$384 & 16721.22 $\pm$ 222.3 & 0.06 \\
+\bottomrule
+\end{tabular}
+\end{table}
+

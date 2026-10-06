@@ -164,13 +164,19 @@ config.json
 Showcase.ipynb
 test_cont_dif.py
 
-
 !assets
 result.jpg
 launch.json
 environment.yml
-main_output/
+main_output/*
+!main_output/tabla_rendimiento.*
+!main_output/etiquetas_evaluacion_video.*
+!main_output/benchmark_jetson_*
 *.pkl
 imagen_umbral.png
 *.mov
 *.MOV
+src/main_output/
+
+
+

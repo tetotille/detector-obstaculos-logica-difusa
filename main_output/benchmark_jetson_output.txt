@@ -1,0 +1,12 @@
+===========================================================================
+BENCHMARK DE RENDIMIENTO EN PLATAFORMA ÚNICA: NVIDIA Jetson Orin Nano Developer Kit (8GB)
+Modo de Potencia: NV Power Mode: 25W
+Archivo de Video: tesis.mp4
+===========================================================================
+Método                 | Backend                    | Resolución | Tiempo Medio   | Throughput (FPS)
+-----------------------------------------------------------------------------------------------
+Ours (Fuzzy Logic)     | CPU (ARM Cortex-A78AE)     | 256x192    |   188.10 ± 8.8  ms |           5.32 FPS
+Ours (Fuzzy Logic)     | GPU (PyTorch CUDA)         | 256x192    |    24.86 ± 2.0  ms |          40.23 FPS
+WaSR-T                 | CPU (ARM Cortex-A78AE)     | 512x384    | 16721.22 ± 222.3 ms |           0.06 FPS
+WaSR-T                 | GPU (NVIDIA Ampere CUDA)   | 512x384    |   841.99 ± 18.4 ms |           1.19 FPS
+===============================================================================================

@@ -3,118 +3,167 @@ import numpy as cp
 
 def triangular(x, a, b, c):
     """
-    Triangular membership function.
+    Función de pertenencia triangular o trapezoidal (hombro/shoulder).
     
-    Parameters:
-    x : array-like
-        Input values.
+    Garantiza que todas las salidas pertenezcan estrictamente al intervalo [0.0, 1.0],
+    incluso para valores que superen el rango superior (ej. peso > 300).
+    
+    Parámetros:
+    x : float o array-like
+        Valor o valores de entrada.
     a : float
-        Start of the triangle.
+        Inicio de la función.
     b : float
-        Peak of the triangle.
+        Punto de máxima pertenencia (pico).
     c : float
-        End of the triangle.
-    
-    Returns:
-    array-like
-        Membership values.
+        Fin de la función.
+        
+    Retorna:
+    float o cp.ndarray
+        Valor de pertenencia en [0.0, 1.0].
     """
+    is_scalar = not isinstance(x, cp.ndarray)
+    x_arr = cp.asarray(x, dtype=cp.float32)
+    
     if a == b:
-        return cp.where(x <= c, 1 - cp.abs(x - b) / (c - b), 0)
-    if b == c:
-        return cp.where(x >= a, 1 - cp.abs(x - b) / (b - a), 0)
-    return cp.maximum(0, cp.minimum((x - a) / (b - a), (c - x) / (c - b)))
+        # Hombro izquierdo: 1.0 para x <= b, desciende linealmente a 0 en c, 0.0 para x >= c
+        res = cp.clip((c - x_arr) / float(c - b), 0.0, 1.0)
+    elif b == c:
+        # Hombro derecho: 0.0 para x <= a, asciende linealmente a 1 en b, 1.0 para x >= b
+        res = cp.clip((x_arr - a) / float(b - a), 0.0, 1.0)
+    else:
+        # Función triangular estándar
+        term1 = (x_arr - a) / float(b - a)
+        term2 = (c - x_arr) / float(c - b)
+        res = cp.clip(cp.minimum(term1, term2), 0.0, 1.0)
+        
+    return float(res) if is_scalar else res
+
 
 def fuzzy_and(a, b):
-    """
-    Fuzzy AND operator.
-    
-    Parameters:
-    a : array-like
-        First input.
-    b : array-like
-        Second input.
-    
-    Returns:
-    array-like
-        Fuzzy AND values.
-    """
+    """Operador AND difuso (mínimo t-norma)."""
     return cp.min((a, b))
 
+
 def fuzzy_or(a, b):
-    """
-    Fuzzy OR operator.
-    
-    Parameters:
-    a : array-like
-        First input.
-    b : array-like
-        Second input.
-    
-    Returns:
-    array-like
-        Fuzzy OR values.
-    """
+    """Operador OR difuso (máximo s-norma)."""
     return cp.max((a, b))
 
-def apply_rules(distancia, y_centroid, weight):
-    
-    # Reglas
-    # 1. Si la distancia es cerca, el y_centroid es bottom y el peso es grande, entonces es un obstáculo
-    # 2. Si la distancia es cerca, el y_centroid es below y el peso es grande, entonces es un obstáculo
-    # 3. Si la distancia es media, el y_centroid es below y el peso es grande, entonces es un obstáculo
-    # 4. Si la distancia es cerca, el y_centroid es bottom y el peso es mediano, entonces es un obstáculo
-    # 5. Si la distancia es cerca, el y_centroid es below y el peso es mediano, entonces es un obstáculo
-    # 6. Si la distancia es cerca y el peso es grande, entonces es un obstáculo
-    # 7. Si la distancia es media y el peso es grande, entonces es un obstáculo
-    # 8. Si la distancia es cerca y el peso es medio, entonces es un obstáculo
-    # 9. Si el peso es grande, entonces es un obstáculo
 
-    rule1 = fuzzy_and(fuzzy_and(distancia["near"], y_centroid["bottom"]), weight["big"])*3
-    rule2 = fuzzy_and(fuzzy_and(distancia["near"], y_centroid["below"]), weight["big"])*3
-    rule3 = fuzzy_and(fuzzy_and(distancia["average"], y_centroid["below"]), weight["big"])*3
-    rule4 = fuzzy_and(fuzzy_and(distancia["near"], y_centroid["bottom"]), weight["medium"])*3
-    rule5 = fuzzy_and(fuzzy_and(distancia["near"], y_centroid["below"]), weight["medium"])*3
-    rule6 = fuzzy_and(distancia["near"], weight["big"])*2
-    rule7 = fuzzy_and(distancia["average"], weight["big"])*2
-    rule8 = fuzzy_and(distancia["near"], weight["medium"])*2
+def apply_rules(distancia, y_centroid, weight):
+    """
+    Evalúa el sistema de reglas difusas para clasificar un candidato como obstáculo.
+    
+    Las reglas utilizan factores de ponderación (multiplicadores de regla):
+    - Reglas 1-5 (multiplicador * 3): Coincidencia espacial cercana y tamaño significativo.
+    - Reglas 6-8 (multiplicador * 2): Coincidencia espacial o tamaño relevante.
+    - Regla 9 (multiplicador * 1): Tamaño grande por sí solo.
+    
+    Retorna:
+    float: Puntuación ponderada (weighted score / puntaje de activación ponderado) en el rango [0, 3].
+    Nota: Este valor representa la fuerza de activación acumulada ponderada de las reglas,
+    no una función de pertenencia normalizada entre cero y uno.
+    """
+    rule1 = fuzzy_and(fuzzy_and(distancia["near"], y_centroid["bottom"]), weight["big"]) * 3
+    rule2 = fuzzy_and(fuzzy_and(distancia["near"], y_centroid["below"]), weight["big"]) * 3
+    rule3 = fuzzy_and(fuzzy_and(distancia["average"], y_centroid["below"]), weight["big"]) * 3
+    rule4 = fuzzy_and(fuzzy_and(distancia["near"], y_centroid["bottom"]), weight["medium"]) * 3
+    rule5 = fuzzy_and(fuzzy_and(distancia["near"], y_centroid["below"]), weight["medium"]) * 3
+    rule6 = fuzzy_and(distancia["near"], weight["big"]) * 2
+    rule7 = fuzzy_and(distancia["average"], weight["big"]) * 2
+    rule8 = fuzzy_and(distancia["near"], weight["medium"]) * 2
     rule9 = weight["big"]
 
-    return fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(rule1, rule2), rule3), rule4), rule5), rule6), rule7), rule8), rule9)
+    score = fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(fuzzy_or(rule1, rule2), rule3), rule4), rule5), rule6), rule7), rule8), rule9)
+    return float(score)
 
-def fuzzy_union(cuadros_list,lidar=(0.0,0.0)):
+
+def fuzzy_union(cuadros_list, lidar=(0.0, 0.0), crop_offsets=None):
     """
-    Función que recibe una lista de cuadros y devuelve la unión difusa de los cuadros
+    Función que recibe una lista de listas de regiones candidatas de cada detector
+    (ej. [cuadros_rgb, cuadros_cmeans]) y devuelve la unión difusa con las mejores regiones.
+    
+    Parámetros:
+    cuadros_list: list of lists
+        Lista donde cada elemento es una lista de regiones:
+        [
+            [{"x_centroid": float, "y_centroid": float, "weight": int, ...}, ...], # Detector 1 (ej. RGB)
+            [{"x_centroid": float, "y_centroid": float, "weight": int, ...}, ...]  # Detector 2 (ej. FCM)
+        ]
+        IMPORTANTE: Las coordenadas x_centroid e y_centroid deben estar referenciadas
+        a la imagen completa, habiendo compensado previamente el recorte del horizonte.
+    lidar: tuple (angulo, distancia)
+        Datos opcionales del sensor LiDAR.
+    crop_offsets: list of int, opcional
+        Desfases verticales [offset_0, offset_1] a sumar a y_init, y_end, y_centroid
+        si aún no fueron compensados previamente.
 
-    cuadros: [[
-        {
-            "x": int,
-            "y": int,
-            weight: int
-        },...
-    ],...]
-    lidar: [float,float] ángulo y distancia del lidar
+    Retorna:
+    list: Lista con el mejor cuadro seleccionado por cada detector (o None si no hay candidatos),
+    cada uno con su atributo 'fuzzy_union' que contiene la puntuación ponderada [0, 3].
     """
+    # Hacer copia profunda superficial para no mutar destructivamente las listas externas
+    cuadros_list_proc = [[dict(c) for c in detector_cuadros] for detector_cuadros in cuadros_list]
 
+    # Compensar desfases verticales si fueron especificados y no estaban compensados
+    if crop_offsets is not None:
+        for idx, offset in enumerate(crop_offsets):
+            if idx < len(cuadros_list_proc) and offset > 0:
+                for cuadro in cuadros_list_proc[idx]:
+                    if not cuadro.get("_compensated", False):
+                        cuadro["y_init"] = cuadro.get("y_init", 0) + offset
+                        cuadro["y_end"] = cuadro.get("y_end", 0) + offset
+                        cuadro["y_centroid"] = cuadro.get("y_centroid", 0) + offset
+                        cuadro["_compensated"] = True
 
-    for _ in range(len(cuadros_list)):
-        cuadros = cuadros_list.pop(0)
-        for cuadro in cuadros:
-            if "distancia_minima" not in cuadro:
-                cuadro["distancia_minima"] = float('inf')
-            for cuadros2 in cuadros_list:
-                for cuadro2 in cuadros2:
+    num_detectores = len(cuadros_list_proc)
+
+    # 1. Calcular distancia mínima hacia los candidatos de los otros detectores
+    # usando los centroides espaciales reales (x_centroid, y_centroid)
+    for i in range(num_detectores):
+        cuadros_i = cuadros_list_proc[i]
+        
+        # Reunir todos los candidatos de los demás detectores
+        otros_candidatos = []
+        for j in range(num_detectores):
+            if i != j:
+                otros_candidatos.extend(cuadros_list_proc[j])
+                
+        for cuadro in cuadros_i:
+            if len(otros_candidatos) == 0:
+                # Si no hay candidatos del otro detector, se define una distancia finita
+                # de 100.0 (cota superior de saturación del conjunto difuso 'far'), evitando
+                # pasar 'inf' a las funciones de pertenencia.
+                cuadro["distancia_minima"] = 100.0
+            else:
+                dist_min = 100.0
+                xc1 = cuadro["x_centroid"]
+                yc1 = cuadro["y_centroid"]
+                
+                for otro in otros_candidatos:
+                    xc2 = otro["x_centroid"]
+                    yc2 = otro["y_centroid"]
+                    
                     if lidar != (0.0, 0.0):
-                        if lidar[0] - cp.atan2(cuadro["y"], cuadro["x"]) < 0.1 or lidar[0] - cp.atan2(cuadro2["y"], cuadro2["x"]) < 0.1:
-                            distancia = 0
+                        ang1 = cp.atan2(yc1, xc1)
+                        ang2 = cp.atan2(yc2, xc2)
+                        if abs(lidar[0] - ang1) < 0.1 or abs(lidar[0] - ang2) < 0.1:
+                            dist = 0.0
+                        else:
+                            dist = float(cp.sqrt((xc1 - xc2)**2 + (yc1 - yc2)**2))
                     else:
-                        distancia = cp.sqrt((cuadro["x"] - cuadro2["x"])**2 + (cuadro["y"] - cuadro2["y"])**2)
-                    cuadro["distancia_minima"] = min(cuadro["distancia_minima"], distancia,100)
-        cuadros_list.append(cuadros)
+                        dist = float(cp.sqrt((xc1 - xc2)**2 + (yc1 - yc2)**2))
+                        
+                    if dist < dist_min:
+                        dist_min = dist
+                        
+                cuadro["distancia_minima"] = min(dist_min, 100.0)
 
-    for i in range(len(cuadros_list)):
+    # 2. Fuzzificación y aplicación de reglas difusas ponderadas
+    resultado = []
+    for i in range(num_detectores):
         max_cuadro = None
-        for cuadro in cuadros_list[i]:
+        for cuadro in cuadros_list_proc[i]:
             near = triangular(cuadro["distancia_minima"], 0, 0, 20)
             average = triangular(cuadro["distancia_minima"], 10, 25, 40)
             far = triangular(cuadro["distancia_minima"], 30, 100, 100)
@@ -127,25 +176,43 @@ def fuzzy_union(cuadros_list,lidar=(0.0,0.0)):
             medium = triangular(cuadro["weight"], 40, 60, 80)
             big = triangular(cuadro["weight"], 70, 300, 300)
 
-            cuadro["fuzzy_union"] = apply_rules({"far":far,
-                                                 "average":average,
-                                                 "near":near,},
-                                                 {"half":half,
-                                                  "below":below,
-                                                  "bottom":bottom,},
-                                                  {"big":big,
-                                                   "medium":medium,
-                                                   "small":small,})
-            if max_cuadro is not None:
-                max_cuadro = cuadro if cuadro["fuzzy_union"] > max_cuadro["fuzzy_union"] else max_cuadro
-            else:
+            cuadro["fuzzy_union"] = apply_rules(
+                {"far": far, "average": average, "near": near},
+                {"half": half, "below": below, "bottom": bottom},
+                {"big": big, "medium": medium, "small": small}
+            )
+
+            if max_cuadro is None or cuadro["fuzzy_union"] > max_cuadro["fuzzy_union"]:
                 max_cuadro = cuadro
-        cuadros_list[i] = max_cuadro
-    return cuadros_list
+
+        resultado.append(max_cuadro)
+
+    return resultado
+
 
 if __name__ == "__main__":
-    cuadros_rgb = [{'puntos': None, 'x_init': 71, 'x_end': 81, 'y_init': 8, 'y_end': 18, 'x': 2882, 'y': 497, 'weight': 38, 'x_centroid': 75, 'y_centroid': 13}, {'puntos': None, 'x_init': 175, 'x_end': 215, 'y_init': 45, 'y_end': 51, 'x': 19489, 'y': 4760, 'weight': 100, 'x_centroid': 194, 'y_centroid': 47}, {'puntos': None, 'x_init': 229, 'x_end': 249, 'y_init': 52, 'y_end': 54, 'x': 7224, 'y': 1585, 'weight': 30, 'x_centroid': 240, 'y_centroid': 52}]
-    cuadros_cmeans = [{'puntos': None, 'x_init': 4, 'x_end': 242, 'y_init': 0, 'y_end': 22, 'x': 445261, 'y': 39261, 'weight': 4219, 'x_centroid': 105, 'y_centroid': 9}, {'puntos': None, 'x_init': 93, 'x_end': 109, 'y_init': 57, 'y_end': 68, 'x': 10097, 'y': 6203, 'weight': 100, 'x_centroid': 100, 'y_centroid': 62}]
+    # Comprobaciones mínimas solicitadas:
+    # 1. Dos regiones con el mismo centroide dan distancia cero.
+    reg_a = [{'x_centroid': 100, 'y_centroid': 80, 'weight': 150, 'x': 15000, 'y': 12000}]
+    reg_b = [{'x_centroid': 100, 'y_centroid': 80, 'weight': 600, 'x': 60000, 'y': 48000}]
+    res = fuzzy_union([reg_a, reg_b])
+    print("Test 1 - Mismo centroide:")
+    print("  Distancia reg_a:", reg_a[0].get("distancia_minima", res[0]["distancia_minima"]))
+    print("  Distancia reg_b:", reg_b[0].get("distancia_minima", res[1]["distancia_minima"]))
+    assert res[0]["distancia_minima"] == 0.0, "La distancia debe ser 0.0 para centroides iguales"
 
-    fuzzy_union_image = fuzzy_union([cuadros_rgb, cuadros_cmeans])
-    print(fuzzy_union_image)
+    # 2. Un peso de 600 no produce pertenencia negativa
+    m_big = triangular(600, 70, 300, 300)
+    print("Test 2 - Peso de 600 en conjunto 'big':", m_big)
+    assert 0.0 <= m_big <= 1.0, f"Pertenencia fuera de rango [0, 1]: {m_big}"
+    assert m_big == 1.0, f"Se esperaba 1.0 para peso saturado, se obtuvo {m_big}"
+
+    # 3. Sin candidatos del otro detector: distancia no es infinita
+    reg_solo = [{'x_centroid': 120, 'y_centroid': 90, 'weight': 80}]
+    res_solo = fuzzy_union([reg_solo, []])
+    print("Test 3 - Sin candidatos del otro detector:")
+    print("  Distancia:", res_solo[0]["distancia_minima"])
+    print("  Puntuación ponderada:", res_solo[0]["fuzzy_union"])
+    assert res_solo[0]["distancia_minima"] == 100.0, "La distancia debe ser 100.0 (finita) sin candidatos"
+
+    print("\nTodos los tests mínimos pasaron exitosamente.")

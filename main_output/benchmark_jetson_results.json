@@ -1,0 +1,47 @@
+{
+  "platform": "NVIDIA Jetson Orin Nano Developer Kit (8GB)",
+  "power_mode": "NV Power Mode: 25W",
+  "video": "tesis.mp4",
+  "benchmarks": [
+    {
+      "method": "Ours (Fuzzy Logic)",
+      "backend": "CPU (ARM Cortex-A78AE)",
+      "resolution": "256x192",
+      "total_frames_evaluated": 50,
+      "warmup_frames_excluded": 10,
+      "mean_time_ms": 188.09949386009976,
+      "std_time_ms": 8.769060019077056,
+      "fps": 5.316335411001992
+    },
+    {
+      "method": "Ours (Fuzzy Logic)",
+      "backend": "GPU (PyTorch CUDA)",
+      "resolution": "256x192",
+      "total_frames_evaluated": 50,
+      "warmup_frames_excluded": 10,
+      "mean_time_ms": 24.855853499939258,
+      "std_time_ms": 1.9776803633852156,
+      "fps": 40.231971917699134
+    },
+    {
+      "method": "WaSR-T",
+      "backend": "CPU (ARM Cortex-A78AE)",
+      "resolution": "512x384",
+      "total_frames_evaluated": 8,
+      "warmup_frames_excluded": 2,
+      "mean_time_ms": 16721.218642999927,
+      "std_time_ms": 222.26066720862548,
+      "fps": 0.0598042535864235
+    },
+    {
+      "method": "WaSR-T",
+      "backend": "GPU (NVIDIA Ampere CUDA)",
+      "resolution": "512x384",
+      "total_frames_evaluated": 50,
+      "warmup_frames_excluded": 10,
+      "mean_time_ms": 841.9888350199108,
+      "std_time_ms": 18.37315449500474,
+      "fps": 1.1876642045691173
+    }
+  ]
+}

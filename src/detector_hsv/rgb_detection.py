@@ -1,6 +1,12 @@
 import cv2
 import time
-from utils import neighbor_framed_np
+try:
+    from src.utils.utils import neighbor_framed_np
+except ImportError:
+    try:
+        from utils.utils import neighbor_framed_np
+    except ImportError:
+        from utils import neighbor_framed_np
 import numpy as cp
 
 # Define los colores de segmentación específicos

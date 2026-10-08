@@ -163,7 +163,7 @@ def fuzzy_union(cuadros_list, lidar=(0.0, 0.0), crop_offsets=None):
     resultado = []
     for i in range(num_detectores):
         max_cuadro = None
-        for cuadro in cuadros_list_proc[i]:
+        for k, cuadro in enumerate(cuadros_list_proc[i]):
             near = triangular(cuadro["distancia_minima"], 0, 0, 20)
             average = triangular(cuadro["distancia_minima"], 10, 25, 40)
             far = triangular(cuadro["distancia_minima"], 30, 100, 100)
@@ -176,11 +176,15 @@ def fuzzy_union(cuadros_list, lidar=(0.0, 0.0), crop_offsets=None):
             medium = triangular(cuadro["weight"], 40, 60, 80)
             big = triangular(cuadro["weight"], 70, 300, 300)
 
-            cuadro["fuzzy_union"] = apply_rules(
+            score_val = apply_rules(
                 {"far": far, "average": average, "near": near},
                 {"half": half, "below": below, "bottom": bottom},
                 {"big": big, "medium": medium, "small": small}
             )
+            cuadro["fuzzy_union"] = score_val
+            if k < len(cuadros_list[i]):
+                cuadros_list[i][k]["fuzzy_union"] = score_val
+                cuadros_list[i][k]["distancia_minima"] = cuadro.get("distancia_minima", 100.0)
 
             if max_cuadro is None or cuadro["fuzzy_union"] > max_cuadro["fuzzy_union"]:
                 max_cuadro = cuadro
@@ -188,6 +192,98 @@ def fuzzy_union(cuadros_list, lidar=(0.0, 0.0), crop_offsets=None):
         resultado.append(max_cuadro)
 
     return resultado
+
+
+def boxes_intersect(b1, b2, tol=0):
+    """
+    Verifica si dos bounding boxes se intersectan espacialmente en el plano 2D,
+    con una tolerancia opcional (tol >= 0) en píxeles.
+    """
+    if b1 is None or b2 is None:
+        return False
+    return not (
+        b1["x_end"] + tol < b2["x_init"]
+        or b2["x_end"] + tol < b1["x_init"]
+        or b1["y_end"] + tol < b2["y_init"]
+        or b2["y_end"] + tol < b1["y_init"]
+    )
+
+
+def compute_box_intersection(b1, b2):
+    """
+    Calcula el rectángulo geométrico de intersección entre dos bounding boxes.
+    Retorna None si no hay intersección física.
+    """
+    if b1 is None or b2 is None:
+        return None
+    xi = max(b1["x_init"], b2["x_init"])
+    yi = max(b1["y_init"], b2["y_init"])
+    xe = min(b1["x_end"], b2["x_end"])
+    ye = min(b1["y_end"], b2["y_end"])
+    if xe > xi and ye > yi:
+        return {
+            "x_init": int(xi),
+            "y_init": int(yi),
+            "x_end": int(xe),
+            "y_end": int(ye),
+            "width": int(xe - xi),
+            "height": int(ye - yi),
+            "weight": int((xe - xi) * (ye - yi)),
+            "x_centroid": float((xi + xe) / 2.0),
+            "y_centroid": float((yi + ye) / 2.0)
+        }
+    return None
+
+
+def intersect_fuzzy_detections(cuadros_fcm, cuadros_union, tol=0, min_score=0.0):
+    """
+    Confirma obstáculos cuadro a cuadro mediante la INTERSECCIÓN espacial entre
+    las regiones candidatas del FCM y las detecciones de la Unión Difusa / detector complementario,
+    eliminando la necesidad de persistencia o memoria temporal inter-frame.
+
+    Parámetros:
+    cuadros_fcm: list of dict
+        Candidatos generados por el detector semántico FCM.
+    cuadros_union: list of dict
+        Candidatos generados por el detector complementario / fusión difusa.
+    tol: int
+        Tolerancia espacial en píxeles (0 = solapamiento físico 2D estricto).
+    min_score: float
+        Puntuación difusa mínima requerida para el candidato de unión.
+
+    Retorna:
+    list of dict:
+        Lista de obstáculos confirmados por consenso e intersección.
+    """
+    confirmed = []
+    valid_fcm = [b for b in cuadros_fcm if b is not None]
+    valid_union = [
+        b for b in cuadros_union
+        if b is not None and b.get("fuzzy_union", 0.0) >= min_score
+    ]
+
+    for bf in valid_fcm:
+        for bu in valid_union:
+            if boxes_intersect(bf, bu, tol=tol):
+                inter_geom = compute_box_intersection(bf, bu)
+                score = max(bf.get("fuzzy_union", 0.0), bu.get("fuzzy_union", 0.0))
+
+                c_conf = dict(bf)
+                c_conf["fuzzy_union"] = float(score)
+                c_conf["intersected_with"] = {
+                    "x_init": bu["x_init"],
+                    "y_init": bu["y_init"],
+                    "x_end": bu["x_end"],
+                    "y_end": bu["y_end"],
+                    "score": bu.get("fuzzy_union", 0.0)
+                }
+                if inter_geom is not None:
+                    c_conf["intersection_box"] = inter_geom
+
+                confirmed.append(c_conf)
+                break
+
+    return confirmed
 
 
 if __name__ == "__main__":
@@ -214,5 +310,13 @@ if __name__ == "__main__":
     print("  Distancia:", res_solo[0]["distancia_minima"])
     print("  Puntuación ponderada:", res_solo[0]["fuzzy_union"])
     assert res_solo[0]["distancia_minima"] == 100.0, "La distancia debe ser 100.0 (finita) sin candidatos"
+
+    # 4. Comprobación de intersección de cajas
+    b_fcm_test = {"x_init": 100, "y_init": 50, "x_end": 150, "y_end": 90, "weight": 200, "fuzzy_union": 1.5}
+    b_rgb_test = {"x_init": 120, "y_init": 60, "x_end": 160, "y_end": 95, "weight": 180, "fuzzy_union": 1.2}
+    assert boxes_intersect(b_fcm_test, b_rgb_test), "Deben intersectar"
+    conf = intersect_fuzzy_detections([b_fcm_test], [b_rgb_test])
+    assert len(conf) == 1, "Debe confirmar 1 obstáculo por intersección"
+    print("Test 4 - Intersección exitosa:", conf[0]["intersection_box"])
 
     print("\nTodos los tests mínimos pasaron exitosamente.")

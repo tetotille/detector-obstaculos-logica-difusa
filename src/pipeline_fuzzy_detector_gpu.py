@@ -26,7 +26,7 @@ if str(project_root) not in sys.path:
 from src.utils.utils import read_image, mask_to_bounding_boxes
 from src.detector_horizonte.pixel_detector import separate_pixels, find_largest_fuzzy_jump
 from src.detector_hsv.rgb_detection import process_image_cpu as detector_rgb_cpu
-from src.fuzzy_union.fuzzy_union import fuzzy_union
+from src.fuzzy_union.fuzzy_union import fuzzy_union, intersect_fuzzy_detections
 
 
 def normalize_power_columns_torch(matrix: torch.Tensor, power: float) -> torch.Tensor:
@@ -89,13 +89,23 @@ def cmeans_torch(
     return centers, u
 
 
+def is_valid_obstacle_geometry(width: int, height: int, max_width: int) -> bool:
+    if width >= max_width * 0.85:
+        return False
+    if height >= 12:
+        return (width / height) <= 6.5
+    elif height >= 8:
+        return (width / height) <= 2.8
+    return False
+
+
 def fcm_gpu(
     image_np: np.ndarray,
     num_clusters: int = 4,
     punto_horizonte: int = 0,
-    min_contrast: float = 0.20,
+    min_contrast: float = 0.245,
     device: str = "cuda"
-) -> Tuple[np.ndarray, int, List[Dict[str, Any]]]:
+) -> Tuple[np.ndarray, np.ndarray, int, List[Dict[str, Any]]]:
     """
     Segmentación FCM en GPU en dos etapas:
     1. Segmentación semántica de agua y obstáculos a nivel de píxel (sin encuadrar primero).
@@ -103,13 +113,14 @@ def fcm_gpu(
     """
     dev = torch.device(device if torch.cuda.is_available() else "cpu")
     h, w, c = image_np.shape
-    punto_horizonte = max(0, min(punto_horizonte, h - 5))
+    y_nav_start = max(0, min(punto_horizonte + 5, h - 20))
+    y_nav_end = min(174, h)
     
-    water_np = image_np[punto_horizonte:, :]
+    water_np = image_np[y_nav_start:y_nav_end, :]
     H_w, W_w, _ = water_np.shape
     if H_w < 5 or W_w < 5:
         empty = np.zeros((H_w, W_w), dtype=np.uint8)
-        return empty, punto_horizonte, []
+        return empty, empty, punto_horizonte, []
 
     # 1. Normalización de fondo / supresión de degradado vertical
     water_filtered = cv2.bilateralFilter(water_np, 5, 50, 50)
@@ -130,38 +141,45 @@ def fcm_gpu(
     dists_neutral = torch.norm(centers - neutral_t, dim=1)
     water_cluster_id = torch.argmin(dists_neutral).item()
 
-    # 4. Máscara semántica de obstáculos a nivel de píxel
+    # 4. Cluster minoritario candidato a obstáculo
+    counts = [int((labels == c_id).sum().item()) for c_id in range(num_clusters)]
+    min_c_id = int(np.argmin(counts))
+    contrast_min = torch.norm(centers[min_c_id] - centers[water_cluster_id]).item()
+
     obstacle_mask_t = torch.zeros((H_w, W_w), dtype=torch.uint8, device=dev)
-    for c_id in range(num_clusters):
-        if c_id == water_cluster_id:
-            continue
-        contrast = torch.norm(centers[c_id] - centers[water_cluster_id]).item()
-        if contrast >= min_contrast:
-            obstacle_mask_t[labels == c_id] = 255
+    water_mask_t = torch.zeros((H_w, W_w), dtype=torch.uint8, device=dev)
+
+    if contrast_min >= min_contrast and counts[min_c_id] < (H_w * W_w * 0.25):
+        obstacle_mask_t[labels == min_c_id] = 255
+        water_mask_t[labels != min_c_id] = 255
+    else:
+        water_mask_t[:, :] = 255
 
     obstacle_mask_np = obstacle_mask_t.cpu().numpy()
+    water_mask_np = water_mask_t.cpu().numpy()
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     obstacle_mask_np = cv2.morphologyEx(obstacle_mask_np, cv2.MORPH_OPEN, kernel)
 
     # 5. Algoritmo de encuadre posterior sobre la máscara limpia
-    boxes = mask_to_bounding_boxes(obstacle_mask_np, min_area=35)
+    raw_boxes = mask_to_bounding_boxes(obstacle_mask_np, min_area=25)
     formatted_boxes = []
-    for b in boxes:
-        formatted_boxes.append({
-            "puntos": None,
-            "x_init": b["x_init"],
-            "x_end": b["x_end"],
-            "y_init": b["y_init"],
-            "y_end": b["y_end"],
-            "x_centroid": b["x_centroid"],
-            "y_centroid": b["y_centroid"],
-            "weight": b["weight"],
-            "x": b["x_centroid"] * b["weight"],
-            "y": b["y_centroid"] * b["weight"]
-        })
+    for b in raw_boxes:
+        w_b = b["x_end"] - b["x_init"]
+        h_b = b["y_end"] - b["y_init"]
+        if is_valid_obstacle_geometry(w_b, h_b, W_w):
+            c_box = dict(b)
+            c_box["y_init"] = int(b["y_init"] + y_nav_start)
+            c_box["y_end"] = int(b["y_end"] + y_nav_start)
+            c_box["y_centroid"] = int(b["y_centroid"] + y_nav_start)
+            c_box["_compensated"] = True
+            formatted_boxes.append(c_box)
 
-    return obstacle_mask_np, punto_horizonte, formatted_boxes
+    full_obs_mask = np.zeros((h, w), dtype=np.uint8)
+    full_obs_mask[y_nav_start:y_nav_end, :] = obstacle_mask_np
+    full_water_mask = np.zeros((h, w), dtype=np.uint8)
+    full_water_mask[y_nav_start:y_nav_end, :] = water_mask_np
 
+    return full_water_mask, full_obs_mask, punto_horizonte, formatted_boxes
 
 
 def detect_obstacles_gpu(
@@ -171,7 +189,7 @@ def detect_obstacles_gpu(
 ) -> Dict[str, Any]:
     """
     Pipeline completo acelerado por GPU:
-    Horizonte → RGB adaptativo → FCM (GPU CUDA) → Fusión difusa corregida.
+    Horizonte → Segmentación FCM (GPU) → Extracción de Regiones → Fusión difusa e Intersección.
     """
     w, h = target_size
     image_np, _ = read_image(frame, w, h)
@@ -183,57 +201,77 @@ def detect_obstacles_gpu(
     h_right = find_largest_fuzzy_jump(right)
 
     if abs(h_center - h_left) < abs(h_right - h_center) and abs(h_center - h_left) < abs(h_right - h_left):
-        a, b = h_left, h_center
+        hz_a, hz_b = h_left, h_center
     elif abs(h_center - h_left) > abs(h_right - h_center) and abs(h_right - h_center) < abs(h_right - h_left):
-        a, b = h_center, h_right
+        hz_a, hz_b = h_center, h_right
     else:
-        a, b = h_left, h_right
+        hz_a, hz_b = h_left, h_right
 
-    ajuste = int((a + b) // 2)
-    ajuste = max(0, min(ajuste, h - 10))
+    ajuste = int((hz_a + hz_b) // 2)
+    ajuste = max(0, min(ajuste, h - 25))
 
-    # 2. RGB Adaptativo
-    cropped_image_np = image_np[ajuste:, :]
-    _, cuadros_rgb_raw = detector_rgb_cpu(cropped_image_np)
+    y_nav_start = max(0, min(ajuste + 5, h - 20))
+    y_nav_end = min(174, h)
+    water_roi = image_np[y_nav_start:y_nav_end, :]
 
-    cuadros_rgb = []
-    for c in cuadros_rgb_raw:
-        c_comp = dict(c)
-        c_comp["y_init"] = int(c["y_init"] + ajuste)
-        c_comp["y_end"] = int(c["y_end"] + ajuste)
-        c_comp["y_centroid"] = int(c["y_centroid"] + ajuste)
-        c_comp["_compensated"] = True
-        cuadros_rgb.append(c_comp)
-
-    # 3. FCM en GPU (PyTorch CUDA) en dos etapas
-    obs_mask_gpu, _, cuadros_cmeans_raw = fcm_gpu(
+    # 2. FCM en GPU (PyTorch CUDA)
+    m_agua, m_obs, _, cuadros_fcm = fcm_gpu(
         image_np,
         num_clusters=4,
         punto_horizonte=ajuste,
-        min_contrast=0.20,
+        min_contrast=0.245,
         device=device
     )
 
-    cuadros_cmeans = []
-    for c in cuadros_cmeans_raw:
-        c_comp = dict(c)
-        c_comp["y_init"] = int(c["y_init"] + ajuste)
-        c_comp["y_end"] = int(c["y_end"] + ajuste)
-        c_comp["y_centroid"] = int(c["y_centroid"] + ajuste)
-        c_comp["_compensated"] = True
-        cuadros_cmeans.append(c_comp)
+    # 3. Detector Cromático
+    hsv_roi = cv2.cvtColor(water_roi, cv2.COLOR_BGR2HSV)
+    med_v = float(np.median(hsv_roi[:, :, 2]))
+    color_anomaly = (hsv_roi[:, :, 1] > 36) | (np.abs(hsv_roi[:, :, 2].astype(float) - med_v) > 42)
+    kernel_m = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    m_col_roi = cv2.morphologyEx(color_anomaly.astype(np.uint8), cv2.MORPH_OPEN, kernel_m)
+    m_col_roi = cv2.morphologyEx(m_col_roi, cv2.MORPH_CLOSE, kernel_m)
 
-    # 4. Fusión Difusa corregida
-    fused_boxes = fuzzy_union([cuadros_rgb, cuadros_cmeans])
+    raw_col = mask_to_bounding_boxes(m_col_roi, min_area=20)
+    cuadros_color = []
+    for b in raw_col:
+        w_b = b["x_end"] - b["x_init"]
+        h_b = b["y_end"] - b["y_init"]
+        if is_valid_obstacle_geometry(w_b, h_b, water_roi.shape[1]):
+            c_box = dict(b)
+            c_box["y_init"] = int(b["y_init"] + y_nav_start)
+            c_box["y_end"] = int(b["y_end"] + y_nav_start)
+            c_box["y_centroid"] = int(b["y_centroid"] + y_nav_start)
+            c_box["_compensated"] = True
+            cuadros_color.append(c_box)
 
-    confirmed_boxes = [b for b in fused_boxes if b is not None and b.get("fuzzy_union", 0.0) > 0.0]
+    # 4. Fusión Difusa
+    fused_boxes = fuzzy_union([cuadros_color, cuadros_fcm])
+
+    # 5. Confirmación por INTERSECCIÓN
+    confirmed_candidates = intersect_fuzzy_detections(
+        cuadros_fcm=cuadros_fcm,
+        cuadros_union=cuadros_color,
+        tol=0
+    )
+
+    confirmed_boxes = []
+    for box in confirmed_candidates:
+        bx1, by1 = int(box["x_init"]), int(box["y_init"])
+        bx2, by2 = int(box["x_end"]), int(box["y_end"])
+        crop = image_np[by1:by2, bx1:bx2]
+        if crop.size > 0:
+            crop_hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+            s_p90 = float(np.percentile(crop_hsv[:, :, 1], 90))
+            if s_p90 >= 55.0 or (box.get("height", 0) >= 12 and float(np.abs(crop_hsv[:, :, 2].mean() - med_v)) > 35.0):
+                confirmed_boxes.append(box)
 
     return {
         "confirmed_boxes": confirmed_boxes,
         "has_obstacle": len(confirmed_boxes) > 0,
-        "horizon": {"a": int(a), "b": int(b), "ajuste": int(ajuste)},
-        "boxes_rgb": cuadros_rgb,
-        "boxes_fcm": cuadros_cmeans,
-        "mask_obstaculos": obs_mask_gpu
+        "horizon": {"a": int(hz_a), "b": int(hz_b), "ajuste": int(ajuste)},
+        "boxes_rgb": cuadros_color,
+        "boxes_fcm": cuadros_fcm,
+        "mask_agua": m_agua,
+        "mask_obstaculos": m_obs
     }
 

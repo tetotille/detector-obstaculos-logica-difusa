@@ -27,7 +27,7 @@ import serial
 import struct
 import time
 
-from src.fuzzy_union.fuzzy_union import fuzzy_union
+from src.fuzzy_union.fuzzy_union import fuzzy_union, intersect_fuzzy_detections
 
 
     # Configura el puerto serial donde está conectado tu sensor LiDAR
@@ -340,62 +340,21 @@ def main_video():
             ]
         """
         tic11 = time.time()
-        ############## IMPLEMENTACIÓN DE MEMORIA ################
-        """
-            Se utiliza fuzzy_union, y generalmente éste tiene pocos valores, 1 o 2 por frame, por lo que un for no
-            va a ser prácticamente una carga para la cpu
+        ############## CONFIRMACIÓN POR INTERSECCIÓN DIFUSA (SIN MEMORIA) ################
+        # Confirmación instantánea por consenso: intersección espacial entre FCM y Fuzzy Union (RGB / LiDAR)
+        # Se elimina la latencia de 5 frames y la persistencia fantasma de FrameMemory
+        detector_aux = [fuzzy_frames[0]] if (len(fuzzy_frames) > 0 and fuzzy_frames[0] is not None) else []
+        confirmed_boxes = intersect_fuzzy_detections(cuadros_cmeans, detector_aux, tol=15)
 
-        """
-        # Agregado a la memoria
-        for fuzzy_frame in fuzzy_frames:
-            if fuzzy_frame is None: continue
-            in_memory = False
-            for memory in video_memory:
-                if fuzzy_frame["weight"] > 100:
-                    if fuzzy_frame in memory:
-                        memory.add(fuzzy_frame)
-                        memory.modified= True
-                        in_memory = True
-            if not in_memory:
-                memory = FrameMemory(memory_limit,fuzzy_frame)
-                video_memory.append(memory)
-        
-        # Limpiado de memoria
-        max_weight = 0
-        max_score = 0
-        final_score = 0
-        for memory in video_memory[:]:
-            if not memory.modified:
-                memory.add(None)
-            memory.modified = False
-            if memory.empty():
-                video_memory.remove(memory)
-                continue
-            max_weight = max(max_weight,memory.get_weight())     # Peso (cantidad de pixeles) del obstáculo
-            max_score = max(max_score,memory.score())           # Cantidad de frames en los que se detectó el obstáculo
-            if final_score < max_weight * (max_score/2):
-                final_score = max_weight * (max_score/2)
-                x,y = memory.get_point() 
-                P1,P2 = memory.get_rectangle()        # Coordenadas del centroide del obstáculo
-                y += ajuste
-                P1[1] += ajuste
-                P2[1] += ajuste
-        
-        #########################################################
-        tic12 = time.time()
-        ######## UTILIZACIÓN DE RESULTADOS ###########
-        """
-           Se puede obtener los puntos x e y de cada obstáculo detectado de la siguiente forma:
-           suponiendo que se recorre video_memory
-
-           Para este caso solo se tiene en cuenta el obstáculo con el score más alto, es decir el que tenga el final_score más alto
-           x,y: son el centroide del obstáculo que debe ser tomado mayormente en cuenta
-        """
-        # Resultado te dice si el objeto está a la izquierda, derecha o centro
         resultado = "Libre"
-        if max_score >= 5 and max_weight > 200:
-            resultado = "Izquierda" if x < max_x//2 else "Derecha" if x > max_x//2 else "Centro"
-        ##############################################
+        P1, P2 = [0, 0], [0, 0]
+        if len(confirmed_boxes) > 0:
+            best_obs = max(confirmed_boxes, key=lambda b: b.get("weight", 0))
+            x, y = int(best_obs["x_centroid"]), int(best_obs["y_centroid"])
+            P1 = [int(best_obs["x_init"]), int(best_obs["y_init"])]
+            P2 = [int(best_obs["x_end"]), int(best_obs["y_end"])]
+            resultado = "Izquierda" if x < max_x // 2 else "Derecha" if x > max_x // 2 else "Centro"
+        ###################################################################################
         if LIDAR:
             data_block = read_data_block()
             if data_block:

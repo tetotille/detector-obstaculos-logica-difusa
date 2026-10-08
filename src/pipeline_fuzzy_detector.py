@@ -27,7 +27,7 @@ from src.utils.utils import read_image
 from src.detector_horizonte.pixel_detector import separate_pixels, find_largest_fuzzy_jump
 from src.detector_hsv.rgb_detection import process_image_cpu as detector_rgb_cpu
 from src.cmeans.c_means_main import fcm, segment_fcm_pixel_level, extract_boxes_from_mask
-from src.fuzzy_union.fuzzy_union import fuzzy_union
+from src.fuzzy_union.fuzzy_union import fuzzy_union, intersect_fuzzy_detections
 
 
 
@@ -67,67 +67,108 @@ def detect_obstacles(
 
     # Selección de los puntos más consistentes para la recta de horizonte
     if abs(h_center - h_left) < abs(h_right - h_center) and abs(h_center - h_left) < abs(h_right - h_left):
-        a, b = h_left, h_center
+        hz_a, hz_b = h_left, h_center
     elif abs(h_center - h_left) > abs(h_right - h_center) and abs(h_right - h_center) < abs(h_right - h_left):
-        a, b = h_center, h_right
+        hz_a, hz_b = h_center, h_right
     else:
-        a, b = h_left, h_right
+        hz_a, hz_b = h_left, h_right
 
-    ajuste = int((a + b) // 2)
+    ajuste = int((hz_a + hz_b) // 2)
     # Asegurar que el recorte esté dentro de los límites válidos de la imagen
-    ajuste = max(0, min(ajuste, h - 10))
+    ajuste = max(0, min(ajuste, h - 25))
 
-    # 2. Detector RGB Adaptativo sobre el área navegable (debajo del horizonte)
-    cropped_image_np = image_np[ajuste:, :]
-    _, cuadros_rgb_raw = detector_rgb_cpu(cropped_image_np)
+    # Región navegable útil: excluye la franja de orilla/costa bajo el horizonte
+    # y la proa del barco propio en la base de la cámara (y >= 174)
+    y_nav_start = max(0, min(ajuste + 5, h - 20))
+    y_nav_end = min(174, h)
+    water_roi = image_np[y_nav_start:y_nav_end, :]
+    H_w, W_w, _ = water_roi.shape
 
-    # Compensar coordenadas de RGB hacia la imagen completa
-    cuadros_rgb = []
-    for c in cuadros_rgb_raw:
-        c_comp = dict(c)
-        c_comp["y_init"] = int(c["y_init"] + ajuste)
-        c_comp["y_end"] = int(c["y_end"] + ajuste)
-        c_comp["y_centroid"] = int(c["y_centroid"] + ajuste)
-        c_comp["_compensated"] = True
-        cuadros_rgb.append(c_comp)
+    if H_w < 10 or W_w < 10:
+        return {
+            "confirmed_boxes": [],
+            "has_obstacle": False,
+            "horizon": {"a": int(hz_a), "b": int(hz_b), "ajuste": int(ajuste)},
+            "boxes_rgb": [],
+            "boxes_fcm": [],
+            "mask_agua": np.zeros((h, w), dtype=np.uint8),
+            "mask_obstaculos": np.zeros((h, w), dtype=np.uint8)
+        }
 
-    # 3. Detector FCM en dos etapas:
-    # 3.1. Segmentación semántica a nivel de píxel (agua y obstáculos) SIN encuadrar primero
-    mask_agua, mask_obstaculos, fcm_info = segment_fcm_pixel_level(
-        cropped_image_np,
+    # 2. Detector FCM en dos etapas:
+    # 2.1. Segmentación semántica a nivel de píxel (agua y obstáculos) SIN encuadrar primero
+    mask_agua_roi, mask_obs_roi, fcm_info = segment_fcm_pixel_level(
+        water_roi,
         num_clusters=4,
         m=2.0,
-        min_contrast=0.20
+        min_contrast=0.245
     )
 
-    # 3.2. Algoritmo de encuadre aplicado posteriormente sobre la máscara de obstáculos limpia
-    cuadros_cmeans = extract_boxes_from_mask(
-        mask_obstaculos,
-        y_offset=ajuste,
-        min_area=35
+    # Máscaras semánticas completas referenciadas al cuadro global (256x192)
+    mask_agua = np.zeros((h, w), dtype=np.uint8)
+    mask_agua[y_nav_start:y_nav_end, :] = mask_agua_roi
+    mask_obstaculos = np.zeros((h, w), dtype=np.uint8)
+    mask_obstaculos[y_nav_start:y_nav_end, :] = mask_obs_roi
+
+    # 2.2. Algoritmo de encuadre aplicado posteriormente sobre la máscara de obstáculos limpia
+    # Filtra estelas planas de oleaje (h < 8 px) y compensa coordenadas al marco global
+    cuadros_fcm = extract_boxes_from_mask(
+        mask_obs_roi,
+        y_offset=y_nav_start,
+        min_area=25
+    )
+
+    # 3. Detector Complementario Cromático / Fusión Difusa (Color, Saturación y Contraste)
+    hsv_roi = cv2.cvtColor(water_roi, cv2.COLOR_BGR2HSV)
+    med_v = float(np.median(hsv_roi[:, :, 2]))
+    # En lagos, el agua es neutra/grisácea (S < 30). Un obstáculo real posee saturación cromática
+    # o contraste fuerte de luminosidad frente al fondo lacustre
+    color_anomaly = (hsv_roi[:, :, 1] > 36) | (np.abs(hsv_roi[:, :, 2].astype(float) - med_v) > 42)
+    kernel_m = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    m_col_roi = cv2.morphologyEx(color_anomaly.astype(np.uint8), cv2.MORPH_OPEN, kernel_m)
+    m_col_roi = cv2.morphologyEx(m_col_roi, cv2.MORPH_CLOSE, kernel_m)
+
+    cuadros_color = extract_boxes_from_mask(
+        m_col_roi,
+        y_offset=y_nav_start,
+        min_area=20
     )
 
     # 4. Fusión difusa (Fuzzy Union)
-    # Recibe ambos conjuntos de candidatos ya compensados
-    fused_boxes_raw = fuzzy_union([cuadros_rgb, cuadros_cmeans])
+    # Evalúa reglas difusas y asigna puntuaciones según distancias espaciales y masas
+    fused_boxes = fuzzy_union([cuadros_color, cuadros_fcm])
 
-    # 5. Filtrado de obstáculos confirmados (sin memoria temporal)
-    # Un obstáculo es confirmado si la fusión difusa asignó una puntuación ponderada > 0
+    # 5. Confirmación por INTERSECCIÓN espacial estricta entre FCM y detector cromático
+    # Un obstáculo solo se confirma si es validado simultáneamente por ambos detectores
+    # y posee propiedades físicas reales de obstáculo (evitando sombras planas de olas)
+    confirmed_candidates = intersect_fuzzy_detections(
+        cuadros_fcm=cuadros_fcm,
+        cuadros_union=cuadros_color,
+        tol=0
+    )
+
     confirmed_boxes = []
-    for box in fused_boxes_raw:
-        if box is not None and box.get("fuzzy_union", 0.0) > 0.0:
-            confirmed_boxes.append(box)
+    for box in confirmed_candidates:
+        bx1, by1 = int(box["x_init"]), int(box["y_init"])
+        bx2, by2 = int(box["x_end"]), int(box["y_end"])
+        crop = image_np[by1:by2, bx1:bx2]
+        if crop.size > 0:
+            crop_hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+            s_p90 = float(np.percentile(crop_hsv[:, :, 1], 90))
+            # Validación física: cuerpo con cromatismo o fuerte contraste con compacidad
+            if s_p90 >= 55.0 or (box.get("height", 0) >= 12 and float(np.abs(crop_hsv[:, :, 2].mean() - med_v)) > 35.0):
+                confirmed_boxes.append(box)
 
     return {
         "confirmed_boxes": confirmed_boxes,
         "has_obstacle": len(confirmed_boxes) > 0,
         "horizon": {
-            "a": int(a),
-            "b": int(b),
+            "a": int(hz_a),
+            "b": int(hz_b),
             "ajuste": int(ajuste)
         },
-        "boxes_rgb": cuadros_rgb,
-        "boxes_fcm": cuadros_cmeans,
+        "boxes_rgb": cuadros_color,
+        "boxes_fcm": cuadros_fcm,
         "mask_agua": mask_agua,
         "mask_obstaculos": mask_obstaculos
     }

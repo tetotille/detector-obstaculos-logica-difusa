@@ -80,10 +80,10 @@ def segment_fcm_pixel_level(water_bgr, num_clusters=4, m=2.0, min_contrast=0.20)
     sobre la región navegable debajo del horizonte, SIN encuadrar primero.
     
     Parámetros:
-    - water_bgr: Imagen recortada bajo el horizonte (H_w, W_w, 3)
+    - water_bgr: Imagen recortada en la zona navegable (H_w, W_w, 3)
     - num_clusters: Número de clusters difusos (por defecto 4)
     - m: Exponente de borrosidad (por defecto 2.0)
-    - min_contrast: Umbral mínimo de contraste frente al cluster de agua
+    - min_contrast: Umbral mínimo de contraste residual frente al cluster de agua
     
     Retorna:
     - mask_agua: Máscara binaria (uint8 [0, 255]) del agua limpia
@@ -95,7 +95,7 @@ def segment_fcm_pixel_level(water_bgr, num_clusters=4, m=2.0, min_contrast=0.20)
         empty = np.zeros((H_w, W_w), dtype=np.uint8)
         return empty, empty, {"water_c_id": 0, "contrast_max": 0.0}
         
-    # 1. Filtrado suave bilateral para amortiguar ruido de oleaje
+    # 1. Filtrado bilateral para amortiguar texturas de oleaje
     filtered = cv2.bilateralFilter(water_bgr, 5, 50, 50)
     
     # 2. Supresión del degradado vertical de luminosidad (normalización del fondo)
@@ -108,53 +108,71 @@ def segment_fcm_pixel_level(water_bgr, num_clusters=4, m=2.0, min_contrast=0.20)
     data = res_norm.reshape(H_w * W_w, 3)
     cntr, u, _, _, _, _, _ = cmeans(data, c=num_clusters, m=m, error=0.01, maxiter=25, seed=42)
     labels = np.argmax(u, axis=0).reshape((H_w, W_w))
+    counts = [int(np.sum(labels == c_id)) for c_id in range(num_clusters)]
     
-    # 4. Identificar el cluster dominante de agua (el más cercano al residuo neutro 128/255 = 0.5)
-    dists_to_neutral = [np.linalg.norm(cntr[c_id] - 0.5) for c_id in range(num_clusters)]
+    # 4. Identificar cluster dominante de agua (más cercano a 0.5 residual)
+    dists_to_neutral = [float(np.linalg.norm(cntr[c_id] - 0.5)) for c_id in range(num_clusters)]
     water_c_id = int(np.argmin(dists_to_neutral))
     
-    # Máscara semántica de agua limpia
+    # 5. Cluster minoritario candidato a obstáculo
+    min_c_id = int(np.argmin(counts))
+    contrast_min = float(np.linalg.norm(cntr[min_c_id] - cntr[water_c_id]))
+    
     mask_agua = np.zeros((H_w, W_w), dtype=np.uint8)
-    mask_agua[labels == water_c_id] = 255
-    
-    # Máscara semántica de obstáculos a nivel de píxel
     mask_obstaculos = np.zeros((H_w, W_w), dtype=np.uint8)
-    max_contrast = 0.0
     
-    for c_id in range(num_clusters):
-        if c_id == water_c_id:
-            continue
-        contrast = float(np.linalg.norm(cntr[c_id] - cntr[water_c_id]))
-        if contrast > max_contrast:
-            max_contrast = contrast
-        if contrast >= min_contrast:
-            mask_obstaculos[labels == c_id] = 255
-            
-    # Limpieza morfológica suave (apertura 3x3) para eliminar píxeles aislados y consolidar regiones
+    # Un cluster solo es obstáculo si tiene contraste residual significativo y ocupa < 25% del agua
+    if contrast_min >= min_contrast and counts[min_c_id] < (H_w * W_w * 0.25):
+        mask_obstaculos[labels == min_c_id] = 255
+        mask_agua[labels != min_c_id] = 255
+    else:
+        # Agua 100% limpia sin obstáculos
+        mask_agua[:, :] = 255
+        
+    # Limpieza morfológica para suprimir píxeles aislados de oleaje
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     mask_obstaculos = cv2.morphologyEx(mask_obstaculos, cv2.MORPH_OPEN, kernel)
     
     info = {
         "water_c_id": water_c_id,
-        "max_contrast": max_contrast,
+        "obstacle_c_id": min_c_id,
+        "contrast": contrast_min,
         "centroids": cntr.tolist()
     }
     return mask_agua, mask_obstaculos, info
 
-def extract_boxes_from_mask(mask_obstaculos, y_offset=0, min_area=35):
+def is_valid_obstacle_geometry(width, height, max_width):
+    """
+    Filtro geométrico discriminador: diferencia cuerpos 2D compactos de crestas de oleaje planas.
+    Las crestas de oleaje son tiras horizontales finas (h < 8 px o w/h > 2.8).
+    Los obstáculos reales (boyas, lanchas, pelotas) tienen altura h >= 8 px y compacidad 2D.
+    """
+    if width >= max_width * 0.85:
+        return False
+    if height >= 12:
+        return (width / height) <= 6.5
+    elif height >= 8:
+        return (width / height) <= 2.8
+    return False
+
+def extract_boxes_from_mask(mask_obstaculos, y_offset=0, min_area=25):
     """
     PASO 2: Aplica el algoritmo de encuadre sobre la máscara binaria limpia de obstáculos.
-    Compensa verticalmente las coordenadas sumando y_offset.
+    Filtra estelas de oleaje plano y compensa verticalmente sumando y_offset.
     """
+    H, W = mask_obstaculos.shape
     raw_boxes = mask_to_bounding_boxes(mask_obstaculos, min_area=min_area)
     compensated_boxes = []
     for b in raw_boxes:
-        c = dict(b)
-        c["y_init"] = int(b["y_init"] + y_offset)
-        c["y_end"] = int(b["y_end"] + y_offset)
-        c["y_centroid"] = int(b["y_centroid"] + y_offset)
-        c["_compensated"] = True
-        compensated_boxes.append(c)
+        w = b["x_end"] - b["x_init"]
+        h = b["y_end"] - b["y_init"]
+        if is_valid_obstacle_geometry(w, h, W):
+            c = dict(b)
+            c["y_init"] = int(b["y_init"] + y_offset)
+            c["y_end"] = int(b["y_end"] + y_offset)
+            c["y_centroid"] = int(b["y_centroid"] + y_offset)
+            c["_compensated"] = True
+            compensated_boxes.append(c)
     return compensated_boxes
 
 def fcm(resized_image, num_clusters=4, m=2.0, metric='euclidean', show_images=False, punto_horizonte=0):
@@ -164,14 +182,21 @@ def fcm(resized_image, num_clusters=4, m=2.0, metric='euclidean', show_images=Fa
     2. Aplica el algoritmo de encuadre posteriormente sobre la máscara de obstáculos.
     """
     H, W, _ = resized_image.shape
-    punto_horizonte = max(0, min(punto_horizonte, H - 5))
-    water_bgr = resized_image[punto_horizonte:, :]
+    y_nav_start = max(0, min(punto_horizonte + 5, H - 20))
+    y_nav_end = min(174, H)
+    water_bgr = resized_image[y_nav_start:y_nav_end, :]
     
     # 1. Segmentar sin encuadrar primero
-    mask_agua, mask_obstaculos, _ = segment_fcm_pixel_level(water_bgr, num_clusters=num_clusters, m=m, min_contrast=0.20)
+    mask_agua, mask_obstaculos_roi, _ = segment_fcm_pixel_level(
+        water_bgr, num_clusters=num_clusters, m=m, min_contrast=0.245
+    )
+    
+    # Máscara completa referenciada a la imagen completa
+    mask_obstaculos = np.zeros((H, W), dtype=np.uint8)
+    mask_obstaculos[y_nav_start:y_nav_end, :] = mask_obstaculos_roi
     
     # 2. Aplicar algoritmo de encuadre sobre la máscara resultante
-    cuadros = extract_boxes_from_mask(mask_obstaculos, y_offset=0, min_area=35)
+    cuadros = extract_boxes_from_mask(mask_obstaculos_roi, y_offset=y_nav_start, min_area=25)
     
     return mask_obstaculos, punto_horizonte, cuadros
 
@@ -180,11 +205,20 @@ def fcm_semantic(resized_image, num_clusters=4, m=2.0, punto_horizonte=0):
     Variante extendida que retorna ambas máscaras (agua y obstáculos) y las cajas.
     """
     H, W, _ = resized_image.shape
-    punto_horizonte = max(0, min(punto_horizonte, H - 5))
-    water_bgr = resized_image[punto_horizonte:, :]
+    y_nav_start = max(0, min(punto_horizonte + 5, H - 20))
+    y_nav_end = min(174, H)
+    water_bgr = resized_image[y_nav_start:y_nav_end, :]
     
-    mask_agua, mask_obstaculos, info = segment_fcm_pixel_level(water_bgr, num_clusters=num_clusters, m=m, min_contrast=0.20)
-    cuadros = extract_boxes_from_mask(mask_obstaculos, y_offset=punto_horizonte, min_area=35)
+    mask_agua_roi, mask_obstaculos_roi, info = segment_fcm_pixel_level(
+        water_bgr, num_clusters=num_clusters, m=m, min_contrast=0.245
+    )
+    
+    mask_agua = np.zeros((H, W), dtype=np.uint8)
+    mask_agua[y_nav_start:y_nav_end, :] = mask_agua_roi
+    mask_obstaculos = np.zeros((H, W), dtype=np.uint8)
+    mask_obstaculos[y_nav_start:y_nav_end, :] = mask_obstaculos_roi
+    
+    cuadros = extract_boxes_from_mask(mask_obstaculos_roi, y_offset=y_nav_start, min_area=25)
     
     return mask_agua, mask_obstaculos, punto_horizonte, cuadros, info
 

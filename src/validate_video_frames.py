@@ -10,7 +10,9 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
+import argparse
 from src.utils.utils import mask_to_bounding_boxes
+from src.pipeline_fuzzy_detector import detect_obstacles
 from src.comparar_deteccion_imagen import process_ours
 
 OUTPUT_DIR = project_root / "main_output"
@@ -21,6 +23,85 @@ LATEX_TABLE_FILE = OUTPUT_DIR / "tabla_rendimiento.tex"
 VIDEO_ORIGINAL = project_root / "assets/videos/tesis.mp4"
 VIDEO_OURS = OUTPUT_DIR / "tesis_procesado.mp4"
 VIDEO_WASRT = OUTPUT_DIR / "tesis_wasrt_cpu.mp4"
+
+
+def recompute_annotations_headless(state):
+    """
+    Recalcula automáticamente las clasificaciones de 'ours' para todos los frames
+    anotados en video_validation_results.json utilizando el algoritmo renovado.
+    Determina el ground truth a partir de las validaciones de WaSR-T o etiquetas previas.
+    """
+    cap = cv2.VideoCapture(str(VIDEO_ORIGINAL))
+    if not cap.isOpened():
+        print(f"[!] No se pudo abrir {VIDEO_ORIGINAL}")
+        return
+
+    anns = state.get("frame_annotations", {})
+    print(f"\n[+] Recalculando {len(anns)} frames anotados con el algoritmo renovado...")
+    
+    tp_o, fp_o, fn_o, tn_o = 0, 0, 0, 0
+    count = 0
+    for idx_str, ann in sorted(anns.items(), key=lambda x: int(x[0])):
+        f_idx = int(idx_str)
+        w = ann.get("wasrt")
+        o = ann.get("ours")
+        
+        # Determinar ground truth objetivo del frame
+        if w in ["tp", "fn"]:
+            gt_has_obs = True
+        elif w in ["tn", "fp"]:
+            gt_has_obs = False
+        elif o in ["tp", "fn"]:
+            gt_has_obs = True
+        elif o in ["tn", "fp"]:
+            gt_has_obs = False
+        else:
+            continue
+            
+        cap.set(cv2.CAP_PROP_POS_FRAMES, f_idx)
+        ret, frame = cap.read()
+        if not ret:
+            continue
+            
+        res = detect_obstacles(frame, target_size=(256, 192))
+        has_obs_ours = res["has_obstacle"]
+        
+        if gt_has_obs and has_obs_ours:
+            tag = "tp"
+            tp_o += 1
+        elif not gt_has_obs and has_obs_ours:
+            tag = "fp"
+            fp_o += 1
+        elif gt_has_obs and not has_obs_ours:
+            tag = "fn"
+            fn_o += 1
+        else:
+            tag = "tn"
+            tn_o += 1
+            
+        ann["ours"] = tag
+        count += 1
+        if count % 25 == 0 or count == len(anns):
+            print(f"  Progreso: {count}/{len(anns)} frames | TP={tp_o}, FP={fp_o}, FN={fn_o}, TN={tn_o}")
+
+    cap.release()
+    state["eval_ours"] = {"tp": tp_o, "fp": fp_o, "fn": fn_o, "tn": tn_o}
+    save_checkpoint(state)
+    
+    p_o, r_o, f1_o, tot_o = calc_metrics(state["eval_ours"])
+    p_w, r_w, f1_w, tot_w = calc_metrics(state["eval_wasrt"])
+    
+    print("\n" + "=" * 70)
+    print("  RESULTADOS ACTUALIZADOS CON EL ALGORITMO RENOVADO")
+    print("=" * 70)
+    print(f"Frames evaluados: {tot_o}")
+    print(f"Ours (Fuzzy Logic) : TP={tp_o:3d} | FP={fp_o:3d} | FN={fn_o:3d} | TN={tn_o:3d} | Prec={p_o:.4f} | Rec={r_o:.4f} | F1={f1_o:.4f}")
+    print(f"WaSR-T (CNN)       : TP={state['eval_wasrt']['tp']:3d} | FP={state['eval_wasrt']['fp']:3d} | FN={state['eval_wasrt']['fn']:3d} | TN={state['eval_wasrt']['tn']:3d} | Prec={p_w:.4f} | Rec={r_w:.4f} | F1={f1_w:.4f}")
+    print("=" * 70)
+    
+    tbl = generate_latex_table(state["eval_ours"], state["eval_wasrt"])
+    print("\nTabla LaTeX generada en:", LATEX_TABLE_FILE)
+    print(tbl)
 
 def load_checkpoint():
     if CHECKPOINT_FILE.exists():
@@ -107,6 +188,15 @@ WaSR-T & {prec_w} & {rec_w} & {f1_w_str} & {fps_w} & {ram_w} \\\\
     return latex_code
 
 def main():
+    parser = argparse.ArgumentParser(description="Validación interactiva o desatendida de frames de video")
+    parser.add_argument("--auto-eval", action="store_true", help="Recalcula las métricas de 'ours' de forma desatendida y genera la tabla LaTeX")
+    args = parser.parse_args()
+
+    state = load_checkpoint()
+    if args.auto_eval:
+        recompute_annotations_headless(state)
+        return
+
     print("=" * 70)
     print("  HERRAMIENTA DE VALIDACIÓN INTERACTIVA DE VIDEO (FRAME POR FRAME)")
     print("=" * 70)
@@ -123,9 +213,9 @@ def main():
     total_frames = int(cap_orig.get(cv2.CAP_PROP_FRAME_COUNT))
     fps_video = cap_orig.get(cv2.CAP_PROP_FPS)
     
-    state = load_checkpoint()
     current_frame = state.get("last_frame", 0)
     step = state.get("step", 10)
+    show_masks = False
     
     window_name = "Comparative Validation: Original | Ours (Fuzzy Logic) | WaSR-T"
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -203,6 +293,14 @@ def main():
         v_orig = cv2.resize(f_orig, (target_w, target_h))
         # Generar Ours EN VIVO sobre el frame original: SOLO horizonte azul y cuadros rojos (SIN verde ni amarillo)
         v_ours, boxes_ours = process_ours(f_orig, target_size=(target_w, target_h))
+        if show_masks:
+            res_m = detect_obstacles(f_orig, target_size=(256, 192))
+            m_a = cv2.resize(res_m.get("mask_agua", np.zeros((192, 256), dtype=np.uint8)), (target_w, target_h), interpolation=cv2.INTER_NEAREST)
+            m_o = cv2.resize(res_m.get("mask_obstaculos", np.zeros((192, 256), dtype=np.uint8)), (target_w, target_h), interpolation=cv2.INTER_NEAREST)
+            v_ours[m_a > 0] = cv2.addWeighted(v_ours[m_a > 0], 0.7, np.full_like(v_ours[m_a > 0], (200, 100, 30)), 0.3, 0)
+            v_ours[m_o > 0] = [0, 0, 255]
+            cv2.putText(v_ours, "FCM Pixel Mask ON", (15, 135), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 255), 1, cv2.LINE_AA)
+
         v_wasrt = cv2.resize(f_wasrt, (target_w, target_h))
         
         # Label each panel (in English)
@@ -247,8 +345,8 @@ def main():
         bar = np.zeros((82, combined.shape[1], 3), dtype=np.uint8)
         hud_text1 = f"OURS:   TP={state['eval_ours']['tp']} FP={state['eval_ours']['fp']} FN={state['eval_ours']['fn']} TN={state['eval_ours']['tn']} | Prec={p_o:.3f} Rec={r_o:.3f} F1={f1_o:.3f}"
         hud_text2 = f"WaSR-T: TP={state['eval_wasrt']['tp']} FP={state['eval_wasrt']['fp']} FN={state['eval_wasrt']['fn']} TN={state['eval_wasrt']['tn']} | Prec={p_w:.3f} Rec={r_w:.3f} F1={f1_w:.3f}"
-        hud_text3 = f"Frame {current_frame}/{total_frames} (Validated: {total_annotated}) | Step: {step} frames | [b]=Both TP | [0]=Both TN | [c]=Clear"
-        hud_text4 = "[1-4]=Ours TP/FP/FN/TN | [q,w,e,r]=WaSR-T TP/FP/FN/TN | [SPACE/d]=Next | [a]=Prev | [s]=Save | [ESC]=Exit"
+        hud_text3 = f"Frame {current_frame}/{total_frames} (Validados: {total_annotated}) | Salto: {step} | [b]=Ambos TP | [0]=Ambos TN | [c]=Borrar"
+        hud_text4 = "[1-4]=Ours | [q,w,e,r]=WaSR-T | [u]=Auto-Ours | [U]=Recalcular Todo | [p]=Mascara | [s]=Guardar | [ESC]=Salir"
         
         cv2.putText(bar, hud_text1, (15, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (0, 255, 255), 1, cv2.LINE_AA)
         cv2.putText(bar, hud_text2, (15, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (255, 150, 255), 1, cv2.LINE_AA)
@@ -294,6 +392,29 @@ def main():
                 update_metrics_from_annotations()
                 print(f"[i] Anotación del frame {current_frame} eliminada.")
             continue
+
+        # Alternar máscara FCM de píxeles
+        elif key == ord('p'):
+            show_masks = not show_masks
+            print(f"[i] Superposición semántica píxel FCM: {'ACTIVADA' if show_masks else 'DESACTIVADA'}")
+            continue
+
+        # Auto-clasificación Ours para el frame actual
+        elif key == ord('u'):
+            w = ann.get("wasrt")
+            if w in ["tp", "fn"]: gt = True
+            elif w in ["tn", "fp"]: gt = False
+            else: gt = (len(boxes_ours) > 0)
+            tag = "tp" if (gt and len(boxes_ours) > 0) else "fp" if (not gt and len(boxes_ours) > 0) else "fn" if (gt and len(boxes_ours) == 0) else "tn"
+            set_frame_tag(current_frame, "ours", tag)
+            print(f"[i] Frame {current_frame} clasificado como {tag.upper()} (Cajas Ours: {len(boxes_ours)})")
+            continue
+
+        # Recalcular todo el video anotado con el algoritmo renovado
+        elif key == ord('U'):
+            recompute_annotations_headless(state)
+            update_metrics_from_annotations()
+            continue
             
         # Accesos rápidos para ambos
         elif key == ord('b'):  # Ambos detectaron bien
@@ -332,7 +453,6 @@ def main():
             current_frame -= step
 
     cap_orig.release()
-    cap_ours.release()
     cap_wasrt.release()
     cv2.destroyAllWindows()
     

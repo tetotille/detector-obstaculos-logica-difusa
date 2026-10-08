@@ -26,10 +26,7 @@ from wasr_t.data.transforms import PytorchHubNormalization
 from wasr_t.wasr_t import wasr_temporal_resnet101
 from wasr_t.utils import load_weights
 from src.utils.utils import mask_to_bounding_boxes, read_image
-from src.cmeans import fcm
-from src.detector_horizonte import find_largest_fuzzy_jump, separate_pixels
-from src.detector_hsv.rgb_detection import process_image_cpu as detector_rgb
-from src.fuzzy_union.fuzzy_union import fuzzy_union
+from src.pipeline_fuzzy_detector import detect_obstacles
 
 # Segmentation palette for WaSR-T
 SEGMENTATION_COLORS = np.array([
@@ -63,87 +60,53 @@ def get_wasrt_model(weights_path: Optional[Union[str, Path]] = None):
 
 def process_ours(image_bgr: np.ndarray, target_size: Tuple[int, int] = (512, 384)):
     """
-    Executes the proposed fuzzy logic obstacle detection pipeline:
-    1. Horizon line estimation
-    2. Cropping below the horizon
-    3. Mode-adaptive RGB & FCM detectors
-    4. Fuzzy union fusion
-    5. Rendering: Blue horizon line + Red obstacle bounding boxes ONLY.
+    Executes the renovated fuzzy logic obstacle detection pipeline:
+    1. Horizon line estimation & ROI navigation clipping
+    2. Pixel-level FCM semantic segmentation (water vs obstacle)
+    3. Wave-filtering bounding box extraction
+    4. Fuzzy union inference
+    5. Strict physical intersection (tol=0) consensus
+    6. Rendering: Blue horizon line + Red obstacle bounding boxes ONLY.
     """
     t_w, t_h = target_size
-    img_np, img_cp = read_image(image_bgr, 256, 192)
+    res = detect_obstacles(image_bgr, target_size=(256, 192))
     
-    # 1. Horizon estimation
-    left, center, right = separate_pixels(img_np)
-    h_left = find_largest_fuzzy_jump(left)
-    h_center = find_largest_fuzzy_jump(center)
-    h_right = find_largest_fuzzy_jump(right)
-    
-    if abs(h_center - h_left) < abs(h_right - h_center) and abs(h_center - h_left) < abs(h_right - h_left):
-        a, b = h_left, h_center
-    elif abs(h_center - h_left) > abs(h_right - h_center) and abs(h_right - h_center) < abs(h_right - h_left):
-        a, b = h_center, h_right
-    else:
-        a, b = h_left, h_right
-    adjustment = int((a + b) // 2)
-    
-    # 2. Crop below horizon
-    cropped_np = img_np[adjustment:, :]
-    cropped_cp = img_cp[adjustment:, :]
-    
-    # 3. Detectors
-    _, boxes_rgb = detector_rgb(cropped_cp)
-    _, _, boxes_cmeans = fcm(img_np, 4, punto_horizonte=adjustment)
-    
-    # Adjust coordinates relative to the full image (256x192)
-    for c in boxes_rgb:
-        c["y_init"] += adjustment
-        c["y_end"] += adjustment
-        c["y_centroid"] += adjustment
-        
-    for c in boxes_cmeans:
-        c["y_init"] += adjustment
-        c["y_end"] += adjustment
-        c["y_centroid"] += adjustment
-        
-    # 4. Fuzzy Union fusion
-    copied_rgb = [c.copy() for c in boxes_rgb]
-    copied_fcm = [c.copy() for c in boxes_cmeans]
-    final_boxes = fuzzy_union([copied_rgb, copied_fcm])
-    
-    # 5. Render onto target_size image
     scale_x = t_w / 256.0
     scale_y = t_h / 192.0
     output_img = cv2.resize(image_bgr, (t_w, t_h))
     
-    # Blue horizon line (BGR: (255, 0, 0))
-    h_a = int(a * scale_y)
-    h_b = int(b * scale_y)
-    cv2.line(output_img, (0, h_a), (t_w // 2, h_a), (255, 0, 0), 2)
-    cv2.line(output_img, (t_w // 2, h_b), (t_w, h_b), (255, 0, 0), 2)
-    
-    # Text with contrast outline
-    cv2.putText(output_img, "Horizon", (15, max(20, h_a - 6)),
+    # Blue horizon line
+    y_h = int(res["horizon"]["ajuste"] * scale_y)
+    cv2.line(output_img, (0, y_h), (t_w, y_h), (255, 0, 0), 2)
+    cv2.putText(output_img, "Horizon", (15, max(20, y_h - 6)),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 3, cv2.LINE_AA)
-    cv2.putText(output_img, "Horizon", (15, max(20, h_a - 6)),
+    cv2.putText(output_img, "Horizon", (15, max(20, y_h - 6)),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
     
-    # ONLY Red bounding boxes for confirmed obstacles (BGR: (0, 0, 255))
-    for c in final_boxes:
-        if c is None: 
-            continue
-        x1, y1 = int(c["x_init"] * scale_x), int(c["y_init"] * scale_y)
-        x2, y2 = int(c["x_end"] * scale_x), int(c["y_end"] * scale_y)
-        w_val = c.get("weight", 0)
-        cv2.rectangle(output_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+    # Scale confirmed boxes to target_size
+    scaled_boxes = []
+    for c in res["confirmed_boxes"]:
+        x1 = int(c["x_init"] * scale_x)
+        y1 = int(c["y_init"] * scale_y)
+        x2 = int(c["x_end"] * scale_x)
+        y2 = int(c["y_end"] * scale_y)
+        score = c.get("fuzzy_union", 0.0)
         
-        label = f"Ours: {w_val}px"
+        c_scaled = dict(c)
+        c_scaled["x_init"] = x1
+        c_scaled["y_init"] = y1
+        c_scaled["x_end"] = x2
+        c_scaled["y_end"] = y2
+        scaled_boxes.append(c_scaled)
+        
+        cv2.rectangle(output_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        label = f"Score: {score:.1f}"
         cv2.putText(output_img, label, (x1, max(18, y1 - 6)),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 3, cv2.LINE_AA)
         cv2.putText(output_img, label, (x1, max(18, y1 - 6)),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2, cv2.LINE_AA)
                     
-    return output_img, final_boxes
+    return output_img, scaled_boxes
 
 def process_wasrt(image_bgr: np.ndarray, target_size: Tuple[int, int] = (512, 384)):
     """

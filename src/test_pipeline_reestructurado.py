@@ -9,7 +9,7 @@ sys.path.insert(0, str(project_root))
 
 from src.detector_horizonte.pixel_detector import separate_pixels, find_largest_fuzzy_jump
 from src.utils.utils import mask_to_bounding_boxes
-from src.fuzzy_union.fuzzy_union import fuzzy_union
+from src.fuzzy_union.fuzzy_union import fuzzy_union, intersect_fuzzy_detections
 from src.detector_hsv.rgb_detection import process_image_cpu as detector_rgb_cpu
 
 # Cargar las 148 anotaciones validadas por el usuario
@@ -146,9 +146,9 @@ def evaluate_pipeline_on_approved_frames():
             c["_compensated"] = True
             boxes_rgb.append(c)
             
-        # 4. Fusión difusa
+        # 4. Fusión difusa y 5. Confirmación por INTERSECCIÓN (sin memoria temporal)
         res_union = fuzzy_union([boxes_rgb, boxes_fcm])
-        confirmed = [b for b in res_union if b is not None and b.get("fuzzy_union", 0) > 0]
+        confirmed = intersect_fuzzy_detections(boxes_fcm, boxes_rgb, tol=15)
         
         det = len(confirmed) > 0
         if gt_has_obs and det:

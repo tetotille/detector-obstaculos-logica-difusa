@@ -173,6 +173,9 @@ main_output/*
 !main_output/etiquetas_evaluacion_video.*
 !main_output/benchmark_jetson_*
 !main_output/wasrt_reference_validation.*
+!main_output/video_validation_results.json
+!main_output/informe_comparativo_rendimiento.md
+!main_output/tabla_rendimiento_jetson.tex
 
 *.pkl
 imagen_umbral.png
@@ -180,5 +183,5 @@ imagen_umbral.png
 *.MOV
 src/main_output/
 
-
-
+# Repositorio externo WaSR-T y pesos pesados
+WaSR-T/

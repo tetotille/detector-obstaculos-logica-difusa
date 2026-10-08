@@ -1,0 +1,1732 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\title{Marco Te\'orico}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Marco Te\'orico}
+
+\subsection{Antecedentes}
+Los Veh\'iculos Aut\'onomos de Superficie (ASV) representan una tecnolog\'ia en desarrollo que ha sido implementada con \'exito en distintas regiones de Latinoam\'erica. Se han dise\~nado embarcaciones como catamaranes equipados con motores el\'ectricos, sensores GPS, unidades de medici\'on inercial y microcontroladores que permiten la navegaci\'on y detecci\'on de obst\'aculos. Estos sistemas facilitan el monitoreo ambiental, la recolecci\'on de datos marinos y la investigaci\'on cient\'ifica en cuerpos de agua.
+
+\subsection{Flota Aut\'onoma}
+La flota aut\'onoma se compone de un conjunto de sistemas interdependientes que garantizan su funcionamiento. El sistema de comunicaci\'on utiliza protocolos estandarizados para la transmisi\'on constante de informaci\'on entre el ASV y su estaci\'on de control. Por su parte, el m\'odulo de Gu\'ia, Navegaci\'on y Control (GNC) se encarga de planificar rutas y ejecutar maniobras evasivas para evitar colisiones. Finalmente, los sensores LiDAR desempe\~nan un papel fundamental en la detecci\'on y medici\'on precisa de distancias hacia posibles obst\'aculos.
+
+\subsection{Telemetr\'ia y Comunicaci\'on}
+La telemetr\'ia permite transmitir informaci\'on en tiempo real, proporcionando datos sobre la posici\'on, velocidad y estado de los sensores integrados en el ASV. La comunicaci\'on se realiza mediante m\'odulos dedicados, utilizando tecnolog\'ias como radiofrecuencia y redes 4G LTE. Estos sistemas garantizan una conexi\'on continua con la estaci\'on de control, lo que facilita la supervisi\'on y el ajuste de par\'ametros de navegaci\'on.
+
+\subsection{Detecci\'on de Obst\'aculos}
+El proceso de detecci\'on de obst\'aculos combina tecnolog\'ias avanzadas para garantizar una navegaci\'on segura. Los sensores LiDAR generan informaci\'on precisa sobre la distancia y ubicaci\'on de objetos en el entorno. Complementando esta funci\'on, la visi\'on artificial se encarga de analizar im\'agenes capturadas por c\'amaras, permitiendo identificar contornos y clasificar elementos. La implementaci\'on de algoritmos basados en l\'ogica difusa fortalece este sistema, ya que permite manejar incertidumbres y ofrecer resultados robustos incluso en condiciones adversas.
+
+\subsection{Procesamiento de Im\'agenes}
+El procesamiento de im\'agenes juega un rol crucial en el funcionamiento aut\'onomo del ASV. La segmentaci\'on de im\'agenes permite dividirlas en regiones homog\'eneas, facilitando la identificaci\'on de \'areas relevantes como agua, obst\'aculos flotantes y la l\'inea del horizonte. Posteriormente, se lleva a cabo una clasificaci\'on que distingue entre estos elementos para optimizar las decisiones de navegaci\'on. Finalmente, la aplicaci\'on de t\'ecnicas de reducci\'on de ruido mejora la calidad de las im\'agenes, eliminando interferencias y reflejos no deseados.
+
+\subsection{L\'ogica Difusa}
+La l\'ogica difusa es una herramienta vers\'atil que permite modelar incertidumbres en entornos complejos, como aquellos presentes en cuerpos de agua. En el procesamiento de im\'agenes, se utiliza para manejar ambig\"uedades y ruido mediante funciones de membres\'ia y algoritmos adaptativos. La segmentaci\'on difusa, por ejemplo, asigna grados de pertenencia a cada regi\'on de la imagen, logrando una clasificaci\'on m\'as precisa. Asimismo, la inferencia difusa se basa en reglas l\'ogicas del tipo ``Si-Entonces'', lo que facilita la toma de decisiones en situaciones donde los datos son imprecisos o incompletos.
+\chapter[Marco teórico]{Marco teórico\label{etiqueta}}
+\section[Antecedentes]{Antecedentes}
+
+En esta sección se hablará de algunos trabajos relevantes anteriores al nuestro. Primeramente, abarcando a nuestros países vecinos, luego los trabajos de investigación hechos en la zona, específicamente en el Lago Ypacaraí.
+
+\subsection[ASV en Latinoamérica]{ASV en Latinoamérica}
+
+En Brasil se implementó un vehículo autónomo de superficie de bajo costo (ASV) utilizando un sistema basado en el comportamiento, utilizando un software basado en el comportamiento, el MOOS-IvP como se puede ver en la figura ~\ref{fig:brasil}.
+
+La plataforma utilizada es un barco catamarán impulsado por dos motores de corriente continua como sistema de propulsión. Está integrado con una placa de procesamiento con un microcontrolador Arduino, una Unidad de Medición Inercial (IMU) de bajo costo con acelerómetros, giroscopios y magnetómetros, un receptor GPS y un módem serie RF inalámbrico.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Brasil.JPG}
+    \caption{Vehículo ASV bajo costo \cite{mattos2015low_cost_asv}.}
+    \label{fig:brasil}
+\end{figure}
+
+El ASV se comunica con una estación de control terrestre (GCS) enviando datos de telemetría y recibiendo comandos de navegación para los motores de propulsión. El GCS utiliza el software MOOS-IvP para implementar los procedimientos de navegación autónoma y el algoritmo de fusión de sensores GPS/Brújula/IM. Del conjunto de comportamientos suministrados con el software MOOS-IvP se utilizaron tres comportamientos:
+
+• Puntos de ruta: dado un conjunto de puntos de ruta, el ASV debe seguir estos puntos de referencia en el orden indicado. Es posible definir un radio de captura, un radio de deslizamiento y cambiar el
+punto de ruta dinámicamente.
+
+• Evitar Obstáculo: Con este comportamiento es posible establecer un
+región a evitar y un área de seguridad para una colisión virtual
+distancia. Este comportamiento se utilizó de alguna manera para definir
+obstáculos virtuales previamente conocidos durante la tarea de waypoint.
+
+• StationKeep: Con este comportamiento el vehículo se mantiene en el área determinada hasta que se cumpla otra condición.
+\cite{mattos2015low_cost_asv} Este modelo se publicó en un artículo en el 2016.
+
+En 2019, se analiza el diseño, implementación y pruebas en tiempo real de un sistema de navegación para vehículos autónomos. Se presenta el vehículo de superficie MACABOT ~\ref{fig:macabot}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Macabot.JPG}
+    \caption{Vehículo ASV MacaBot \cite{paiva2019unmanned_surface_vehicle}.}
+    \label{fig:macabot}
+\end{figure}
+
+Este vehículo representa una plataforma versátil para realizar diversas tareas en el medio marino, tales como: mantenimiento de puertos, estudios de ecosistemas marinos productivos y batimetrías.
+
+El sistema de navegación es responsable de determinar con precisión la posición, velocidad y altitud del vehículo. Representa un componente fundamental para realizar de forma autónoma cualquiera de las tareas antes mencionadas.
+
+En este trabajo, el sistema de navegación se desarrolla basándose en un sistema de navegación inercial con correas asistido por GPS utilizando un algoritmo extendido de fusión de sensores de filtro Kalman. Con el fin de proporcionar un enfoque adaptativo al algoritmo de fusión de sensores que ajusta, se utiliza el sistema de inferencia difusa.
+
+El sistema de navegación era implementado como un paquete para el sistema operativo del robot, beneficiándose de las ventajas de la heterogeneidad, la integración y abstracción de hardware.
+
+Se realizaron pruebas en tiempo real del MACÁBOT en un arroyo local, mostrando funcionamiento satisfactorio del sistema de navegación en ambas estimaciones de posición y velocidad. Además de estas pruebas, se realizaron simulaciones de cortes de GPS con los datos registrados para evaluar el desempeño del sistema de navegación en tales casos.
+\cite{paiva2019unmanned_surface_vehicle}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Cormoran.JPG}
+    \caption{Vehículo Cormoran II \cite{conacyt_proyecto_788}}
+    \label{fig:cormoran}
+\end{figure}
+
+En 2020, se realiza un trabajo que se enmarca en el proyecto de investigación PINV 15-177, titulado "Vehículo Autónomo de Superficie (ASV) para el Estudio de Calidad del Agua en Lagos y Lagunas" , financiado por el Consejo Nacional de Ciencia y Tecnología (CONACyT) y desarrollado en el Laboratorio de Sistemas Distribuidos (LSD) de la Facultad de Ingeniería de la Universidad Nacional de Asunción (FIUNA) ~\ref{fig:catama}.
+
+El proyecto tiene como objetivo proponer y desarrollar un prototipo de vehículo no tripulado diseñado para el monitoreo de la calidad del agua y otros factores medioambientales, como la luminosidad, el $CO_2$ (dióxido de carbono), el $O_3$ (ozono) y el $H_2S$ (sulfuro de hidrógeno).
+
+Asimismo, busca relacionar los parámetros físico-químicos analizados a lo largo del tiempo con el grado de contaminación orgánica e inorgánica en el lago Ypacaraí \cite{conacyt_proyecto_788}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.45\textwidth]{noticia.png}
+    \caption{Vehículo Catamaran \cite{conacyt_proyecto_788}.}
+    \label{fig:catama}
+\end{figure}
+
+También forma parte del proyecto 2018/ACDE/000773, denominado "Sistema de monitorización de agentes contaminantes en el Lago Ypacaraí mediante el uso de Vehículos Acuáticos no Tripulados de Superficie", financiado por la Agencia Española de Cooperación Internacional para el Desarrollo (AECID). Para lograr la navegación adaptativa, los ASVs están equipados con dos subsistemas principales:
+
+\begin{itemize}
+    \item Sistema de percepción del entorno, que utiliza diversos sensores para detectar obstáculos.
+    \item Sistema de navegación, responsable de guiar el vehículo y evitar colisiones con dichos obstáculos.
+\end{itemize}
+
+En este trabajo final de grado (TFG), se exploraron métodos de detección de obstáculos basados en visión artificial y redes neuronales convolucionales, junto con técnicas de medición de distancia mediante visión artificial.
+
+Además, se desarrolló un algoritmo de toma de decisiones para la evasión de obstáculos y el retorno a la ruta original. Este sistema fue evaluado a través de simulaciones y posteriormente implementado en el dron acuático denominado Cormorán III. \cite{una_2024_monitoreo_ambiental}
+
+Luego, en el 2023, para enfrentar los desafíos relacionados con la navegación autónoma en medios acuáticos, se desarrolló un sistema de visión artificial para vehículos autónomos de superficie (ASV).
+
+Este sistema permite al ASV percibir su entorno utilizando un enfoque de visión artificial monocular, una técnica que ha ganado relevancia en el ámbito de la conducción autónoma debido a su eficacia frente a sistemas más complejos.
+
+El núcleo de este sistema es la Jetson Nano de NVIDIA, un dispositivo de computación en el borde diseñado específicamente para tareas de inteligencia artificial. Este dispositivo combina una tarjeta gráfica especializada para ejecutar modelos avanzados de inteligencia artificial con una arquitectura ARM.
+
+En cuanto a la navegación, se emplea el piloto automático Pixhawk, encargado de gestionar el control autónomo del ASV. Por su parte, la Jetson Nano ejecuta el programa WaSR-T , un software basado en visión por computadora que mejora significativamente la capacidad del ASV para detectar obstáculos y realizar maniobras evasivas de manera automática.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.45\textwidth]{wasr-t.png}
+    \caption{Sistema WASR-T \cite{wasr_t_github}.}
+    \label{fig:wasrt}
+\end{figure}
+
+Este sistema de visión artificial para vehículos acuáticos representa una solución innovadora que responde a los retos específicos de estos entornos.
+
+Al permitir la detección y evasión de obstáculos de forma automática mediante visión monocular, ofrece una alternativa eficaz y accesible para la navegación autónoma. Su implementación no solo mejora la seguridad en la navegación, sino que también optimiza la eficiencia del vehículo en operaciones acuáticas.
+
+El modelo propuesto en el Trabajo Final de Grado previo se basa en una segmentación semántica para discriminar entre agua, cielo y objetos, logrando una alta precisión y una latencia de 10 fps. Además, implementa un análisis de múltiples frames (menos de 5) para reducir falsos positivos, lo que lo hace robusto en su tarea principal.
+
+Sin embargo, este modelo presenta ciertas limitaciones, como el alto consumo de recursos de memoria derivado de su implementación en PyTorch y el uso de un modelo preentrenado que requiere un amplio espacio de almacenamiento.
+
+Aunque estas características eran adecuadas al momento de su desarrollo, la falta de actualizaciones recientes ha limitado su compatibilidad con los avances tecnológicos en hardware y software más modernos. \cite{TFG2}
+
+Para superar estas limitaciones, optamos por desarrollar un modelo desde cero, empleando librerías con mayor cobertura y soporte actual. Este nuevo enfoque utiliza algoritmos basados en lógica difusa, debido a su capacidad para manejar de manera eficiente la incertidumbre y la variabilidad en escenarios reales.
+
+Esta metodología permite simplificar el diseño de reglas para la clasificación de elementos, logrando una detección de objetos con menor latencia sin comprometer la calidad del modelo.
+
+\section[Flota autónoma]{Flota autónoma}
+
+Una flota autónoma, también llamada Vehículo de Superficie Autónomo (ASV) o Vehículo de Superficie No Tripulado (USV), se define como una embarcación sin tripulación que opera en diversos entornos complejos sin intervención humana directa. Los USV también tienen una mayor capacidad de carga útil potencial y pueden realizar monitoreo y muestreo de profundidades de agua más profundas en comparación con otras aeronaves/UAV y naves espaciales.\cite{LIU201671} Cabe señalar que en la literatura, los términos ASV y USV suelen usarse indistintamente, sin una diferenciación clara en su metodología.
+
+Un USV se refiere a un vehículo no tripulado que no lleva personas a bordo y es generalmente controlado de manera remota por un operador humano. En contraste, un ASV también es un vehículo no tripulado, pero opera sin intervención humana directa a lo largo de su misión. \cite{TFG2}
+
+Los barcos autónomos son un área de investigación emergente con
+potencial de aplicación significativo en buques de carga transoceánicos, control del medio ambiente costero y estructura hecha por el hombre, inspección. Su autonomía depende crucialmente de la percepción.
+capacidad de transporte, que es particularmente desafiante en el medio ambiente. \cite{maritimeObstacle}
+
+\subsection[MavLink]{MavLink}
+
+MAVLink es un protocolo de mensajería muy ligero para comunicarse con drones (y entre componentes a bordo de drones).MAVLink sigue un moderno patrón de diseño híbrido de publicación-suscripción y punto a punto: los flujos de datos se envían/publican como temas, mientras que los subprotocolos de configuración, como el protocolo de misión o el protocolo de parámetros, son punto a punto con retransmisión.
+
+Los mensajes se definen dentro de archivos XML. Cada archivo XML define el conjunto de mensajes admitido por un sistema MAVLink particular, también conocido como "dialecto". El conjunto de mensajes de referencia que implementan la mayoría de las estaciones de control terrestre y los pilotos automáticos se define en common.xml (la mayoría de los dialectos se basan en esta definición).
+
+Los generadores de código crean bibliotecas de software para lenguajes de programación específicos a partir de estas definiciones de mensajes XML, que luego pueden ser utilizadas por drones, estaciones de control terrestre y otros sistemas MAVLink para comunicarse.
+
+Las bibliotecas generadas suelen tener licencia MIT y, por lo tanto, se pueden utilizar sin límites en cualquier aplicación de código cerrado sin publicar el código fuente de la aplicación de código cerrado. \cite{mavlink}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{mavlink.jpg}
+    \caption{Protocolo MAVLink 2.}
+    \label{fig:mavlink}
+\end{figure}
+
+\begin{table}[H]
+    \protect\caption[Especificaciones del paquete de protocolo MAVLink]{Especificaciones del paquete de protocolo MAVLink \label{tab:nombre_referencia}}
+    \begin{centering}
+    \arrayrulecolor{myred}\arrayrulewidth=1pt % Color y grosor de bordes
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \rowcolor{red!50}
+    \textbf{Índice} & \textbf{Versión C} & \textbf{Contenido} & \textbf{Valor} & \textbf{Explicación} \\
+    \hline
+    0 & uint8\_t magic & Marcador & 0xFD &  Marcador de inicio\\
+    & & de inicio & & de texto (STX) \\
+    & & de paquete & & especifico del \\
+    & &  & & protocolo que se \\
+    & & & & utiliza para indicar el \\
+    & & & & comienzo de un \\
+    & & & & nuevo paquete. \\
+    \hline
+    1 & uint8\_t dimension & Longitud de & 0-255 & Indica el tamaño \\
+    & & carga útil & & de la sección de carga \\
+    & & & & útil (payload) que sigue. \\
+    \hline
+    2 & uint8\_t, & Banderas  & & Indica características\\
+    & incompat\_flags & incompatibles & & incompatibles con  \\
+    & & & & versiones anteriores \\
+    & & & & de MAVLink. \\
+    \hline
+    3 & uint8\_t & Banderas & & Define banderas\\
+    & compat\_flags & compatibles & & compatibles para \\
+    & & & & asegurar la \\
+    & & & & compatibilidad con \\
+    & & & & versiones del protocolo. \\
+    \hline
+    4 & uint8\_t seq & Numero de  & 0-255 & Usado para\\
+    & & secuencia  & & detectar paquetes \\
+    & & del paquete & & perdidos \\
+    \hline
+    5 & uint8\_t sysid & Sistema ID & 1-255 & ID del sistema \\
+    & & & & (vehículo) enviando \\
+    & & & & el mensaje.\\
+    \hline
+    6 & uint8\_t compid & ID del & 1-255 & ID del componente \\
+    & & componente & &  enviando el mensaje. \\
+    \hline
+    7 a 9 & uint32\_t & ID del & 0- & ID del \\
+    & msgid:24 &  mensaje & 16777215 & tipo de mensaje \\
+    & & & & en payload \\
+    \hline
+    For n-byte & uint8\_t & Payload & & Dato del mensaje. \\
+    payload: & & & & \\
+    n=0: NA, & & & & \\
+    n=1: 10, & payload & & & \\
+    n>=2: 10 & [max 255] & & & \\
+    a (9+n) & & & & \\
+    \hline
+    (n+10) & uint16\_t & Checksum & & CRC-16 \\
+    a (n+11) & checksum & & & /MCRF4XX \\
+    & & & & por mensaje. \\
+    \hline
+    (n+12) & uint8\_t & Firma & & Firma para \\
+    a (n+25) & signature[13] & & & garantizar que \\
+    & & & & el enlace sea a \\
+    & & & & prueba de manipulaciones. \\
+    \hline
+    \end{tabular}
+    \par\end{centering}
+\end{table}
+
+\textbf{\textit{Implementaciones de MavLink:}}
+
+Muchos pilotos automáticos, estaciones terrestres, API de integración, proyectos y otros paquetes de software utilizan MAVLink. A continuación se proporciona una lista no exhaustiva de algunos usuarios/contribuyentes de este proyecto.
+
+Autopilots:
+Se sabe que los siguientes pilotos automáticos son compatibles con MAVLink y se están desarrollando activamente.
+
+\begin{itemize}
+    \item PX4
+    \item ArduPilot
+    \item AutoQuad 6 AutoPilot
+    \item iNAV
+    \item SmartAP Autopilot
+\end{itemize}
+
+Ground Stations:
+
+\begin{itemize}
+    \item QGroundControl (original reference implementation)
+    Branded/modified variants include: AutoQuad GCS, SmartAP GCS, Yuneec Datapilot, Sentera Groundstation, WingtraPilot, APM Planner 2.
+    \item Mission Planner ~\ref{fig:mission}
+    \item MAVProxy
+    \item UgCS (Universal Ground Control Station)
+    \item Side Pilot
+    \item JAGCS
+    \item Flightzoomer
+    \item Inexa Control
+    \item Synturian Control
+    \item LOGOS
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{imagenes/MissionPlanner/Inicio-copia.png}
+    \caption{Simulador Mission Planner.}
+    \label{fig:mission}
+\end{figure}
+
+API de desarrollador/envoltorio MAVLink:
+Se han escrito varias API de nivel superior para simplificar la interacción con los pilotos automáticos, cámaras, estaciones terrestres, etc. de MAVLink (MAVLink es una API de nivel relativamente bajo). Estos contenedores suelen proporcionar implementaciones de los principales microservicios e interfaces simples/específicas para enviar comandos y acceder a información del vehículo.
+
+\begin{itemize}
+    \item MAVSDK: biblioteca API MAVLink (C++, Python, Swift (iOS), Java, JS) que pretende ser totalmente compatible con los estándares de los microservicios comunes de MAVLink.
+    \item MAVLink Camera Manager: servidor de cámara MAVLink multiplataforma extensible (implementa el protocolo de cámara) integrado sobre GStreamer y Rust-MAVLink.
+    \item Rosetta Drone: contenedor MAVLink para DJI SDK (vuela un dron DJI con un GCS basado en Mavlink, código: https://github.com/RosettaDrone/rosettadrone).
+    \item pymavlink: enlaces MAVLink de Python.
+    \item MAVROS - ROS al puente MAVLink.
+\end{itemize}
+
+Estos proyectos tienen cierta actividad, pero no están bien mantenidos
+\cite{mavlink}:
+
+\begin{itemize}
+    \item DroneKit: biblioteca API MAVLink (Python, Android) y herramienta de análisis de registros (optimizada para ArduPilot).
+    \item Dronecode Camera Manager: agrega una interfaz de protocolo de cámara para cámaras conectadas a una computadora con Linux.
+\end{itemize}
+
+\subsection[Sistema de navegación autónoma]{Sistema de navegación autónoma}
+
+Un sistema de navegación autónomo es un conjunto de algoritmos, sensores y tecnologías que permite a un vehículo desplazarse de forma independiente en su entorno, sin intervención humana directa. Estos sistemas son esenciales para la planificación de rutas y la aplicación de algoritmos de evasión de colisiones.
+
+Por ejemplo, Fossen (2002) ha propuesto que el sistema de control de una  embarcación consta de tres módulos principales conocidos como los componentes de  Guía, Navegación y Control (GNC). Estos módulos, generalmente constituidos por computadoras y software a bordo, son responsables de administrar todo el sistema del ASV y se consideran elementos fundamentales del mismo.
+
+Adicionalmente, Lekkas (2014) ha presentado una alternativa en la  organización de la arquitectura del sistema de control, donde se propone la incorporación de un módulo de planificación de ruta separado de la capa de guía en el  sistema GNC, lo que implica la existencia de cuatro módulos principales en total \cite{PathPlanning}.
+
+\subsection[Catamarán]{Catamarán}
+
+Se define catamarán como embarcación o buque multi-casco, los dos cascos o flotadores se sitúan en paralelo uno del otro y son de igual tamaño, estos van unidos entre sí por un elemento que les hace de puente. Pueden ir propulsados a vela ~\ref{fig:cata2} o a motor ~\ref{fig:cata1} \cite{TFGcata}.
+
+Tanto el sistema de componentes como el sistema de misión utilizan un diseño modular, lo que facilita el cambio entre diferentes implementaciones de misión y el mantenimiento del USV. El diseño estable del casco del catamarán y la propulsión eléctrica de baja vibración proporcionan una gran estabilidad para la navegación de investigación \cite{m40}.
+
+\begin{figure}[H]
+    \subfigure[Catamaran a motor.]
+    {\label{fig:cata1}\includegraphics[width=65mm]{imagenes/Cata-pan.jpeg}}
+    \hfill
+    \subfigure[Catamaran a vela.]
+    {\label{fig:cata2}\includegraphics[width=65mm]{imagenes/catamaran_drone7.jpeg}}
+    \caption{Catamaranes}
+    \label{fig:catamaran}
+\end{figure}
+
+\subsection[LiDAR]{LiDAR}
+
+Ghorpade desarrollo un modelo de detección y evasión de obstáculos
+para robots móviles autónomos terrestres. El sistema que propuso se inicializa con las ubicaciones de origen y destino, y la salida es un ángulo de orientación el cual el robot debe seguir para alcanzar la ubicación de destino sin chocar con el obstáculo.
+
+El LiDAR 2D se utiliza para obtener las ubicaciones de los posibles obstáculos. El sensor GPS se utiliza para determinar la posición del
+robot. El 2D LiDAR se utiliza para adquirir datos del entorno operativo del robot para explorar la región limitada conocida. \cite{thomas2019lidar}
+
+LiDAR: EL lidar ( a menudo escrito LIDAR o LiDAR) es un método de topografía de medición de distancias que utiliza luz láser. La palabra lidar es una abreviatura de “detección de luz y alcance” por sus siglas en ingles “detección de luz y alcance” (“light detection and ranging”).
+
+Los sistemas LiDAR funcionan enviando pulsos de luz hacia un objetivo y luego midiendo el tiempo que tardan en reflejarse esos pulsos de luz en el sensor. LiDar es similar al radar y la sonda, pero usa luz en lugar de ondas de radio u ondas de sonido. LiDar es una tecnología de teledetección, lo que significa que obtiene mediciones u observaciones desde lejos ~\ref{fig:lidar}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\textwidth]{imagenes/Lidar.png}
+    \caption{Sistema LiDar. \cite{lidar_redeweb}}
+    \label{fig:lidar}
+\end{figure}
+
+La distancia que recorre la luz se puede calcular utilizando la velocidad de la luz (aproximadamente 300,000 kilómetros por segundo) \cite{wikipedia_lidar}.
+
+El LiDAR es similar al radar que emite energía hacia un objetivo para determinar la distancia del objeto. Pero a diferencia del radar, que usa ondas de radio, LiDar usa luz, visible, luz ultravioleta (luz con longitudes de onda más cortas que la luz azul visible) o luz infrarroja (luz con longitudes de onda ligeramente más largas que la luz roja visible).
+
+La luz utilizada para LIDAR tiene longitudes de onda más cortas que las ondas de radio, lo que permite que los sistemas LIDAR detecten objetos más pequeños y resuelvan características más pequeñas que el radar.
+
+Sin embargo, la luz de longitud de onda más corta se desvía más fácilmente por nubes, lluvia o neblina densa, lo que significa que LIDAR solo es efectivo en condiciones de clima despejado, a diferencia del radar. \cite{thomas2019lidar}
+
+\section[Telemetría]{Telemetría}
+
+La telemetría consiste en la medición remota de variables físicas o químicas detectadas mediante sensores. Este proceso implica medir (metrón) a distancia (tele) señales que, por lo general, se envían a través de tecnología inalámbrica (radiofrecuencia). Los sistemas de telemetría permiten registrar y monitorear parámetros como ondas, temperatura, vibración, presión, voltaje, altitud, velocidad, tiempo y otras magnitudes.
+
+Debido a que sus sistemas aportan información en tiempo real, estos son algunos de sus objetivos \cite{telemetria_movistar}:
+
+\begin{itemize}
+    \item Conocer el estado de procesos, sistemas y equipos.
+    \item Alertar de necesidades de mantenimiento preventivo, incidencias o fallas.
+    \item Alertar de violaciones de acceso, seguridad o robos.
+    \item Recopilar mediciones para predecir sucesos naturales.
+    \item Programar actividades de manera remota y desde un centro de control.
+\end{itemize}
+
+\subsection[Funcionamiento de la telemetría]{Funcionamiento de la telemetría}
+
+El funcionamiento de la telemetría se basa en un transductor que convierte las magnitudes físicas o químicas medidas en señales eléctricas.
+
+Estas señales eléctricas son procesadas por un dispositivo que las codifica en un formato adecuado para su transmisión. La transferencia de estas señales puede realizarse mediante diversos medios, como comunicación inalámbrica, cables, Internet o sistemas GPS.
+
+Los datos codificados son recibidos por un receptor que los recoge, registra y procesa, permitiendo su interpretación en unidades estándar, como kilómetros por hora, niveles de líquidos, presión, temperatura o ubicación geográfica.
+
+En resumen, un sistema de telemetría consta de cuatro elementos principales: el transductor, la unidad terminal, el medio de transmisión y el receptor \cite{telemetria_movistar}.
+
+\subsection[Aplicaciones de la telemetría]{Aplicaciones de la telemetría}
+
+Estos sistemas registran magnitudes esenciales para la prestación de servicios, la producción y la seguridad. Se utilizan en diversas áreas, como empresas, industrias, entornos naturales o en áreas urbanas.
+
+Algunos de los elementos que pueden ser medidos, monitoreados o gestionados en tiempo real a través de telemetría son \cite{telemetria_movistar}:
+
+\begin{itemize}
+    \item Sensores de temperatura, humedad o presión ~\ref{fig:servidorweb}.
+    \item Niveles de combustible, refrigerante, lubricante o líquidos en depósitos.
+    \item Cámaras de video vigilancia, micrófonos y sensores en zonas de acceso.
+    \item Sistemas de identificación remota.
+    \item Control de la cantidad de pasajeros o personas en un determinado espacio.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/telemetria-770x252.jpg}
+    \caption{Telemetría \cite{telemetria_alianzaflotillera}}
+    \label{fig:servidorweb}
+\end{figure}
+
+\subsection[Servicios de la telemetría]{Servicios de la telemetría}
+
+Podemos ver que la telemetría ofrece mucho más que solo la medición de valores. De esta tecnología se derivan cuatro servicios principales que las empresas pueden contratar: medición, comunicación, visualización y analítica.
+
+Diversos tipos de empresas proporcionan servicios de telemetría, entre ellas:
+
+\begin{itemize}
+    \item Consultoras especializadas en ingeniería, electrónica, procesos industriales o instrumentación.
+    \item Integradores de soluciones con instrumentación para áreas como geotecnia, termografía y estudios geoespaciales.
+    \item Desarrolladores de sistemas de telemetría, biometría y domótica personalizados para entornos empresariales e industriales.
+    \item Consultoras en monitoreo remoto para procesos logísticos y de transporte.
+    \item Empresas dedicadas a aplicaciones médicas, que ofrecen servicios de cuidado prenatal, posoperatorio y para pacientes con enfermedades crónicas, entre otros.
+    \item Desarrolladores de aplicaciones orientadas a la medición y análisis de la productividad en entornos de teletrabajo.
+\end{itemize}
+La telemetría sigue evolucionando con la integración de tecnologías habilitadoras para la revolución industrial, como el Internet de las Cosas (IoT), la robótica, la computación en la nube, la computación en el borde (edge computing) y las redes 5G \cite{telemetria_movistar}.
+
+\section[Servidor web]{Servidor web}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/ES-how-web-server-works.jpg}
+    \caption{Servidor web \cite{servidorweb_hostinger}}
+    \label{fig:servidorweb}
+\end{figure}
+
+Un servidor web es un software que se ejecuta en un servidor físico o virtual y tiene como función principal procesar solicitudes entrantes de clientes, como navegadores web, y responder enviando las páginas web correspondientes ~\ref{fig:servidorweb}.
+
+\subsection[Principales funciones]{Principales funciones}
+
+Los servidores web son esenciales para que los usuarios puedan acceder a sitios web y sus recursos desde cualquier lugar con conexión a Internet.
+
+\textit{\textbf{Funcionamiento de un Servidor Web:}}
+
+Cuando un usuario introduce una dirección web en su navegador, se desencadena un proceso que involucra al servidor web:
+
+\begin{enumerate}
+    \item Solicitud del navegador: El navegador envía una solicitud al servidor web correspondiente utilizando protocolos estándar como HTTP o HTTPS.
+    \item Procesamiento de la solicitud: El servidor web interpreta la solicitud y localiza el recurso solicitado, que puede ser un archivo HTML, una imagen, un video o cualquier otro contenido alojado en el servidor.
+    \item Respuesta al navegador: El servidor envía el recurso solicitado al navegador, junto con una cabecera que contiene información adicional, como el tipo de contenido y el estado de la solicitud.
+    \item Visualización: El navegador recibe los datos, los interpreta y los presenta al usuario como una página web.
+\end{enumerate}
+
+\textbf{\textit{Protocolos utilizados:}}
+
+\begin{itemize}
+    \item HTTP: Protocolo básico para la transferencia de información entre cliente y servidor.
+    \item HTTPS: Versión segura de HTTP que utiliza cifrado para proteger la información intercambiada.
+\end{itemize}
+
+Este proceso asegura que los usuarios puedan acceder de manera eficiente y segura a los contenidos almacenados en el servidor.
+
+\subsection[Flask: El Framework Web para Python]{Flask: El Framework Web para Python}
+
+Flask es un framework web ligero y flexible diseñado para facilitar la creación de servidores web en Python. Ofrece una estructura sencilla y extensible que permite a los desarrolladores construir aplicaciones de manera rápida y eficiente.
+
+\textit{\textbf{Características principales:}}
+
+\begin{itemize}
+    \item Routing sencillo: Flask facilita la asociación de funciones a rutas específicas, permitiendo definir cómo la aplicación debe responder a diversas URL y métodos HTTP como GET, POST, PUT y DELETE.
+    \item Plantillas HTML dinámicas: Utiliza el motor de plantillas Jinja2, que permite generar contenido HTML dinámico. Esto es crucial para crear páginas web interactivas y atractivas.
+    \item Manejo de solicitudes y respuestas: Proporciona herramientas para procesar solicitudes HTTP, manejar datos de formularios, gestionar cookies y sesiones, y generar respuestas personalizadas.
+    \item Facilidad para desarrollo y pruebas: Incluye un servidor de desarrollo integrado que simplifica las pruebas y la depuración. También es compatible con pruebas unitarias, asegurando la calidad del código.
+    \item Flexibilidad en herramientas y bibliotecas: Flask no impone una estructura rígida, permitiendo a los desarrolladores elegir las herramientas y bibliotecas que mejor se ajusten a sus necesidades, otorgando gran libertad en el diseño de aplicaciones.
+\end{itemize}
+
+Flask es ideal para proyectos pequeños a medianos y es ampliamente utilizado debido a su simplicidad y capacidad de personalización.
+
+\section[Detección de obstáculos]{Detección de obstáculos}
+
+La detección de obstáculos es el proceso mediante el cual el se detectan objetos próximos en el camino el cual producen una colisión. Es el proceso de utilizar sensores, estructuras de datos y algoritmos para detectar objetos o tipos de terreno que impiden el movimiento \cite{obstacleDetection}.
+
+Los intereses de investigación incluyen la teledetección, los sistemas de información geográfica (SIG), la imagen digital, análisis y aplicaciones LiDAR en silvicultura, estudios urbanos y geociencias \cite{liDAR}.
+
+
+\subsection[Detección de obstáculos en entornos acuáticos]{Detección de obstáculos en entornos acuáticos}
+
+La navegación autónoma se realiza en aguas costeras, puertos deportivos, canales urbanos, ríos y lagos.
+
+Allí, el aspecto de la zona navegable (el agua) varía significativamente con las condiciones climáticas, el entorno (contiene reflejos reflejados de la tierra y el brillo del sol), la aparición de obstáculos potenciales es igualmente amplia.
+
+Obstáculos puede ser estático (por ejemplo, costa y muelles) o dinámico (por ejemplo, barcos ~\ref{fig:obstaculos}, nadadores, escombros, boyas) \cite{maritimeObstacle}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\textwidth]{imagenes/R.png}
+    \caption{Obstaculos \cite{barcos_citesoft}}
+    \label{fig:obstaculos}
+\end{figure}
+
+\subsection[Algoritmos de detección de obstáculos]{Algoritmos de detección de obstáculos}
+
+Los algoritmos de detección de obstáculos son técnicas aplicadas en sistemas de navegación autónoma para identificar y localizar objetos o barreras en el entorno del vehículo. Estos algoritmos se fundamentan en la percepción computacional y emplean diversos métodos, como el análisis de imágenes y la interpretación de datos de sensores, con el fin de detectar obstáculos y establecer su posición relativa.
+
+Ejemplos comunes de algoritmos de detección de obstáculos incluyen métodos de visión por computadora, técnicas de procesamiento de señales y algoritmos de fusión sensorial. Estos algoritmos son esenciales para asegurar tanto la seguridad como el rendimiento de los sistemas de navegación autónoma. \cite{TFG2}
+
+Además, la evitación de obstáculos no requiere una precisión de segmentación igualmente alta en todas las regiones de la imagen.
+
+Por ejemplo, detectar el límite entre el agua y la costa es crucial para la prevención de colisiones, mientras que la segmentación precisa del límite entre la costa y el cielo no tiene sentido desde la perspectiva de la evitación de obstáculos.
+
+De manera similar, la falta de algunos píxeles de borde en un nadador no provocará una colisión. Pero la clasificación errónea de parches aislados de píxeles de agua frente al barco como obstáculos afectará negativamente al control, causando frecuentes paradas innecesarias. Esto se refleja en los últimos puntos de referencia marinos, donde el rendimiento se evalúa en términos de detección dinámica de obstáculos \cite{maritimeObstacle}.
+
+\section[Imagen digital]{Imagen digital}
+
+Una imagen se puede definir como una función de dos dimensiones \( f(x, y) \), donde \( x \) e \( y \) son las coordenadas en un plano que abarca todos los puntos de la imagen. La función \( f(x, y) \) representa la amplitud en el punto \( (x, y) \), la cual se denomina intensidad o nivel de gris de la imagen en ese punto.
+
+Cuando las coordenadas \(x\) e \(y\), así como los valores de intensidad de la función \(f\), son discretos y finitos, se denomina \textit{imagen digital}. Una imagen digital se forma por un conjunto finito de elementos, donde cada uno posee una posición específica y un valor definido.
+
+A estos elementos se les llama puntos elementales de la imagen o píxeles, siendo este último el término comúnmente utilizado para denotar la unidad mínima de medida de una imagen digital. En la Figura ~\ref{fig:mujer} se muestra una representación de una imagen con 256 niveles de intensidad.
+
+En ella, cada uno de los píxeles está representado por un número entero que es interpretado como el nivel de intensidad luminosa en la escala de grises. Ampliando la imagen en una zona cualquiera, se pueden apreciar estos valores, que se muestran en forma de matriz en la misma figura, correspondiéndose cada elemento de la matriz $Nij$ con las coordenadas en el plano $x=i$, $y=j$.
+
+Uno de los parámetros de mayor importancia en una imagen digital es su \textit{resolución}. La resolución se refiere a la cantidad de píxeles que contiene una imagen. Además, se utiliza para clasificar casi todos los dispositivos relacionados con las imágenes digitales, como pantallas de ordenador o televisión, impresoras, escáneres, cámaras digitales, etc.
+
+La resolución total indica el número de píxeles que forman una imagen de mapa de bits, y la calidad de una imagen depende directamente de su resolución.
+
+Es habitual expresar la resolución de una imagen mediante dos valores numéricos: el primero indica la cantidad de columnas de píxeles (es decir, el ancho de la imagen en píxeles) y el segundo especifica la cantidad de filas de píxeles (es decir, la altura de la imagen en píxeles) \cite{capitulo3_bibing}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{imagenes/mujer_blanco_y_negro.JPG}
+    \caption{Imagen digital.}
+    \label{fig:mujer}
+\end{figure}
+
+\subsection[Imágenes en color]{Imágenes en color}
+
+El fundamento para describir una imagen digital en color ~\ref{fig:color} es el mismo que el expuesto anteriormente, con la salvedad de que cada elemento o píxel es descrito y codificado de otra forma, según el espacio de color que se esté utilizando.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.45\textwidth]{imagenes/1.jpg}
+    \caption{Imagen a color.}
+    \label{fig:color}
+\end{figure}
+
+Así por ejemplo, para un espacio de color RGB ~\ref{fig:rgb} (generalmente el más usado para representar imágenes), se representa cada píxel como un color creado a partir de ciertas cantidades de los colores rojo, verde y azul.
+
+Esta representación se puede interpretar como una matriz de tres niveles de intensidad, donde cada nivel corresponde a la intensidad de color de las componentes rojo, verde y azul, como se muestra en la figura.
+
+Trabajar con matrices para describir imágenes es habitual en el campo de la visión por computador. En una imagen RGB, cada píxel está compuesto por un valor de intensidad correspondiente a cada componente primaria.
+
+El color resultante del píxel vendrá por tanto definido por la "cantidad" de intensidad que tenga cada componente. Así, el color blanco estará compuesto de la máxima intensidad de color para los tres componentes. Por el contrario, el color negro será el resultado de reducir al mínimo la intensidad de los componentes \cite{capitulo3_bibing}.
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.55\textwidth]{imagenes/RGBCube_b.png}
+    \caption{RGB \cite{rgb_wikipedia}}
+    \label{fig:rgb}
+\end{figure}
+
+\subsection[Segmentación de imágenes]{Segmentación de imágenes}
+
+La segmentación de imágenes es el proceso de dividir una imagen en regiones no superpuestas que son homogéneas con respecto a algunas características como intensidad, color o textura.
+
+La segmentación de imágenes es un paso fundamental para la visión de alto nivel y la comprensión de imágenes, necesaria en muchas aplicaciones, como el reconocimiento y seguimiento de objetos/patrones, la recuperación de imágenes, etc.
+
+En otras palabras, el objetivo de la segmentación es simplificar y/o cambiar la representación de una imagen en algo que sea más significativo y más fácil de analizar. La segmentación de imágenes se utiliza normalmente para localizar objetos y límites (líneas, curvas, etc.) en imágenes.
+
+Más precisamente, la segmentación de imágenes es el proceso de asignar una etiqueta a cada píxel de una imagen de modo que los píxeles con la misma etiqueta compartan ciertas características.
+
+Aunque en los últimos años ya se han publicado una gran cantidad de métodos de segmentación diferentes y continuamente aparecen otros algoritmos novedosos, el problema de la segmentación aún está lejos de resolverse satisfactoriamente para imágenes del mundo real.
+
+El rendimiento de cada método depende en gran medida del tipo de escenas visuales y de los parámetros de la imagen, como la resolución, la iluminación y la visualización.
+
+Generalmente, el problema de segmentación implica separar los píxeles de la imagen en varias particiones distintas correspondientes a regiones homogéneas.
+
+El objetivo de la segmentación es capturar con precisión estas regiones. Para formalizar el problema de segmentación introducimos el concepto de vecinos de un píxel y conectividad de una región.
+
+Vecinos de píxeles:
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.55\textwidth]{imagenes/Vecino.JPG}
+    \caption{Vecino de un pixel}
+    \label{fig:vecino}
+\end{figure}
+
+Hay dos formas diferentes de definir los vecinos de un píxel p ubicado en (x,y) ~\ref{fig:vecino} .
+
+ 1. Los 4 vecinos del píxel $p$, denotados por $N4(p)$, son los cuatro píxeles ubicados en $(x-1, y)$, $(x+1, y)$, $(x, y-1)$ y $(x, y+1)$. que están ubicados, respectivamente, al norte, sur, oeste y este del píxel $p$.
+
+ 2. Los 8 vecinos del píxel $p$, denotados por $N8(p)$, incluyen los 4 vecinos y cuatro píxeles a lo largo de la dirección diagonal ubicada en $(x - 1, y - 1)$ (noroeste), $(x - 1, y + 1)$ (noreste), $(x + 1, y - 1)$ (suroeste) y $(x + 1, y + 1)$ (sureste).
+
+Conectividad de la región
+
+Una región está conectada si todos los pares de sus píxeles están conectados. Dos píxeles vecinos están conectados si sus valores están cerca uno del otro, es decir, ambos pertenecen al mismo subconjunto de niveles de gris que comparten la misma propiedad: $p \in V$ y $q \in V$
+donde V es un subconjunto de todos los niveles de gris de la imagen que comparten una propiedad particular. La conectividad se puede definir como una de las siguientes:
+
+1. 4 conectados. Dos píxeles $p$ y $q$ están 4 conectados si son 4 vecinos y $p \in V$ y $q \in V$.
+
+2. 8 conectados. Dos píxeles $p$ y $q$ están 8 conectados si son 8 vecinos y $p \in V$ y $q \in V$.
+
+Sea $R$ la región espacial ocupada por la imagen. El proceso de segmentación puede verse como el problema de dividir $R$ en varias subregiones $R1$, $R2$,…, $Rn$ tal que \cite{fuzzyLogic}:
+
+\begin{enumerate}
+    \item $\bigcup_{i=1}^n R_i = R$ \text{ where } $R_i$ \text{ is a connected set, } $i = 1 \ldots n$;
+    \item $R_i \cap R_j = \emptyset$ \text{ for } $i \neq j$;
+    \item $Q(R_i) = \text{TRUE for } i = 1 \ldots n$;
+    \item $Q(R_i \cup R_j) = \text{FALSE for each pair of adjacent regions} (R_i, R_j)$, \text{ where } $Q(R_i)$ \text{ is a predicate defined on region } $R_i$.
+\end{enumerate}
+
+\section[Inteligencia Artificial]{Inteligencia Artificial}
+
+La Inteligencia Artificial (IA) es un área de la informática que se centra en crear sistemas y programas capaces de realizar tareas que típicamente requieren habilidades humanas. Estos sistemas buscan replicar ciertas capacidades cognitivas, como el aprendizaje, el razonamiento, la percepción y la toma de decisiones.
+
+La IA implica que una máquina o sistema sea capaz de emular la inteligencia humana al ejecutar tareas complejas. Esto se logra mediante el desarrollo de algoritmos y modelos que permiten a las máquinas aprender, razonar, tomar decisiones y resolver problemas de una manera que simule el comportamiento humano. \cite{TFG2}
+
+\subsection[OpenCV]{OpenCV}
+
+OpenCV (Biblioteca de visión por computadora de código abierto) es una biblioteca de software de aprendizaje automático y visión por computadora de código abierto. OpenCV se creó para proporcionar una infraestructura común para aplicaciones de visión por computadora y acelerar el uso de la percepción automática en los productos comerciales.
+
+Al ser un producto con licencia Apache 2, OpenCV facilita a las empresas utilizar y modificar el código. La biblioteca tiene más de 2500 algoritmos optimizados, que incluyen un conjunto completo de algoritmos de aprendizaje automático y visión por computadora, tanto clásicos como de última generación.
+
+Estos algoritmos se pueden utilizar para detectar y reconocer rostros, identificar objetos, clasificar acciones humanas en videos, rastrear movimientos de cámara, rastrear objetos en movimiento, extraer modelos 3D de objetos, producir nubes de puntos 3D a partir de cámaras estéreo, unir imágenes para producir una alta resolución, imagen de una escena completa, buscar imágenes similares en una base de datos de imágenes, eliminar ojos rojos de imágenes tomadas con flash, seguir los movimientos oculares, reconocer paisajes y establecer marcadores para superponerlos con realidad aumentada, etc.
+
+OpenCV cuenta con más de 47 mil personas de usuarios comunidad y número estimado de descargas superiores a 18 millones. La biblioteca se utiliza ampliamente en empresas, grupos de investigación y organismos gubernamentales.
+
+El documento describe la llamada API OpenCV 2.x, que es esencialmente una API \texttt{C++}, a diferencia de la API OpenCV 1.x basada en \texttt{C} (la API \texttt{C} está en desuso y no se ha probado con el compilador \texttt{C} desde el lanzamiento de OpenCV 2.4).
+
+OpenCV tiene una estructura modular, lo que significa que el paquete incluye varias bibliotecas compartidas o estáticas. Están disponibles los siguientes módulos:
+
+\begin{itemize}
+    \item Funcionalidad principal (núcleo): un módulo compacto que define estructuras de datos básicas, incluida la densa matriz multidimensional Mat y las funciones básicas utilizadas por todos los demás módulos.
+    \item Procesamiento de imágenes (imgproc): un módulo de procesamiento de imágenes que incluye filtrado de imágenes lineal y no lineal, transformaciones geométricas de imágenes (cambio de tamaño, deformación afín y de perspectiva, reasignación genérica basada en tablas), conversión de espacio de color, histogramas, etc.
+    \item Lectura y escritura de archivos de imágenes (imgcodecs): incluye funciones para leer y escribir archivos de imágenes en varios formatos.
+    \item Video I/O (videoio): una interfaz fácil de usar para captura de video y códecs de video.
+    \item GUI de alto nivel (highgui): una interfaz fácil de usar para capacidades de interfaz de usuario simples.
+    \item Análisis de video (video): un módulo de análisis de video que incluye estimación de movimiento, resta de fondo y algoritmos de seguimiento de objetos.
+    \item Calibración de cámara y reconstrucción 3D (calib3d): algoritmos básicos de geometría de vistas múltiples, calibración de cámara única y estéreo, estimación de la pose de objetos, algoritmos de correspondencia estéreo y elementos de reconstrucción 3D.
+    \item Marco de características 2D (features2d): detectores de características destacadas, descriptores y comparadores de descriptores.
+\end{itemize}
+
+\subsubsection[Segmentación de imágenes en inteligencia artificial]{Segmentación de imágenes en inteligencia artificial}
+
+La segmentación de imágenes es una técnica en visión artificial destinada a dividir una imagen digital en distintas partes o regiones, facilitando el análisis de su contenido y contexto. Dependiendo de la aplicación, se puede realizar con diferentes niveles de detalle. Entre los métodos comunes de segmentación se encuentran la clasificación de regiones, la detección de bordes, la segmentación semántica y la segmentación semántica por instancia.\cite{TFG2}
+
+\section[Planificación de ruta]{Planificación de ruta}
+
+\subsection[Planificación de rutas y trayectorias]{Planificación de rutas y trayectorias}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.45\textwidth]{imagenes/iStock-479027199.jpg}
+    \caption{Planificacion de ruta \cite{planificacion_rutas_eae}}
+    \label{fig:ruta}
+\end{figure}
+
+La planificación de trayectorias para vehículos autónomos de superficie (ASV) se refiere a la generación de rutas óptimas que guíen el movimiento de una embarcación desde una posición inicial hasta una posición final, considerando diversas restricciones y criterios de optimización .
+
+La planificación de rutas, en primer lugar, se enfoca en crear una ruta geométrica compuesta por puntos específicos que guían la navegación hacia el destino ~\ref{fig:ruta} . Esta etapa se centra en hallar una trayectoria libre de colisiones y físicamente viable, respetando las limitaciones espaciales del entorno.
+
+La generación de trayectorias, por otro lado, va más allá de la simple planificación de rutas y tiene en cuenta factores adicionales, como los límites en el ángulo de giro y las restricciones de velocidad y aceleración de la embarcación. Su objetivo es crear una trayectoria que el barco pueda seguir de manera realista, integrando restricciones temporales (ley de tiempo) a la ruta geométrica.
+
+El seguimiento de camino consiste en adherirse a una ruta predefinida en el espacio, sin considerar limitaciones de tiempo. Su objetivo principal es permanecer en el trayecto geométrico y seguirlo a cualquier velocidad hasta llegar al destino.
+
+Por otro lado, el seguimiento de trayectoria incluye un perfil temporal, lo que significa que el barco debe alcanzar puntos específicos de la trayectoria en momentos determinados mientras la sigue.
+
+El suavizado de ruta es un proceso de optimización que ajusta una secuencia inicial de puntos de ruta, considerando las limitaciones de curvatura o el radio de giro de la embarcación. Esto produce una ruta más suave, permitiendo una navegación más fluida \cite{PathPlanning}.
+
+\subsection[Evasión de obstáculo en la navegación marítima]{Evasión de obstáculo en la navegación marítima}
+
+La evasión de obstáculos en la navegación marítima abarca los procesos y técnicas destinados a evitar colisiones y asegurar una navegación segura para las embarcaciones. Este concepto implica el uso de algoritmos y sistemas que ayudan a esquivar obstáculos, como otras embarcaciones, objetos flotantes, costas y diversas estructuras \cite{ShipCollision}.
+
+Para implementar la evasión de obstáculos, se emplean tres módulos principales. El primero, el módulo de predicción de movimiento, anticipa las trayectorias tanto de la embarcación como de los obstáculos cercanos, tomando en cuenta factores como velocidad y dirección. El segundo módulo, de detección de conflictos, evalúa el riesgo de colisión a partir de las trayectorias previstas y emite alarmas o advertencias si es necesario \cite{op. cit.}.
+
+Además, este sistema puede incorporar sensores para la detección de obstáculos en tiempo real. Finalmente, el tercer módulo, conocido como resolución de conflictos, se encarga de encontrar rutas alternativas libres de colisiones mediante técnicas como el uso de reglas de navegación, maniobras evasivas y ajustes en la velocidad y dirección de la embarcación \cite{ShipCollision}.
+
+Estos tres módulos operan en conjunto para lograr la evasión de obstáculos en la navegación marítima, asegurando la seguridad de las embarcaciones y reduciendo al mínimo el riesgo de colisiones. Cada módulo cumple una función específica: desde la predicción de trayectorias hasta la detección y resolución de conflictos, todos trabajan con el objetivo de preservar la integridad de la embarcación \cite{maritimeObstacle}.
+
+\section[Lógica Difusa]{Lógica Difusa}
+
+La lógica difusa (también llamada lógica borrosa (en inglés: fuzzy logic)) es una lógica para-consistente multivaluada en la cual los valores de verdad de las variables pueden ser cualquier número real comprendido entre 0 y 1. Fue formulada por el matemático e ingeniero Lotfi A. Zadeh.
+
+Este tipo de lógica se ha empleado para estudiar la verdad parcial. La lógica difusa tiene como base los denominados conjuntos difusos y posee un sistema de inferencia basado en reglas de producción "SI antecedente ENTONCES consecuente", donde los valores lingüísticos del antecedente y el consecuente están definidos por conjuntos difusos \cite{logicadifusa}.
+
+En esencia, cualquier problema del mundo puede abordarse determinando un conjunto de variables de entrada (espacio de entrada) y obteniendo un valor apropiado para las variables de salida (espacio de salida). La lógica difusa facilita este mapeo de manera eficiente, priorizando criterios de significado por encima de la precisión exacta \cite{uclm_logica_difusa}.
+
+\subsection[Conjuntos difusos]{Conjuntos difusos}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Conjuntos.png}
+    \caption{Conjuntos clásicos y difusos \cite{logica_difusa_blogspot}}
+    \label{fig:conjuntos}
+\end{figure}
+
+La lógica difusa, como una lógica multivaluada, utiliza grados de pertenencia definidos mediante valores continuos entre 0 y 1, donde 0 representa hechos completamente falsos y 1 representa hechos completamente verdaderos. De esta forma, la lógica binaria tradicional puede considerarse un caso particular de la lógica difusa ~\ref{fig:conjuntos}.
+
+En 1965, Zadeh introdujo por primera vez el concepto de \textbf{Conjunto Difuso}, lo que marcó el inicio de una nueva teoría denominada Teoría de Conjuntos Difusos. En esta teoría, los conceptos se vinculan a conjuntos difusos a través de los valores de pertenencia en un proceso denominado \textit{fuzzificación}.
+
+Una vez obtenidos estos valores fuzzificados, se pueden aplicar reglas lingüísticas para generar una salida, que puede mantenerse difusa o ser defuzzificada para obtener un valor discreto o \textit{crisp}.
+
+A diferencia de la teoría clásica de conjuntos, que se basa en el principio binario de que un elemento pertenece o no a un conjunto, los conjuntos difusos permiten que un elemento pertenezca a un conjunto con un cierto \textbf{grado de pertenencia}.
+
+Así, las proposiciones no son completamente ciertas o falsas, sino que se definen por un grado que se expresa mediante un número real dentro del intervalo [0, 1] \cite{Logica_Difusa_Jerarquica}.
+
+\subsubsection[Definición de conjuntos difusos]{Definición de conjuntos difusos}
+
+Un conjunto difuso puede definirse de forma general como un conjunto con límites difusos. Sea \textit{X} el Universo del discurso, y sus elementos se denotan como \textit{x}. En la teoría clásica de conjuntos \textit{crisp} se define un conjunto \textit{C} se define sobre \textit{X} mediante la función característica de \textit{C} como \textit{fC}.
+
+\[
+f_C(x) =
+\begin{cases}
+1 & \text{si } x \in C, \\
+0 & \text{si } x \notin C.
+\end{cases}
+\]
+
+Este conjunto mapea el universo \textit{X} en un conjunto de dos elementos, donde la función $fC(x)$ es 1 si el elemento \textit{x} pertenece al conjunto \textit{C} y 0 si el elemento \textit{x} no pertenece al conjunto \textit{C}.
+
+Si generalizamos esta función para que los valores asignados a los elementos del conjunto caigan en un rango particular y así indicar el grado de pertenencia de los elementos a ese conjunto, tendremos una función de pertenencia de un determinado conjunto difuso.
+
+La función de pertenencia $\mu_A$ por la que se define un conjunto difuso \textit{A}, sería:
+\[
+\mu_A(x) : X \to [0, 1],
+\]
+donde $\mu_A(x) = 1$ si \textit{x} está totalmente en \textit{A}, $\mu_A(x) = 0$ si \textit{x} no está en A y $0 < \mu_A(x) < 1$ si \textit{x} está parcialmente en \textit{A}. Este valor entre 0 y 1 representa el grado de pertenencia (también llamado valor de pertenencia de un elemento \textit{x} a un conjunto \textit{A}).
+
+Así, el intervalo de la ecuación anterior es de números reales e incluye los extremos. Aunque [0, 1] es el rango de valores más utilizado
+para representar funciones de pertenencia, cualquier conjunto arbitrario con alguna ordenación total o parcial podría ser utilizado \cite{logica_difusa_blogspot}.
+
+\subsubsection[Operaciones de conjuntos difusos]{Operaciones de conjuntos difusos}
+
+Las tres operaciones básicas que se definen sobre conjuntos \textit{crisp}
+(complemento, unión e intersección), pueden generalizarse de varias formas en conjuntos difusos. No obstante, existe una generalización particular que tiene especial importancia. Cuando se restringe el rango de pertenencia al conjunto [0, 1], estas operaciones ”estándar” sobre conjuntos difusos se comportan de igual modo que las operaciones sobre conjuntos \textit{crisp}. Dichas operaciones se definen del siguiente modo:
+
+\begin{figure}[H]
+    \subfigure[Unión]{\label{fig:union}\includegraphics[width=55mm]{imagenes/Logica_difusa/union-de-conjuntos.png}}
+    \hfill
+    \subfigure[Intersección]
+    {\label{fig:interseccion}\includegraphics[width=55mm]{imagenes/Logica_difusa/interseccion-de-conjuntos.png}}
+    \centering
+    \subfigure[Complemento]{\label{fig:complemento}\includegraphics[width=55mm]{imagenes/Logica_difusa/complemento-de-un-conjunto-768x384.png}}
+    \caption{Complemento de conjuntos difusos.}
+    \label{fig:operaciones_conjuntos_difusos}
+\end{figure}
+
+\[
+\mu_A(x) = 1 - \mu_A(x)
+\]
+\[
+\mu_{A \cap B}(x) = \bot [\mu_A(x), \mu_B(x)]
+\]
+\[
+\mu_{A \cup B}(x) = \top [\mu_A(x), \mu_B(x)]
+\]
+
+\begin{itemize}
+    \item \textbf{Unión:} La forma generalizada de la unión es la T-conorma ~\ref{fig:union}.
+
+    \[
+\bot : [0, 1] \times [0, 1] \to [0, 1], \quad \mu_{A \cup B}(x) = \bot \left[ \mu_A(x), \mu_B(x) \right]
+\]
+
+        Algunas T-conormas ampliamente utilizadas son:
+
+    -Máximo: $\perp(a, b) = \max(a, b)$
+
+    -Producto: $\perp(a, b) = (a + b) - (a \times b)$
+
+    -Suma limitada (o de Lukasiewick): $\perp(a, b) = \min(a + b, 1)$
+
+    \item \textbf{Intersección:}
+    La forma generalizada de la intersección se denomina T-norma. Es una función de la forma ~\ref{fig:interseccion}:
+
+    $T : [0, 1] \times [0, 1] \to [0, 1] \qquad \mu_{A \cap B}(x) = T[\mu_A(x), \mu_B(x)]$
+
+    Algunas T-normas ampliamente utilizadas son:
+
+    -Minimo: $T(a, b) = \min(a, b)$
+
+    -Producto algebraico: $T(a, b) = ab$
+
+    -Diferencia limitada (o de Lukasiewick): $T(a, b) = \max(0, a + b - 1)$
+
+    \item \textbf{Complemento:}
+    El complemento $\overline{A}$ de un conjunto difuso \textit{A}, se denota por \textit{cA}; está definido por una función del tipo $c : [0, 1] \to [0, 1]$ ~\ref{fig:complemento}.
+
+    Al igual que sucedía con los operadores de unión y de intersección,
+también para el complemento existen gran variedad de clases. Uno de los más utilizados, además del complemento clásico ($\mu_A(x) = c(a) = 1 - a$), es el $\lambda$-complemento de Sugeno, que viene definido por la siguiente expresión \cite{Logica_Difusa_Jerarquica}:
+
+\begin{equation}
+\mu_A\lambda(x) = \frac{1 - \mu_A(x)}{1 + \lambda \mu_A(x)} \quad \text{con} \quad \lambda \in (-1, \infty)
+\end{equation}
+
+Otro tipo de complemento borroso muy utilizado es el de Yager, que se define con la siguiente expresión:
+
+\begin{equation}
+\mu_Aw(x) = \frac{(1 - \mu_A(x))^w}{w} \quad \text{con} \quad w \in (0, \infty)
+\end{equation}
+\end{itemize}
+
+\subsubsection[Operaciones de conjuntos difusos]{Operaciones de conjuntos difusos}
+
+Los conjuntos crisp y difusos comparten propiedades similares, aunque los conjuntos crisp pueden considerarse un subconjunto de los conjuntos difusos \cite{Logica_Difusa_Jerarquica}.
+
+\begin{itemize}
+  \item \textbf{Conmutativa:} \( A \cap B = B \cap A \)
+  \item \textbf{Asociativa:} \( A \cup (B \cup C) = (A \cup B) \cup C \)
+  \item \textbf{Distributiva:} \( A \cup (B \cap C) = (A \cup B) \cap (A \cup C) \)
+  \item \textbf{Idempotencia:} \( A \cup A = A \) y \( A \cap A = A \)
+  \item \textbf{Involución:} \( \neg(\neg A) = A \)
+  \item \textbf{Transitiva:} Si \( A \subset B \) y \( B \subset C \), entonces \( A \subset C \)
+  \item \textbf{Leyes de Morgan:} \( \neg(A \cap B) = \neg A \cup \neg B \) y \( \neg(A \cup B) = \neg A \cap \neg B \)
+\end{itemize}
+
+\subsubsection[Titulo de sección para índice]{Funciones de membresía}
+
+Para un universo discreto de discurso (finito), FS, se representa de la siguiente manera:
+
+\begin{equation}
+A = \left\{ \frac{\mu_A(x_1)}{x_1} + \frac{\mu_A(x_2)}{x_2} + \cdots \right\} = \sum_i \frac{\mu_A(x_i)}{x_i}
+\label{1}
+\end{equation}
+
+\text{Aquí } \mu_A(x_1) \text{ es un valor entre 1 y 0. Para el universo continuo del discurso } x, \text{ un FS se denota por: }
+\begin{equation}
+A = \left\{ \int \frac{\mu_a(x)}{x} \right\}
+\label{2}
+\end{equation}
+
+En las ecuaciones \eqref{1} y \eqref{2}, la horizontal se utiliza como delimitador y no especifica cociente. La expresión del numerador representa el valor de membresía del conjunto asociado al elemento en el universo que es representado en el denominador.
+
+En la ecuación \eqref{1}, el símbolo de suma denota la colección de cada elemento y no significa suma algebraica. De manera similar, en la ecuación \eqref{2}, el signo integral representa un operador de agregación teórico de función continua para variables continuas y no significa operador integral algebraico.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Logica_difusa/Fm.JPG}
+    \caption{Propiedades de MF. \cite{logica_difusa_blogspot}}
+    \label{fig:mf}
+\end{figure}
+
+\begin{figure}[H]
+    \subfigure[MF creciente.]
+    {\label{fig:creciente}\includegraphics[width=55mm]{imagenes/Logica_difusa/creciente.JPG}}
+    \hfill
+    \subfigure[MF creciente.]
+    {\label{fig:decreciente}\includegraphics[width=55mm]{imagenes/Logica_difusa/decreciente.JPG}}
+    \caption{Parametros de MF.}
+    \label{fig:parametros_mf}
+\end{figure}
+
+Según las definiciones estándar, los parámetros para MF se definen como:
+
+\begin{enumerate}
+    \item Soporte: se define como la región del universo que tiene una membresía distinta de cero en un área difusa determinada \((A) = \{x \in X \mid \mu_A(x) > 0\} \) que se puede apreciar en la figura ~\ref{fig:fm}.
+    \item Núcleo: se define como la región del universo que tiene un valor de membresía de 1 en una zona difusa determinada  \((A) = \{x \in X \mid \mu_A(x) = 1\} \) que se puede visualizar en la figura ~\ref{fig:fm}.
+    \item Frontera: se define como la región del universo que tiene un valor de membresía entre 0 y 1 en un determinado conjunto difuso \((A) = \{x \in X \mid 0 < \mu_A(x) < 1\} \) pudiéndose demostrar en la figura ~\ref{fig:fm}.
+    \item FS normal: es una función de membresía que tiene un valor de membresía de 1 para al menos un elemento en el universo ~\ref{fig:fm}.
+    \item FS convexo: es una función de membresía que tiene valores de membresía: (a) monótonamente creciente ~\ref{fig:creciente}, o monótonamente decrecientes ~\ref{fig:decreciente}, o (b) cuyos valores de membresía aumentan monótonamente y luego disminuyen con valores crecientes para los elementos del universo.
+\end{enumerate}
+
+A continuación se enumeran algunas funciones matemáticas comunes que gobiernan la forma de un MF \cite{jain_sharma_membership_functions}:
+\begin{itemize}
+    \item MF triangular: uno de los MF más simples y utilizados para diseñar FLS. Los atributos fundamentales de las MF triangulares que la diferencian de otras MF son:
+- Aquí el límite varía linealmente del grado de membresía más alto al más bajo.
+- Solo hay 1 elemento discreto que tiene el grado de membresía más alto.
+Un MF triangular se caracteriza por la siguiente ecuación:
+\[
+\mu_A(x) =
+\begin{cases}
+0 & \text{si } x \leq a \text{ o } x \geq c, \\
+\frac{x - a}{b - a} & \text{si } a < x \leq b, \\
+\frac{c - x}{c - b} & \text{si } b < x < c.
+\end{cases}
+\]
+aquí el rango “a a c” representa el soporte del conjunto difuso y “b” es un punto único en el rango que tiene el valor más alto de la función de membresía ~\ref{fig:triangular}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Logica_difusa/triangular.JPG}
+    \caption{Funcion de membresia triangular.}
+    \label{fig:triangular}
+\end{figure}
+
+\item Trapezoidal MF: al igual que el triangular, el trapezoidal también tiene un límite lineal para FS; sin embargo, un MF trapezoidal
+se caracteriza por una gama de elementos que tienen el grado máximo de membresía. El MF trapezoidal está representado por ~\ref{fig:trapezoidal}:
+\[
+\mu_A(x) =
+\begin{cases}
+0, & x < a  \text{ o }  x \geq d \\
+\frac{x - a}{b - a}, & a \leq x \leq b \\
+1, & b < x < c \\
+\frac{d - x}{d - c}, & c \leq x \leq d \\
+\end{cases}
+\]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Logica_difusa/trapezoidal.JPG}
+    \caption{Funcion de membresia trapezoidal.}
+    \label{fig:trapezoidal}
+\end{figure}
+
+\item MF gaussiano: Los MF gaussianos se caracterizan por límites no lineales para la variación de MF y se definen como sigue:
+\[
+\mu_A(x) = e^{-\frac{(x-c)^2}{\sqrt{2\sigma}}}
+\]
+aquí, $\sigma$ denota la desviación estándar y se considera una constante de ajuste de curva que rige la forma del MF.
+
+Función de densidad de probabilidad: esta FS se obtiene a partir de la distribución de probabilidad de una variable. La función MF viene dada por:
+\setlength{\abovedisplayskip}{3pt} % Espacio antes de la ecuación
+\setlength{\belowdisplayskip}{3pt} % Espacio después de la ecuación
+\[
+\mu(x) = 1 - \frac{1}{x}, \quad x \in [0, a]
+\]
+Para una función no lineal, la forma linealizada se representa como ~\ref{fig:gaus}:
+\vspace{-2mm}
+\[
+\mu(x) = \alpha \left(1 - e^{\frac{b-x}{b-a}}\right), \quad x \in [a, b]
+\]
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Logica_difusa/s.JPG}
+    \caption{Función de membresía sigmoide.}
+    \label{fig:s}
+\end{figure}
+
+\item Función S: estos FS se caracterizan por límites no lineales para la variación de MF. Estos son comúnmente utilizados para una aproximación analítica, y se representan como:
+\[
+S(x) = \begin{cases}
+0 & \text{si } x \leq a \\
+\displaystyle \frac{1}{1 + e^{-a (x - c)}} & \text{si } a < x < c \\
+1 & \text{si } x \geq c
+\end{cases}
+\]
+aquí a, b, c son parámetros utilizados para dar forma a la curva y b es el punto medio ~\ref{fig:s}.
+
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Logica_difusa/gaussiana.JPG}
+    \caption{Funcion de membresia gaussiana.}
+    \label{fig:gaus}
+\end{figure}
+
+\subsection[Variables lingüísticas]{Variables lingüísticas}
+
+Una variable lingüística es aquella cuyo valor se expresa mediante palabras o frases en un lenguaje natural o artificial. De este modo, una variable lingüística permite representar conceptos que son demasiado complejos o que no tienen una definición precisa, es decir, aquello que no se puede describir mediante números. Por lo tanto, una variable lingüística se define mediante una quíntupla (X, T(X), U, G, M) ~\ref{fig:modi}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Logica_difusa/Modificadores.JPG}
+    \caption{Modificadores lingüísticos.}
+    \label{fig:modi}
+\end{figure}
+
+\begin{itemize}
+    \item X es el nombre de la variable lingüística.
+    \item T(X) es el conjunto de términos de X, es decir, la colección de los valores lingüísticos o etiquetas lingüísticas asociados a la variable.
+    \item U es el universo del discurso, o dominio subyacente, que puede ser un dominio numérico.
+    \item G es una gramática libre de contexto que genera los términos dentro de T(X). Ejemplos de términos generados pueden ser expresiones como "muy alto", "no muy bajo", etc.
+    \item M es una regla semántica que asocia a cada valor lingüístico de X su significado. M(X) representa un subconjunto difuso dentro del universo U, lo que permite interpretar los valores lingüísticos en el contexto del dominio subyacente.
+\end{itemize}
+
+Los símbolos terminales de las gramáticas incluyen:
+\begin{itemize}
+    \item Términos primarios: ”bajo”, ”alto”, ...
+    \item Modificadores: ”Muy”, ”más”, ”menos”, ”cerca de”, ...
+    \item Conectores lógicos: Normalmente NOT, AND y OR.
+\end{itemize}
+
+Los conjuntos difusos de los términos primarios se definen normalmente de forma directa, y a partir de estos, se generan los conjuntos difusos de los términos compuestos. Por ejemplo, si tenemos los términos "muy" y "alto", podemos construir un término compuesto como "muy alto".
+
+Una etiqueta lingüística se forma mediante una sucesión de los símbolos terminales de la gramática. En este caso, expresiones como "muy alto" o "no muy bajo" se construyen combinando diferentes términos según las reglas de la gramática \cite{uclm_logica_difusa}.
+
+\subsection[Reglas difusas]{Reglas difusas}
+
+El razonamiento aproximado se emplea para representar y razonar sobre conocimientos que están expresados mediante primitivas atómicas, las cuales son formuladas en lenguaje natural.
+
+El concepto de proposición difusa, junto con los conectores lingüísticos como “y”, “o” y “no”, permite construir proposiciones difusas más complejas como “A es X y B es Y” o “A es no X”.
+
+El significado de estas proposiciones compuestas se determina mediante la interpretación de los conectores lingüísticos, que se realiza utilizando operaciones de intersección, unión y complemento.
+
+Estas operaciones, que se aplican a los conjuntos difusos, son gestionadas mediante T-normas (para la intersección), T-conormas (para la unión) y el operador de complemento seleccionado.
+
+Es importante señalar que el grado de satisfacción de una expresión en lógica difusa forma un conjunto difuso. Por lo tanto, los conectores lingüísticos deben ser interpretados mediante operadores correspondientes a conjuntos difusos. En el contexto de las reglas difusas, las reglas de producción if-then se expresan de la siguiente forma simbólica:
+
+\begin{equation}
+\text{IF } \langle \text{proposición difusa} \rangle \text{ THEN } \langle \text{proposición difusa} \rangle
+\end{equation}
+
+Donde \( \langle \text{proposición difusa} \rangle \) puede ser una proposición difusa atómica o compuesta. Podemos definir una proposición sencilla de este tipo mediante:
+
+\begin{equation}
+\text{IF } X \text{ es } A \text{ THEN } Y \text{ es } B
+\end{equation}
+
+B son términos lingüísticos asociados con esas variables. La proposición difusa se puede dividir en un antecedente ("IF") y un consecuente ("THEN"), que pueden ser tan simples o complejos como se necesite.
+
+En sistemas de reglas clásicos, si el antecedente es verdadero, el consecuente también lo es. Sin embargo, en los sistemas de lógica difusa, donde el antecedente es difuso, las reglas no son estrictas. En lugar de ser verdaderas o falsas de forma binaria, las reglas en lógica difusa se ejecutan parcialmente.
+
+Esto significa que si el antecedente tiene un cierto grado de pertenencia, el consecuente también se vuelve cierto en ese mismo grado. Este enfoque refleja la naturaleza gradual y flexible de la lógica difusa, donde los grados de verdad se aplican de forma continua.
+
+Por ejemplo, si el antecedente es cierto en un 70\%, el consecuente también será cierto en un 70\%. El valor de la salida (grado de pertenencia) puede ser estimado directamente empleando un método de inferencia de selección monotónica \cite{uclm_logica_difusa}.
+
+\subsection[Inferencia difusa]{Inferencia difusa}
+
+La inferencia difusa es el proceso mediante el cual se obtiene un valor de salida a partir de un valor de entrada utilizando la teoría de conjuntos difusos. La inferencia difusa utiliza reglas de producción difusa, las cuales combinan proposiciones atómicas y compuestas, y determinan el grado de pertenencia de las variables de salida, dadas las condiciones de las variables de entrada ~\ref{fig:infe}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{imagenes/Logica_difusa/inferencia.JPG}
+    \caption{Sistema de inferencia difusa}
+    \label{fig:infe}
+\end{figure}
+
+Existen diferentes enfoques para llevar a cabo este proceso, siendo los más comunes los modelos de Mamdani y TSK (Takagi, Sugeno y Kang). Ambos modelos son utilizados en sistemas de control difuso, pero difieren en la forma en que manejan las reglas y el cálculo de los resultados.
+
+\subsubsection[Mamdami]{Mamdami}
+
+Es posiblemente el método más ampliamente utilizado, propuesto
+por Ebrahim Mamdani en 1975. El proceso se realiza en cuatro pasos:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Logica_difusa/Mamdami.JPG}
+    \caption{Inferencia de Mamdami.}
+    \label{fig:mamdami}
+\end{figure}
+
+\begin{enumerate}
+    \item Fuzificación de las variables de entrada.
+    \item Evaluación de las reglas.
+    \item Agregación de las salidas de las reglas.
+    \item Defuzificación.
+\end{enumerate}
+
+Veremos a continuación un ejemplo de uso empleando tres reglas. Estas reglas usan como variables lingüísticas x, y y z.
+Los conjuntos definidos sobre el dominio de X son A1, A2, A3 (inadecuado, marginal, adecuado), sobre el dominio de Y B1, B2 (pequeña, grande) y sobre el universo del discurso de Z son C1, C2 y C3 (bajo, normal y alto). Reglas:
+
+\text{R1: IF } x \text{ is } A_3 \text{ OR } y \text{ is } B_1 \text{ THEN } z \text{ is } C_1
+
+\text{R2: IF } x \text{ is } A_2 \text{ AND } y \text{ is } B_2 \text{ THEN } z \text{ is } C_2
+
+\text{R3: IF } x \text{ is } A_1 \text{ THEN } z \text{ is } C_3
+
+Veamos a continuación las etapas de inferencia ~\ref{fig:mamdami}:
+
+\begin{enumerate}
+    \item \textbf{Fuzificación:} El proceso de fuzzificación es el primer paso en un sistema de inferencia difusa y consiste en convertir los valores crisp (valores exactos) de las variables de entrada en grados de pertenencia a los conjuntos difusos correspondientes.
+
+    En este caso, tenemos dos variables de entrada: \( X \) e \( Y \). Cada una de estas variables tiene conjuntos difusos asociados, y la fuzzificación determina el grado en el que los valores crisp pertenecen a esos conjuntos. En nuestro caso, vamos a suponer que un experto asigna a \( X \) un valor del 35\% y a \( Y \) un valor del 60\%.
+
+    Como se puede ver estos valores Crisp se corresponden con los valores de pertenecia de A1 y A2 (en el caso de x) con 0.5 y 0.2, y con los valores de B1 y B2 (en el caso de y) con 0.1 y 0.7 respectivamente. De este modo cada entrada se fuzzifica sobre todas las funciones de pertenencia utilizadas en la reglas difusas.
+    \item \textbf{Evaluación de las Reglas:} Tomamos las entradas anteriores y se aplican a los antecedentes de las reglas difusas. Si una regla tiene múltiples antecedentes, se utiliza el operador AND u OR para obtener un único número que represente el resultado de la evaluación. Este número (el valor de verdad) se aplica al consecuente.
+
+    Para evaluar la disyunción (operador OR) habitualmente se emplea la T-Conorma estándar (máximo), definida como hemos visto como: $\mu_{A \cup B}(x) = \max \big[ \mu_A(x), \mu_B(x) \big]$. De igual forma, para el AND se usa habitualmente la T-Norma estándar del mínimo.
+
+    Finalmente el resultado de la evaluación del antecedente se aplica al consecuente, aplicando un \textbf{recorte} o \textbf{escalado} según el valor de verdad del antecedente.
+
+    El método más comúnmente utilizado es el \textbf{recorte} (clipping) que corta el consecuente con el valor de verdad del antecedente. El \textbf{escalado} proporciona un valor más preciso, preservando la forma original del conjunto difuso. Se obtiene multiplicando todos los valores por el valor de verdad del antecedente.
+    \item \textbf{Agregación de las salidas:} La agregación es el proceso de unificación de las salidas de todas las reglas; es decir, se combinan las funciones de pertenencia de todos los consecuentes previamente recortados o escalados, obteniendo un único conjunto difuso para cada variable de salida.
+    \item \textbf{Defuzificación:} La defuzificación es el proceso que convierte el conjunto difuso obtenido en un valor crisp, necesario para representar el resultado final de manera clara y utilizable.
+
+    De los diversos métodos de defuzificación disponibles, uno de los más comunes es el del \textbf{centroide}, el cual determina el punto donde una línea vertical divide el conjunto en dos áreas con igual masa. Este método proporciona un valor representativo y equilibrado del conjunto difuso.
+\[
+\text{Centroide} = \frac{\sum_{i} z_i \cdot \mu_A(z_i)}{\sum_{i} \mu_A(z_i)}
+\]
+\end{enumerate}
+
+
+\subsubsection[Titulo de sección para índice]{Inferencia TSK}
+
+Para optimizar el tiempo de inferencia, es posible utilizar una función matemática en el consecuente de las reglas. Así, el formato general de una regla en la inferencia TSK (Takagi-Sugeno-Kang) se expresa de la siguiente manera  ~\ref{fig:mtsk}:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Logica_difusa/TSK.JPG}
+    \caption{Inferencia de TSK.}
+    \label{fig:tsk}
+\end{figure}
+
+p: \text{IF } x \text{ es } A \text{ AND } y \text{ es } B \text{ THEN } z \text{ es } f(x, y)
+
+Este enfoque ofrece una mayor eficiencia, aunque no proporciona un marco tan intuitivo para representar el conocimiento humano. Un tipo común de representación para el consecuente es un singleton, el cual tiene un valor de uno en un punto específico del universo del discurso y cero en todos los demás puntos.
+
+Usando este tipo de aproximación, que es ampliamente empleado, la inferencia TSK y Mamdani son muy similares, con las reglas adoptando el siguiente formato:
+
+p: \text{IF } x \text{ es } A \text{ AND } y \text{ es } B \text{ THEN } z \text{ es } k
+
+Siendo $k$ un valor constante para el singleton, la salida crisp se obtiene a través de una simple agregación, que consiste en calcular la media ponderada de estos singletones.
+
+\begin{equation}
+W_A = \frac{\sum \left( \mu(k_i) \times k_i \right)}{\sum \mu(k_i)}
+\end{equation}
+
+\subsection[Aplicaciones de la lógica difusa]{Aplicaciones de la lógica difusa}
+
+La lógica difusa se utiliza cuando la complejidad del proceso en cuestión es muy alta y no existen modelos matemáticos precisos, para procesos altamente no lineales y cuando se envuelven definiciones y conocimiento no estrictamente definido (impreciso o subjetivo) ~\ref{fig:sistema}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Logica_difusa/grado.JPG}
+    \caption{Sistema de Lógica Difusa.}
+    \label{fig:sistema}
+\end{figure}
+
+En cambio, no es una buena idea usarla cuando algún modelo matemático ya soluciona eficientemente el problema, cuando los problemas son lineales o cuando no tienen solución.
+
+Esta técnica se ha empleado con bastante éxito en la industria, principalmente en Japón, extendiéndose sus aplicaciones a multitud de campos. La primera vez que se usó de forma importante fue en el metro japonés, con excelentes resultados.
+
+A continuación se citan algunos ejemplos de su aplicación:
+    \begin{itemize}
+        \item Sistemas de control de acondicionadores de aire.
+        \item Sistemas de foco automático en cámaras fotográficas.
+        \item Electrodomésticos familiares (frigoríficos, lavadoras...).
+        \item Control y optimización de procesos y sistemas industriales.
+        \item Sistemas de escritura.
+        \item Mejora en la eficiencia del uso de combustible en motores.
+        \item Mejora del medio ambiente.
+        \item Sistemas expertos del conocimiento (emular el comportamiento de un experto humano).
+        \item Robótica.
+        \item Vehículos y conducción autónoma.
+    \end{itemize}\cite{logicadifusa}
+
+\subsection[Lógica difusa en inteligencia artificial]{Lógica difusa en inteligencia artificial}
+En inteligencia artificial, la lógica difusa permite analizar información real en un rango continuo entre lo verdadero y lo falso, manejando conceptos imprecisos como "caliente," "húmedo" o "lento." Esto facilita a ingenieros y expertos el desarrollo de dispositivos que interpretan y evalúan la información de una forma específica, permitiendo que actúen en consecuencia tras analizarla.
+
+Estos sistemas intentan emular la manera en que los humanos toman decisiones, pero, además de hacerlo más rápidamente, lo hacen basándose en la proximidad de los valores de verdad a 0 o a 1, es decir, a "completamente falso" o "completamente verdadero".
+
+Con la lógica tradicional, las computadoras solo pueden trabajar con dos valores: 0 o 1, es decir, verdadero o falso. Sin embargo, en la lógica difusa se utilizan métodos matemáticos para describir estados subjetivos, asignando un valor específico a cada estado. Según ese valor, la computadora toma decisiones y actúa de manera diferente, dependiendo de cómo haya sido programada para interpretar y responder a esos valores.
+
+En inteligencia artificial, la lógica difusa, se emplea para resolver una amplia gama de problemas, especialmente aquellos relacionados con el control de procesos industriales complejos, sistemas de toma de decisiones y la compresión de datos. Además, estos sistemas son generalmente robustos y tolerantes a imprecisiones y ruidos en los datos de entrada \cite{logicadifusa}.
+
+\subsection[Lógica difusa en procesamiento de imágenes]{Lógica difusa en procesamiento de imágenes}
+
+La lógica difusa ofrece una herramienta de resolución de problemas que se encuentra entre la precisión de la lógica clásica y la imprecisión inherente del mundo real.
+
+En los últimos años, varios se han introducido enfoques basados en la lógica difusa para procesar datos de imagen que tienen características de vaguedad y ambigüedad debidas a la fase de adquisición, así como al conocimiento impreciso y mal definido sobre el contenido de la imagen.
+
+La imprecisión en una imagen contenida en los píxeles se puede manejar mediante conjuntos difusos que son los principales elementos de la lógica difusa. Conceptos vagos como 'buen contraste' o 'límites nítidos', 'rojo claro', 'alta saturación', etc., pueden ser percibidos cualitativamente por el ser humano razonamiento y se expresa de manera formal por medio de una lógica difusa, que permite a una máquina simular el razonamiento humano.
+
+Además, muchas dificultades en algunas tareas de procesamiento de imágenes dependen de el hecho de que los datos/resultados sean inciertos. Esta incertidumbre no sólo depende de la aleatoriedad de los datos, sino también de su ambigüedad y vaguedad.
+
+De hecho, aleatoriedad podría ser una cuestión de la teoría de la probabilidad, mientras que la ambigüedad y la vaguedad son una cuestión de la teoría de conjuntos difusos. La tarea de procesamiento de imágenes borrosas consta de tres pasos fundamentales:
+
+\begin{enumerate}
+
+\item Borrosidad de la imagen Φ
+
+\item Modificación de los valores de membresía Γ
+
+\item Desdifusificación de la imagen Ψ
+
+\end{enumerate}
+El resultado Y para una entrada X viene dado por
+\begin{equation}
+Y = \Psi(\Gamma(\Phi(X)))
+\end{equation}
+
+Los pasos de difusificación y defuzzificación están motivados por el hecho de que no tenemos ninguna imagen borrosa, es decir, ningún dispositivo de hardware capaz de producir imágenes borrosas.
+
+Por lo tanto, la codificación de los datos de la imagen y la decodificación de los resultados son pasos necesarios para utilizar técnicas difusas en el procesamiento de imágenes.
+
+El punto fuerte del procesamiento de imágenes borrosas reside en la modificación de los valores de membresía, dependiendo de la aplicación particular. Las funciones de membresía representan el concepto básico de la teoría de conjuntos difusos. Los valores de membresía representan el grado de propiedades específicas que satisfacen los objetos.
+
+Las funciones de membresía difusa representan similitudes entre objetos que pertenecen a un conjunto, según propiedades definidas de manera imprecisa. Los valores de membresía también indican qué tan difuso es un conjunto.
+
+El cálculo de los valores de membresía es fundamental en el procesamiento de imágenes borrosas. Tradicionalmente, los datos de imagen se procesan en el plano de nivel de grises, especificando los valores del brillo gris de cada píxel.
+
+En cambio, el objetivo del procesamiento de imágenes difusas es mapear el plano de nivel de grises en el plano de pertenencia mediante la fusificación de la imagen.
+De esta manera, es posible operar a un nivel aproximado más cercano al razonamiento humano y percepción. Las aportaciones teóricas más importantes en el campo del procesamiento de imágenes borrosas son:
+
+ • Sistemas de inferencia difusa, que involucran los tres pasos de fusificación de imágenes, inferencia y defusificación de imágenes.
+
+ • Medidas de borrosidad, útiles para evaluar qué tan borrosa es una imagen. Son útiles en muchas aplicaciones, como la creación de umbrales.
+
+ • Sistemas basados en reglas difusas, frecuentemente utilizados para mejorar el contraste de imágenes.
+
+ • Agrupación difusa, muy utilizada en la segmentación de imágenes.
+
+ • Morfología matemática difusa.
+
+ \cite{fuzzyLogic}
+
+\subsubsection[Fusificacion de imágenes]{Fusificacion de imágenes}
+
+Normalmente modelamos una imagen mediante un conjunto de singletons difusos sin modificación de los valores de los píxeles. Para ilustrar cómo introducir un conjunto difuso relacionado con una imagen, presentamos un ejemplo simple: queremos definir el conjunto oscuro de niveles de gris que comparten la propiedad esté oscura. De manera estándar (también llamada nítida), podemos definir un umbral $t$, por ejemplo $t = 100$ y luego podemos usar la siguiente definición:
+
+\begin{itemize}
+    \item Los niveles $0 \leq g \leq 100$ son elementos del conjunto oscuro.
+    \item Todos los demás niveles no pertenecen al conjunto oscuro.
+\end{itemize}
+
+
+Un enfoque alternativo consiste en modelar la propiedad de oscuridad introduciendo un conjunto difuso definido por una función de pertenencia adecuada. Para este objetivo, definimos dos parámetros, por ejemplo 50 y 100, como en la Fig ~\ref{fig:gray} y utilizamos la siguiente definición:
+
+\begin{itemize}
+    \item Los niveles $g \leq 50$ son elementos completos del conjunto oscuro.
+    \item Los niveles $g \geq 150$ no pertenecen al conjunto oscuro.
+    \item Los niveles $50 < g < 150$ tienen un grado parcial de pertenencia al conjunto.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.55\textwidth]{imagenes/Logica_difusa/gray.JPG}
+    \caption{Niveles difusos de gris.}
+    \label{fig:gray}
+\end{figure}
+
+Consideremos una imagen $G$ de $M × N$ píxeles y $L$ niveles de gris. Para interpretar $G$ de forma difusa, asumimos que $G$ está asociado a una matriz $F$ de singleton difuso teniendo valores de membresía $\mu(G(m, n))$
+. Es decir, $\mu_{mn} = \mu(G(m, n))$ denota el valor de membresía de cada píxel $(m,n)$ con respecto a una propiedad predefinida (p. ej. brillo, nerviosismo o textura), es decir, el grado en el que el píxel $(m,n)$ satisface una propiedad. Por tanto, la imagen G se puede definir como
+
+G = \bigcup_m \bigcup_n \mu_{mn}
+
+con $\mu_{mn} \in [0, 1]$. La propiedad asociada a $\mu$ depende del problema en cuestión y puede definirse mediante información global, local o puntual.
+En otros casos, como en la morfología de la imagen, los niveles de gris de una imagen están correctamente escalado a rango en un intervalo real $[0.0,1.0]$.
+
+En este caso, transformamos los valores de píxeles para obtener una imagen de valor real también llamada imagen borrosa. De esta manera, podemos considerar el nivel de gris de un píxel como un grado de pertenencia al conjunto de píxeles de alto valor que representan una propiedad específica; por tanto, una imagen en nivel de grises se puede modelar como un conjunto difuso.
+
+\subsubsection[Titulo de sección para índice]{Defusificacion de imágenes}
+
+La borrosidad es una característica intrínseca de las imágenes y un resultado natural de muchas tareas de procesamiento de imágenes. Sin embargo, en muchos casos se necesita una representación nítida. Normalmente se requiere una representación nítida para facilitar la visualización e interpretación.
+
+Aunque contiene menos información, una representación nítida suele ser más fácil de interpretar y comprender, especialmente si la dimensionalidad espacial de la imagen es superior a dos.
+
+Además, muchas herramientas disponibles para el análisis de imágenes binarias aún no están desarrolladas para imágenes borrosas, lo que puede obligar a dar un paso más en el procesamiento de imágenes borrosas para que genere una representación nítida de la imagen. El proceso de reemplazar una representación difusa por una representación nítida se conoce como defusificación.
+
+• Continuidad del resultado de la defusificación: esto significa que pequeños cambios en los valores de pertenencia del conjunto difuso de salida no deberían dar grandes cambios en el conjunto nítido resultante.
+
+• Eficiencia computacional: depende principalmente del tipo y número de operaciones necesarias para obtener el resultado de la defusificación.
+• Compatibilidad con otras operaciones utilizadas en un sistema difuso, como inferencia y la composición, puede ser importante.
+
+La mayor parte de la literatura que menciona la defusificación considera la defusificación de un conjunto difuso a uno solo (nitido) punto (ver Sección 3.3.3). Los principales enfoques[4, 6] para la defusificación hasta cierto punto son
+
+• Los métodos de máxima dan como resultado un elemento de un núcleo de conjunto difuso. La principal ventaja de seleccionar un elemento del núcleo de un conjunto difuso es la simplicidad. El representante básico de ese grupo es la técnica del Primero de Máxima (FOM).
+
+• Los métodos de distribución consideran la función de pertenencia del conjunto difuso de salida como una distribución, cuyo valor medio se evalúa. La salida de estos métodos tiene cambios continuos y suaves en correspondencia con los cambios en los valores de entrada. La técnica básica de este grupo es la técnica del Centro de Gravedad (COG).
+
+Convierte la función de pertenencia en una distribución de probabilidad y calcula el valor esperado. La principal ventaja es la propiedad de continuidad.
+
+•Los métodos de área utilizan el área bajo la función de membresía para determinar el valor de salida defuzzificado. El valor defuzzificado es el (centro del área) que divide el área bajo la función de membresía en dos (más o menos) partes iguales. El método del centro de área (COA) es la técnica principal de este grupo.
+
+La defusificación de un conjunto difuso a un conjunto nítido, cuando se aplica al procesamiento de imágenes, no ha sido bien explorado hasta el momento.
+
+El método de defusificación más utilizado en el procesamiento de imágenes consiste en establecer un umbral en la función de pertenencia seleccionando un corte $\alpha$ específico.
+
+Por supuesto, el resultado de la defusificación mediante umbralización es muy sensible a la elección específica del umbral $\alpha$. Además, la defusificación mediante umbralización no tiene en cuenta las propiedades espaciales del conjunto difuso ni preserva la geometría, forma y topología del objeto original.
+
+Dado que las propiedades espaciales son de gran importancia en las aplicaciones de procesamiento de imágenes, generalmente es necesario considerar información sobre las propiedades geométricas globales del objeto a defusificar, además de los valores de pertenencia del conjunto.
+
+Además, los conjuntos espaciales difusos pueden ser útiles como información que preserva las representaciones de objetos en imágenes, y la desdifusificación de un conjunto espacial difuso puede verse como un procedimiento de segmentación nítido.
+
+Se ha propuesto un método de desdifusificación de imágenes de conjuntos espaciales difusos basado en la minimización de la distancia de las características como una alternativa a la segmentación nítida.
+
+Este método de defusificación define una defusificación óptima como aquella que mejor conserva las características (seleccionadas) del objeto digital difuso original.
+
+La correspondencia entre un conjunto difuso y uno nítido se establece a través de una distancia entre sus representaciones en función de características seleccionadas, donde se tienen en cuenta las diferentes resoluciones de las imágenes.
+
+La medida de distancia se basa en la distancia de Minkowski entre representaciones de características de los conjuntos. La minimización de la distancia proporciona la preservación de las características cuantitativas seleccionadas del conjunto difuso.
+
+Este método utiliza la información contenida en la representación difusa para definir un mapeo de la colección de conjuntos difusos a la colección de conjuntos nítidos.
+
+Si el conjunto difuso es una representación de un conjunto original nítido desconocido, de modo que las características seleccionadas del conjunto original se conservan en la representación borrosa, entonces el conjunto desenfocado puede verse como una reconstrucción aproximada del conjunto original nítido \cite{fuzzyLogic}.
+
+\subsubsection[Titulo de sección para índice]{Segmentación de imágenes difusas}
+
+Hay numerosos métodos disponibles para la segmentación de imágenes. Se pueden seleccionar según las aplicaciones específicas y la modalidad de imagen. Los artefactos de imagen como el ruido, los efectos de volumen parcial y el movimiento también pueden tener una influencia significativa en el rendimiento de los algoritmos de segmentación. Los principales métodos de segmentación de imágenes se pueden agrupar de la siguiente manera:
+
+ • Métodos basados en discontinuidades: Algunos métodos de segmentación, como el establecimiento de umbrales, buscan los límites entre regiones en función de discontinuidades en la escala de grises, el color u otras propiedades. Los enfoques de umbralización segmentan una imagen creando una partición binaria de las intensidades de la imagen.
+
+ Un procedimiento de umbralización intenta determinar un valor de intensidad, llamado umbral, que separa las clases deseadas. Luego, la segmentación se logra agrupando todos los píxeles con una intensidad mayor que el umbral en una clase y todos los demás píxeles en otra clase.
+
+ • Métodos basados en regiones: La segmentación basada en regiones es una técnica para encontrar la región directamente. Un método básico entre ellos es el crecimiento regional que agrupa píxeles o subregiones en regiones más grandes según criterios de crecimiento predefinidos. El enfoque básico implica la selección de un conjunto de puntos "semilla" y a partir de estas regiones crecer de forma iterativa determinando si los píxeles vecinos deben agregarse a la región.
+
+Otra categoría de métodos para la segmentación de imágenes, y la que se considera en este libro, es la de los métodos de agrupamiento. La agrupación es el proceso de agrupar un conjunto de puntos (vectores de características) en subconjuntos (llamados grupos) de modo que los puntos en el mismo grupo sean similares en algún sentido.
+
+La aplicación del clustering a la segmentación de imágenes requiere tener en cuenta también la información espacial. Para este objetivo, una estrategia común es dividir la imagen en varios bloques y extraer una serie de características locales para cada bloque. Sucesivamente, el algoritmo de agrupamiento se aplica a estas características y se obtiene un número predefinido de grupos.
+
+Se han propuesto esquemas de agrupamiento nítidos y difusos para la segmentación de imágenes. Las técnicas difusas revelaron ser más robustas que los algoritmos nítidos, especialmente en el caso de imágenes caracterizadas por algún tipo de ambigüedad, como contraste deficiente, ruido y falta de homogeneidad en los valores de intensidad. Entre los algoritmos de agrupamiento difuso, el más utilizado es el conocido algoritmo Fuzzy C Means (FCM).
+
+Agrupación difusa
+
+Los métodos de agrupamiento difuso suponen que cada punto de datos pertenece a más de un grupo con diferentes grados de membresía y límites vagos o difusos entre los diferentes grupos.
+
+El principal algoritmo de agrupamiento difuso es la versión difusa de las K-medias llamada Fuzzy C-Means (FCM). FCM es un método de agrupación de particiones basado en la minimización de la siguiente función objetivo:
+
+\begin{equation} \label{eq:objetivo}
+J = \sum_{i=1}^N \sum_{k=1}^K (u_{ik})^m d(\mathbf{x}_i, \mathbf{c}_k)^2, \quad 1 < m < \infty,
+\end{equation}
+
+Donde $d(\mathbf{x}_i, \mathbf{c}_k)$ es la distancia entre el punto $\mathbf{x}_i$ y el centroide del grupo $\mathbf{c}_k$, $m$ es el parámetro de borrosidad, $K$ es el número de grupos, $N$ es el número de puntos de datos $\mathbf{x}_i$, y $u_{ik} \in [0, 1]$ es el grado de membresía de $\mathbf{x}_i$ perteneciente al grupo $k$, calculado de la siguiente manera:
+
+\begin{equation} \label{eq:grado_membresia}
+u_{ik} = \frac{1}{\sum_{l=1}^K \left( \frac{d(\mathbf{x}_i, \mathbf{c}_k)}{d(\mathbf{x}_i, \mathbf{c}_l)} \right)^{\frac{2}{m-1}}}.
+\end{equation}
+
+para $i = 1...N, k = 1...K$. Usando la matriz de membresía difusa $U =[uik]$ se calcula una nueva posición del k-ésimo centroide como
+
+\begin{equation} \label{eq:centroide}
+\mathbf{c}_k = \frac{\sum_{i=1}^N (u_{ik})^m \mathbf{x}_i}{\sum_{i=1}^N (u_{ik})^m}.
+\end{equation}
+
+con la restriccion $\sum_{i} u_{ik} = 1$.
+
+Dados los parámetros iniciales (número de grupos $K$ y parámetro de borrosidad $m$), FCM calcula iterativamente la matriz U de acuerdo con la ecuación \ref{eq:grado_membresia} y actualiza las posiciones de los centroides como en la ecuación \ref{eq:centroide}. El algoritmo termina después de un número fijo de iteraciones, o si la mejora expresada por $J$ es sustancialmente pequeña.
+
+El parámetro m determina el grado de borrosidad del proceso de agrupación. Si este parámetro tiene el valor 1, las c-medias difusas se aproximan al algoritmo de K-medias nítidas, siendo los valores de membresía iguales solo a 0 o 1.
+
+La elección más común para m es 2. De la ecuación \ref{eq:objetivo} se puede observar que FCM no incorpora ninguna dependencia espacial entre observaciones. Esto puede degradar el resultado general de la agrupación en el caso de la segmentación de imágenes, porque las regiones vecinas pueden estar altamente correlacionadas y, por lo tanto, deberían pertenecer al mismo grupo \cite{fuzzyLogic}.
+
+\section[Computador]{Computador}
+
+Una computadora, también conocida como computador u ordenador, es un dispositivo electrónico digital programable que sigue una serie de instrucciones para procesar datos de entrada y generar información, la cual luego se envía a los dispositivos de salida.
+
+Este equipo está formado por una gran cantidad de circuitos integrados y otros componentes auxiliares que, en conjunto, permiten realizar diversas tareas de manera rápida y eficiente bajo la dirección de un software. La computadora está compuesta por dos elementos fundamentales: el hardware, que se refiere a su estructura física (como los circuitos electrónicos, cables, gabinete, teclado, ratón, entre otros), y el software, que constituye su componente intangible (incluyendo programas, datos, información, documentación, etc.).
+
+Desde una perspectiva funcional, la computadora es una máquina que consta, al menos, de una unidad central de procesamiento (CPU), una unidad de memoria y una unidad de entrada/salida (periféricos). Los periféricos de entrada permiten la captura de datos, la CPU se encarga de procesarlos (mediante operaciones aritmético-lógicas), y los dispositivos de salida transmiten la información procesada a medios externos.
+
+Así, la computadora recibe datos, los procesa y genera la información resultante, que puede ser interpretada, almacenada, transmitida a otro dispositivo o incluso impresa, todo bajo el control de un programa y según las decisiones de un operador o usuario.
+
+El hecho de ser programable le permite ejecutar una amplia variedad de tareas utilizando datos de entrada, ya que puede realizar operaciones y resolver problemas en diferentes campos de la actividad humana, como administración, ciencia, diseño, ingeniería, medicina, comunicaciones, música, entre otros \cite{wikipedia_computadora}.
+
+\subsection[Componentes]{Componentes}
+
+La arquitectura de Von Neumann describe una computadora compuesta por cuatro secciones principales: la unidad aritmético-lógica, la unidad de control, la memoria primaria o central, y los dispositivos de entrada y salida (E/S). Estas secciones están conectadas mediante canales de conductores llamados buses ~\ref{fig:com} \cite{wikipedia_computadora}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Computador/esquema.jpeg}
+    \caption{Arquitectura de una cpu}
+    \label{fig:sistema}
+\end{figure}
+
+\subsubsection[CPU]{CPU}
+
+CPU es la abreviación de Unidad Central de Procesamiento, un componente básico de todo dispositivo que procesa datos y realiza cálculos matemáticos-informáticos.
+
+El CPU proporciona la capacidad de programación. Algunas de las funciones esenciales de la CPU incluyen recopilar información, descomponerla en partes más pequeñas y ejecutar las instrucciones correspondientes.
+
+El CPU es el componente central de cualquier dispositivo y se le considera el cerebro de un sistema. Su principal función es recibir e interpretar datos, además de ejecutar las secuencias de instrucciones de cada programa mediante operaciones aritméticas y matemáticas.
+
+El CPU procesa toda la información que proviene del dispositivo, tanto de los programas como de las interacciones del usuario a través de aplicaciones. Además, se encarga de supervisar el correcto funcionamiento de cada componente del sistema, asegurando que todas las acciones se realicen de manera oportuna y precisa.
+
+El lenguaje de los CPU es un sistema de códigos que permite la comunicación de las instrucciones que debe ejecutar el procesador para garantizar el funcionamiento adecuado del dispositivo.
+
+Los procesadores no son capaces de interpretar cualquier tipo de información, sino exclusivamente aquella escrita en formato binario, es decir, utilizando los caracteres cero y uno. Cada programa o aplicación consiste en una secuencia de instrucciones en este código, que la máquina interpreta correctamente para ejecutar las acciones necesarias.
+
+\textbf{\textit{Características de una CPU:}}
+
+\begin{itemize}
+    \item Consumo energético
+    \item Frecuencia reloj
+    \item Memoria cache
+    \item Numero de núcleos
+    \item Numero de hilos
+    \item Tipo de bus
+\end{itemize}
+
+\textbf{\textit{Partes del CPU:}}
+
+\begin{figure}[H]
+    \subfigure[ALU]
+    {\label{fig:alu}\includegraphics[width=45mm]{imagenes/Computador/ALU_symbol.png}}
+    \hfill
+    \subfigure[Estructura de coma flotante.]
+    {\label{fig:coma}\includegraphics[width=90mm]{imagenes/Computador/Figura-2-Estructura-interna-de-la-unidad-de-coma-flotante-Estructuralmente-la-unidad-en.png}}
+    \centering
+    \subfigure[Registros]
+    {\label{fig:registros}\includegraphics[width=60mm]{imagenes/Computador/maxresdefault.jpg}}
+    \caption{Partes de la CPU.}
+    \label{fig:cpu}
+\end{figure}
+
+\begin{itemize}
+\item Núcleo: Es la unidad base que constituye a un CPU, que interpreta y ejecuta acciones. Originariamente los procesadores solo tenían uno (single core), pero actualmente lo mínimo es dos.
+\item Unidad de control: Es un circuito digital que extrae la instrucción de la memoria, la descifra y la ejecuta.
+\item Unidad aritmética lógica ~\ref{fig:alu}: Es un circuito digital que lleva a cabo las operaciones lógicas, matemáticas y aritméticas entre los datos.
+\item Unidad de coma flotante ~\ref{fig:coma}: Es un componente especializado en el cálculo de operaciones con coma flotante.
+\item Memoria caché: Es la memoria en la que se almacenan los datos que el usuario consulta con frecuencia, esto permite ganar velocidad al procesador.
+\item Registros ~\ref{fig:registros}: Es una memoria de alta velocidad que permite controlar y almacenar las instrucciones en ejecución.
+\item Controlador de memoria: Es un circuito que puede estar integrado al procesador y que regula el flujo de datos entre el procesador y la memoria.
+Bus. Es un sistema digital que envía y recibe datos entre los componentes.
+\item Tarjeta gráfica: Es el componente que procesa los datos de video e imagen, que puede estar incluido o no en el CPU.
+\end{itemize}
+
+\subsubsection[Titulo de sección para índice]{Memoria RAM}
+
+La memoria principal, también conocida como memoria de acceso aleatorio (RAM, por sus siglas en inglés: Random-Access Memory), consiste en un conjunto de celdas de almacenamiento dispuestas de tal forma que cada una puede ser accedida mediante una dirección numérica.
+
+Cada celda almacena un bit, que es la unidad mínima de información, y se accede a ella en secuencias de 8 bits. Una instrucción es una acción específica que indica a la Unidad Aritmético Lógica (ALU) qué operación debe ejecutar (como suma, resta, operaciones lógicas, etc.).
+
+En la memoria principal se guardan tanto los datos como los códigos de operación necesarios para ejecutar las instrucciones.La capacidad de la memoria se mide por el número de celdas que contiene, generalmente expresado en bytes o múltiplos.
+
+Estas memorias se dividen en dos tipos: las memorias estáticas (SRAM), que utilizan seis transistores por bit, y las memorias dinámicas (DRAM), que emplean un transistor y un condensador por bit, siendo estas últimas las más comunes. La memoria RAM es capaz de ser reescrita millones de veces, a diferencia de la memoria ROM, que solo puede ser programada una vez.
+
+\subsubsection[Titulo de sección para índice]{Memoria secundaria}
+
+La memoria secundaria, también conocida como memoria auxiliar, periférica o externa, forma parte del sistema de almacenamiento de datos de una computadora, complementando la memoria primaria o principal.
+
+Es común referirse a esta como "memoria práctica" o periférico de almacenamiento, en contraste con la "memoria central", dado que en ocasiones se la considera un periférico de Entrada/Salida.
+
+Este tipo de memoria proporciona almacenamiento masivo y permanente (no volátil), lo que le otorga una mayor capacidad para almacenar datos e información en comparación con la memoria primaria. Sin embargo, presenta una velocidad inferior frente a la memoria principal, que es volátil.
+
+\textbf{\textit{Procedimientos de lectura y escritura en almacenamiento}}
+
+El proceso de transferencia de datos hacia un sistema informático se denomina "procedimiento de lectura", mientras que la transferencia de datos desde el sistema hacia un medio de almacenamiento se conoce como "procedimiento de escritura" o grabación.
+
+Para almacenar información, existen diversas tecnologías, clasificadas en las siguientes categorías:
+
+\begin{itemize}
+    \item Magnética: Incluye dispositivos como disquetes, discos duros y cintas magnéticas.
+    \item Óptica: Comprende medios como CD, DVD y Blu-ray Disc (BD).
+    \item Magneto-óptica: Ejemplos incluyen discos Zip, Floptical y Minidisc.
+    \item Estado sólido o memoria Flash: Engloba memorias USB (pendrives) y tarjetas de memoria como SD, MiniSD, microSD, MS, MMC, CF y SM.
+\end{itemize}
+
+\textbf{\textit{Características de memoria secundaria}}
+\begin{itemize}
+    \item Gran capacidad de almacenamiento.
+    \item Conserva información a falta de alimentación eléctrica.
+    \item Bajas velocidades de transferencia de información.
+    \item Mismo formato de almacenamiento que en memoria primaria.
+    \item Siempre es independiente de la CPU y de la memoria primaria. Debido a esto, los dispositivos de almacenamiento secundario, también son conocidos como, dispositivos de almacenamiento externo.
+\end{itemize}
+
+\textbf{\textit{Particiones del disco duro}}
+
+Una partición es una división del disco duro que el sistema operativo trata como si fuera una unidad independiente. Al particionar un disco, es posible crear hasta cuatro particiones primarias, cada una de las cuales puede tener un sistema de archivos diferente.
+
+Las particiones son útiles en varios casos:
+
+\begin{itemize}
+    \item Multisistema operativo: Permiten instalar y usar múltiples sistemas operativos en un mismo ordenador. Cada sistema operativo utiliza su propia partición y, al encender el ordenador, el usuario elige qué partición cargar.
+    \item Organización del disco: Facilitan una mejor organización de la información.
+    \item Por ejemplo, se puede tener una partición para el sistema operativo y las aplicaciones, otra para los datos (documentos, imágenes, música, etc.) y una tercera para copias de seguridad.
+    \item La información sobre las particiones se almacena en el primer sector del disco, conocido como el sector de arranque o Master Boot Record (MBR). Al iniciar el ordenador, el sistema busca en el MBR las particiones disponibles y determina en cuál se encuentra el sistema operativo a cargar.
+\end{itemize}
+
+\textbf{\textit{Sistema operativo}}
+
+El sistema operativo es el software que administra los recursos del hardware de manera transparente para el usuario y se ejecuta desde el momento en que se enciende el ordenador. Su núcleo, conocido como kernel, sirve como una plataforma para que otros programas del sistema y aplicaciones puedan funcionar correctamente.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Computador/Caracteristicas-de-los-Sistemas-Operativos.png}
+    \caption{Sistemas operativos}
+    \label{fig:so}
+\end{figure}
+
+Las principales funciones o servicios que ofrece un sistema operativo son ~\ref{fig:so}:
+
+\begin{enumerate}
+    \item Gestión de procesos: Administra los recursos que utiliza cada proceso, como el tiempo de CPU, memoria asignada, archivos y dispositivos de entrada/salida (E/S).
+    \item Gestión de la memoria: Asigna la memoria disponible a los diferentes procesos y dispositivos de E/S. Una vez que un proceso finaliza, libera la memoria utilizada para que otros procesos puedan emplearla. Si la memoria física es insuficiente, se recurre a memoria virtual, lo que puede ralentizar el sistema debido al acceso más lento de los dispositivos de almacenamiento secundarios.
+    \item Soporte al sistema de archivos: Facilita el almacenamiento permanente de información mediante unidades de disco. Permite crear, eliminar y manipular archivos y directorios, así como realizar copias de seguridad.
+    \item Sistema de comunicaciones: Gestiona el envío y recepción de datos a través de dispositivos de red y protocolos de comunicación estándar, como TCP/IP.
+    \item Sistemas de seguridad: Garantizan que los recursos utilizados por un proceso no sean modificados accidentalmente por otro. Además, implementan mecanismos de protección que restringen el acceso a recursos o servicios no autorizados, tanto desde usuarios internos como externos.
+    \item Intérprete de comandos: Conocido también como consola o shell, permite la interacción del usuario con el sistema operativo mediante la introducción de comandos alfanuméricos en una consola o a través de interfaces gráficas, como Windows o entornos de escritorio en Linux (por ejemplo, GNOME o KDE).
+    \item Sistema de entrada/salida (E/S): Gestiona el uso de los diferentes dispositivos periféricos mediante solicitudes de uso o interrupciones. Esto asegura que los elementos externos al sistema, como impresoras, discos o dispositivos USB, funcionen correctamente en conjunto con el software.
+\end{enumerate}
+
+\textit{\textbf{Ubuntu}}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth] {imagenes/Computador/1450786498_1.jpg}
+    \caption{Ubuntu}
+    \label{fig:ubuntu}
+\end{figure}
+
+Ubuntu es una distribución basada en Debian GNU/Linux que incluye, principalmente, software libre y de código abierto. Diseñada para ser utilizada en computadoras y servidores ~\ref{fig:ubuntu}, está orientada al usuario promedio, priorizando la facilidad de uso y una experiencia optimizada.
+
+La distribución está formada por un conjunto de software, mayoritariamente libre y de código abierto. Según estadísticas, Ubuntu tiene una cuota de mercado aproximada del 52 \% entre las distribuciones Linux, especialmente destacando como servidor web, con una tendencia al alza.
+
+Su desarrollo es patrocinado por Canonical, una compañía británica fundada por el empresario sudafricano Mark Shuttleworth. Canonical distribuye Ubuntu de forma gratuita y genera ingresos mediante servicios asociados al sistema operativo y la venta de soporte técnico. Además, el enfoque libre y gratuito permite que la comunidad de desarrolladores colabore en la mejora constante de los componentes del sistema.
+
+  \begin{table}[H]
+    \protect\caption[Especificaciones del S.O. Ubuntu.]{Especificaciones del S.O. Ubuntu \label{tab:ubuntu}}
+    \begin{centering}
+    \arrayrulecolor{myred}\arrayrulewidth=1pt % Color y grosor de bordes
+    \begin{tabular}{|c|c|}
+    \hline
+    \rowcolor{red!20} \textbf{Característica} & \textbf{Descripción} \\
+    \hline
+    Programado en & C++, C, Shell de UNIX, Python \\
+    \hline
+    Nucleo & Linux \\
+    \hline
+    Tipo de nucleo & Monolitico \\
+    \hline
+    Tamanho & 2.7 gibibytes \\
+    \hline
+    Plataformas admitidas & x86-64, x86, ARM \\
+    & IA-32, ppc64, IBM ESA/390, RISC-V \\
+    \hline
+    Interfaz gráfica & GNOME Shell (17.10+) \\
+    predeterminada & \\
+    \hline
+    Sistema de gestion & dpkg \\
+    de paquetes & \\
+    \hline
+    Metodo de actualizacion & APT, (Software Updater,  \\
+    & Ubuntu Software Center \\
+    \hline
+    Ultima versión estable & 24.04.1  \\
+    \hline
+    \end{tabular}
+    \par\end{centering}
+    \begin{centering}
+    \textbf{Fuente:} Elaboración propia. \\
+    Basado en \cite{wikipedia_ubuntu}.
+    \par\end{centering}
+    \end{table}
+
+\textbf{\textit{Organización del software:}}
+
+Ubuntu internamente divide todo el software en cuatro secciones, llamadas \textbf{«componentes»}, para mostrar diferencias en licencias y la prioridad con la que se atienden los problemas que informen los usuarios. Estos componentes son: \texttt{main}, \texttt{restricted}, \texttt{universe} y \texttt{multiverse}.
+
+De forma predeterminada, se instalan paquetes de los componentes \texttt{main} y \texttt{restricted}. Los paquetes del componente \texttt{universe} de Ubuntu generalmente se basan en los paquetes de la rama inestable (\texttt{Sid}) y en el repositorio experimental de Debian GNU/Linux.
+
+\begin{itemize}
+    \item \textbf{Main:} contiene solamente los paquetes que cumplen los requisitos de la licencia de Ubuntu, y para los que hay soporte disponible por parte de su equipo. Está pensado para que incluya todo lo necesario para la mayoría de los sistemas Linux de uso general. Los paquetes de este componente poseen ayuda técnica garantizada y mejoras de seguridad oportunas.
+    \item \textbf{Restricted:} contiene paquetes soportados por los desarrolladores de Ubuntu debido a su importancia, pero que no están disponibles bajo ningún tipo de licencia libre para incluir en \texttt{main}. En este lugar se incluyen los paquetes tales como los controladores propietarios de algunas tarjetas gráficas, como los de ATI y NVIDIA. El nivel de la ayuda es más limitado que para \texttt{main}, puesto que los desarrolladores pueden no tener acceso al código fuente.
+    \item \textbf{Universe:} contiene una amplia gama de programas, que pueden o no tener una licencia restringida, pero que no recibe apoyo por parte del equipo de Ubuntu sino por parte de la comunidad. Esto permite que los usuarios instalen toda clase de programas en el sistema guardándolos en un lugar aparte de los paquetes soportados: \texttt{main} y \texttt{restricted}.
+    \item \textbf{Multiverse:} contiene los paquetes sin soporte debido a que no cumplen los requisitos de software libre.
+\end{itemize}
+
+\textbf{\textit{Ubuntu 18.04}}
+
+Ubuntu 18.04, conocido como Bionic Beaver (Castor Biónico), es una versión LTS (Long Term Support) lanzada el 26 de abril de 2018, con soporte extendido de cinco años. Inicialmente se planeaba incluir un nuevo tema gráfico creado por la comunidad, pero debido a retrasos en su desarrollo y depuración, esta versión mantuvo como tema predeterminado el clásico Ambiance, vigente desde 2010. El nuevo tema, sin embargo, estuvo disponible como un paquete .snap.
+
+\begin{enumerate}
+
+\item Principales características:
+
+\begin{itemize}
+    \item Color emoji incorporado.
+    \item Nueva aplicación preinstalada: To-Do (lista de tareas).
+    \item Opción de "Instalación mínima" en el instalador, que solo incluye un navegador web y herramientas básicas del sistema.
+    \item Retorno al servidor gráfico Xorg como predeterminado, en lugar de Wayland, para mejorar la estabilidad y fiabilidad. Wayland aún está incluido como opción en la instalación.
+\end{itemize}
+
+\item Kernel y mejoras técnicas:
+\item Ubuntu 18.04 utiliza el kernel Linux 4.15, que introduce:
+
+\begin{itemize}
+    \item Controlador de CPU para la interfaz cgroup v2.
+    \item Soporte para encriptación segura de memoria de AMD.
+    \item Mejoras en la administración de energía con SATA Link Power Management.
+\end{itemize}
+
+\end{enumerate}
+
+\subsubsection[Titulo de sección para índice]{Periféricos de entrada y salida}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Computador/entrada_salida.jpg}
+    \caption{Periféricos de entrada y salida \cite{perifericos_entrada_salida}}
+    \label{fig:perifericos}
+\end{figure}
+
+Los periféricos de entrada son dispositivos que permiten la introducción de datos e información en la computadora, mientras que los periféricos de salida se encargan de mostrar o exteriorizar la información procesada por la máquina.
+
+Algunos periféricos tienen funciones tanto de entrada como de salida. Un ejemplo típico de un periférico de entrada es el teclado, de salida es el monitor, y de entrada/salida es el disco duro. Existen numerosos dispositivos de entrada/salida, como el teclado, el monitor, la impresora, el ratón, la unidad de disco flexible, la cámara web, entre otros ~\ref{fig:perifericos} \cite{concepto_cpu}.
+
+\subsubsection[Titulo de sección para índice]{Buses}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Computador/Computer_Bus.png}
+    \caption{Buses \cite{computer_bus_cybertecz}}
+    \label{fig:bus}
+\end{figure}
+
+Las tres unidades fundamentales en una computadora, la CPU, la memoria y los dispositivos de E/S, están interconectadas por buses o canales de comunicación ~\ref{fig:bus} \cite{concepto_cpu}:
+
+\begin{itemize}
+
+\item \textit{Bus de direcciones:} Se encarga de seleccionar la dirección del dato o del periférico al que se desea acceder.
+
+\item \textit{Bus de control:} Regula el funcionamiento interno y externo de la CPU, asegurando la correcta ejecución de las operaciones.
+
+\item \textit{Bus de datos:} Transporta la información (datos) que circula a través del sistema.
+
+\end{itemize}
+
+\subsubsection[Titulo de sección para índice]{GPU}
+
+La unidad de procesamiento gráfico (GPU) cuenta con una gran cantidad de núcleos pequeños y especializados. Estos núcleos colaboran de manera eficiente al dividir las tareas de procesamiento y ejecutarlas simultáneamente (o en paralelo).
+
+La GPU es especialmente destacada en tareas que requieren procesamiento paralelo intensivo, como renderizar imágenes en videojuegos, manipular datos de video en la creación de contenido y realizar cálculos en aplicaciones de inteligencia artificial con alta demanda computacional.
+
+La GPU (unidad de procesamiento gráfico) está diseñada para realizar operaciones paralelas masivas, lo que la hace ideal para tareas como renderización gráfica y procesamiento de datos en aplicaciones de inteligencia artificial. El funcionamiento y segmentación de una GPU se explican por las unidades funcionales que mencionaste, como el vertex shader, el rasterizador, el pixel shader, y las unidades de salida de renderizado (ROP).
+
+Desglose de las principales etapas:
+
+\begin{enumerate}
+
+\item Procesamiento de vértices (Vertex Shader):
+
+\begin{itemize}
+    \item Recibe los vértices enviados por la CPU.
+    \item Realiza transformaciones como rotación, escalado y traslación, ajustando la posición de los vértices en el espacio 3D.
+    \item Determina qué vértices son visibles (clipping), según la perspectiva de la cámara.
+\end{itemize}
+
+\item Rasterización: Convierte los vértices en píxeles. Esta etapa divide las formas geométricas en una cuadrícula de píxeles para su representación en pantalla. Aquí se generan las primitivas como triángulos, líneas y puntos a partir de los vértices procesados.
+
+\item Pixel Shader:
+\begin{itemize}
+    \item Es el cuello de botella principal en muchas GPUs, ya que maneja la mayor carga de trabajo.
+    \item Aplica texturas, colores, efectos de iluminación y sombras.
+    \item Realiza cálculos complejos para definir el color final de cada píxel.
+    \end{itemize}
+
+\item Unidades de salida de renderizado (ROP):
+
+\begin{itemize}
+    \item Procesan y almacenan los píxeles finales en el búfer de fotogramas.
+    \item Aplican efectos adicionales como antialiasing y blending.
+    \item Preparan los datos para su salida, ya sea digital o analógica (a través de un DAC, si es necesario).
+\end{itemize}
+
+\item Memoria: La memoria gráfica (VRAM) almacena datos intermedios, texturas, y otros recursos necesarios para la renderización. Es fundamental por su rapidez, asegurando que los datos estén accesibles para las etapas anteriores.
+
+\item Relevancia en aplicaciones: En gráficos, este flujo permite generar imágenes complejas con efectos visuales avanzados en tiempo real, como en videojuegos o simulaciones.
+En inteligencia artificial y aprendizaje automático, la GPU usa su arquitectura paralela para acelerar cálculos matemáticos como multiplicaciones de matrices.
+\end{enumerate}
+
+Evolución de la tecnología de GPU
+
+NVIDIA fue la primera empresa en comercializar las GPU GeForce 256 de un solo chip en 1999. Las décadas de 2000 y 2010 establecieron una era de crecimiento en la que las GPU adquirieron funciones, como el trazado de rayos, el sombreado en malla y la teselación de hardware. Esto llevó a una generación de imágenes y un rendimiento gráfico cada vez más avanzados.
+
+No fue hasta 2007 que NVIDIA lanzó CUDA, una capa de software que permite el procesamiento paralelo en la GPU. En esta misma época, quedó claro que las GPU eran muy eficaces a la hora de realizar tareas muy específicas. En particular, se destacaron en tareas que requieren una gran capacidad de procesamiento para lograr cierto resultado.
+
+Cuando NVIDIA lanzó CUDA, llevó la programación de GPU a un público más amplio. Los desarrolladores podían entonces programar la tecnología de GPU para todo tipo de aplicaciones prácticas que requieren mucha capacidad de procesamiento. La computación con GPU comenzó a generalizarse mucho más.
+
+CUDA
+
+CUDA, siglas de Compute Unified Device Architecture (Arquitectura Unificada de Dispositivos de Cómputo), es una plataforma de computación paralela desarrollada por NVIDIA. Incluye un compilador y un conjunto de herramientas que permiten a los desarrolladores implementar algoritmos en las GPU de NVIDIA utilizando una extensión del lenguaje de programación C, conocida como CUDA C ~\ref{fig:cuda}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\textwidth]{imagenes/Computador/memory-hierarchy-in-gpus-2.png}
+    \caption{Gerarquia de memoria en CUDA}
+    \label{fig:cuda}
+\end{figure}
+
+Además, gracias a wrappers, es posible utilizar lenguajes como Python, Fortran, Julia y Java para desarrollar aplicaciones en CUDA, en lugar de limitarse exclusivamente a C/C++. Estos wrappers facilitan el acceso a la potencia de cálculo de las GPU desde diferentes entornos de programación.
+
+CUDA aprovecha las capacidades de las GPU frente a las CPU de propósito general al explotar el paralelismo que ofrecen sus múltiples núcleos. Esta arquitectura permite ejecutar una gran cantidad de hilos simultáneamente, maximizando el rendimiento en tareas paralelas.
+
+Por este motivo, las aplicaciones diseñadas para utilizar numerosos hilos independientes —una característica inherente a las GPU cuando procesan gráficos, su función principal— pueden beneficiarse enormemente de la potencia de cálculo de CUDA.
+
+El Modelo CUDA:
+
+CUDA se enfoca en maximizar el paralelismo y el ancho de banda de memoria disponibles en las GPU, optimizando aplicaciones con altos costos computacionales en lugar de operaciones que impliquen numerosos accesos a la memoria principal, ya que estos últimos pueden convertirse en un cuello de botella.
+
+\textbf{\textit{Modelo de Programación de CUDA}}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Computador/CUDA-Programming-Model.png}
+    \caption{Modelo de programación CUDA}
+    \label{fig:cuda_model}
+\end{figure}
+
+El modelo de programación de CUDA está diseñado para desarrollar aplicaciones que puedan escalar su paralelismo de manera transparente al aumentar la cantidad de núcleos de cómputo. Este enfoque incluye tres elementos clave ~\ref{fig:cuda_model}:
+
+\begin{enumerate}
+
+\item Jerarquía de Grupos de Hilos ~\ref{fig:cuda_model}:
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/Computador/Jerarquia-de-hilos-en-CUDA_Q640.jpg}
+    \caption{Jerarquía de grupo de hilos.}
+    \label{fig:hilos}
+\end{figure}
+
+\begin{itemize}
+    \item Las aplicaciones se estructuran en grids.
+    \item Un grid contiene bloques de hilos, y cada bloque puede tener hasta 1024 hilos distintos.
+\end{itemize}
+
+\item Memorias Compartidas: Se optimiza el acceso a datos al compartir información entre hilos en un bloque, reduciendo el tráfico de la memoria global.
+
+\item Barreras de Sincronización: Permiten coordinar los hilos dentro de un bloque para garantizar que todos los hilos lleguen a un punto antes de continuar.
+
+\item Identificación de Hilos y Bloques: Cada hilo dentro de un bloque tiene un identificador único, accesible mediante la variable threadIdx. Este identificador tiene tres componentes $(x, y, z)$ que coinciden con las dimensiones del bloque, permitiendo mapear tareas a estructuras multidimensionales como matrices.
+
+De manera similar, los bloques dentro de una grid son identificados por la variable blockIdx, que también tiene componentes $(x, y, z)$.
+
+Otras Variables Útiles
+\begin{itemize}
+\item blockDim: Representa el tamaño del bloque en cada dimensión.
+\item gridDim: Proporciona la forma (dimensiones) de la grid.
+\end{itemize}
+
+Este diseño permite asignar tareas eficientemente, como asociar cada elemento de una matriz a un hilo correspondiente dentro de un bloque bidimensional, maximizando así el paralelismo.
+
+\end{enumerate}
+
+\textbf{\textit{Kernel}}
+
+Un kernel es el código que se ejecuta en el dispositivo, es decir, la función que los diferentes flujos ejecutan durante la fase paralela. En el caso de CUDA, un kernel se lanza mediante un conjunto de flujos, lo que significa que es una función que, al ejecutarse, lo hace en múltiples hilos de manera paralela en lugar de de forma secuencial. Para definir un kernel en CUDA, se utiliza el modificador \texttt{\_\_global\_\_} en su declaración.
+
+Cuando se lanza un kernel en CUDA, se genera una malla de hilos, donde todos los hilos ejecutan el mismo programa de manera simultánea. El kernel define las instrucciones que debe ejecutar cada hilo individual. Existen varias configuraciones posibles: se pueden lanzar todos los hilos en un único bloque, dividir el trabajo en múltiples bloques con un solo hilo cada uno, o bien organizar varios bloques con múltiples hilos en cada uno.
+
+De este modo, la GPU administra la ejecución simultánea de tantas copias del kernel como hilos estén en ejecución. Cada hilo recibe su propio conjunto de datos, lo que permite que todas las copias del kernel realicen las mismas operaciones sobre diferentes datos, maximizando el paralelismo inherente de las GPUs.
+
+La memoria del procesador principal y del dispositivo son espacios de memoria completamente separados, lo que permite la computación simultánea tanto en la CPU como en la GPU sin competir por los recursos de memoria. Para ejecutar un kernel en el dispositivo GPU se siguen los siguientes pasos:
+
+\begin{enumerate}
+    \item Reservar memoria en el dispositivo.
+    \item Transferir los datos necesarios del procesador principal al espacio de memoria asignado al dispositivo.
+    \item Invocar la ejecución del kernel en cuestión.
+    \item Transferir los resultados del dispositivo al procesador principal y liberar la memoria del dispositivo una vez finalizada la ejecución del kernel.
+\end{enumerate}
+
+En una llamada a un kernel, se le ha de pasar el tamaño de grid y de bloque. En el momento que se invoque esta función, los bloques de un grid se enumerarán y distribuirán por los distintos multiprocesadores libres.
+
+Como los distintos hilos colaboran entre ellos y pueden compartir datos, se requieren unas directivas de sincronización. En un kernel, se puede explicitar una barrera incluyendo una llamada a \texttt{\_\_syncthreads()}, en la que todos los hilos se esperarán a que los demás lleguen a ese mismo punto. Esto asegura que todos los hilos de un bloque sincronicen su ejecución antes de continuar.
+
+Las funciones kernel se separan del código principal y son compiladas por los ensambladores y compiladores patentados por NVIDIA, mientras que el resto del código se compila con un compilador de C++ compatible con el Compilador Nvidia CUDA (NVCC), por ejemplo gcc, g++ o cl.exe. Al final, se incorporan las funciones de GPU compiladas al archivo principal del código.
+
+Jerarquía de memoria:
+
+Los hilos en CUDA pueden acceder a distintas memorias, unas compartidas y otras no.
+
+\begin{itemize}
+    \item En primer lugar, está la memoria privada de cada hilo, solamente accesible desde él mismo.
+    \item Cada bloque de hilos posee también un espacio de memoria, compartida en este caso por los hilos del bloque y con un ámbito de vida igual que el del propio bloque.
+    \item Todos los hilos pueden acceder a una memoria global.
+\end{itemize}
+
+Además, existen otros dos espacios de memoria más, que son de solo lectura y accesibles por todos los hilos. Son la memoria constante y la de texturas. Todas las memorias de acceso global persisten mientras esté el kernel en ejecución.
+\subsection{Componentes del Sistema}
+El sistema de navegaci\'on aut\'onoma est\'a respaldado por componentes de hardware de alto rendimiento. La plataforma NVIDIA Jetson TX2 destaca por su capacidad de procesamiento en tareas de inteligencia artificial, como el an\'alisis de im\'agenes en tiempo real. El controlador de vuelo Pixhawk 4 es responsable de la estabilidad y navegaci\'on del ASV, asegurando un desplazamiento preciso en diversas condiciones. Finalmente, los sensores LiDAR y las c\'amaras integradas proporcionan informaci\'on cr\'itica para la percepci\'on del entorno y la detecci\'on de obst\'aculos.
+
+\subsection{Comparaci\'on de Algoritmos}
+El sistema propuesto, basado en l\'ogica difusa, se compara con m\'etodos tradicionales como WASR-T. Las evaluaciones destacan la superioridad de la l\'ogica difusa en t\'erminos de precisi\'on, permitiendo una detecci\'on y clasificaci\'on de obst\'aculos con mayor exactitud. Adem\'as, se observa una reducci\'on significativa en la latencia del procesamiento, lo que optimiza la respuesta del sistema. En cuanto a eficiencia, la l\'ogica difusa requiere un menor consumo de recursos computacionales, facilitando su implementaci\'on en sistemas embarcados.
+
+\subsection{Resumen Final}
+El marco te\'orico presentado sienta las bases para el desarrollo del sistema de navegaci\'on aut\'onoma. La integraci\'on de l\'ogica difusa y visi\'on artificial, junto con el uso de sensores avanzados como LiDAR y c\'amaras, permite obtener un sistema robusto y eficiente. Este enfoque garantiza la detecci\'on precisa de obst\'aculos, el procesamiento optimizado de im\'agenes y una navegaci\'on segura en entornos acu\'aticos complejos.
+
+\end{document}

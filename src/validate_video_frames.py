@@ -148,6 +148,12 @@ def load_checkpoint():
 def save_checkpoint(data):
     with open(CHECKPOINT_FILE, "w") as f:
         json.dump(data, f, indent=2)
+    # Sincronizar automáticamente CSV y JSON unificados y tablas del artículo
+    try:
+        from src.unificar_evaluacion import export_unified_files
+        export_unified_files()
+    except Exception as e:
+        print(f"[!] Aviso al exportar tablas unificadas: {e}")
 
 def calc_metrics(stats):
     tp = stats["tp"]
@@ -259,28 +265,33 @@ def main():
     
     print("\n[INSTRUCCIONES DE TECLADO]")
     print("  -------------------------------------------------------------")
+    print("  [GROUND TRUTH / REALIDAD FÍSICA]:")
+    print("    'g' : Alternar Ground Truth del frame (Obstáculo físico Sí / No)")
+    print("  -------------------------------------------------------------")
     print("  [ACCESOS RÁPIDOS COMBINADOS]:")
-    print("    'b' : Ambos detectaron bien el obstáculo (Ours=TP, WaSR-T=TP)")
-    print("    '0' : Ambos agua limpia correcta (Ours=TN, WaSR-T=TN)")
+    print("    'b' : Ambos detectaron bien el obstáculo (Ours=TP, WaSR-T=TP, GT=Sí)")
+    print("    '0' : Ambos agua limpia correcta (Ours=TN, WaSR-T=TN, GT=No)")
     print("  -------------------------------------------------------------")
     print("  [LÓGICA DIFUSA (OURS)]:")
     print("    '1' : TP (Obstáculo presente y bien detectado)")
     print("    '2' : FP (Falsa alarma en agua donde no hay obstáculo)")
     print("    '3' : FN (Había obstáculo y NO lo detectó)")
     print("    '4' : TN (Agua limpia y no detectó nada)")
+    print("    'o' : Alternar si Ours detectó obstáculo en este cuadro")
     print("  -------------------------------------------------------------")
     print("  [WaSR-T]:")
     print("    'q' : TP (Obstáculo presente y bien detectado)")
     print("    'w' : FP (Falsa alarma en agua)")
     print("    'e' : FN (Había obstáculo y NO lo detectó)")
     print("    'r' : TN (Agua limpia)")
+    print("    'y' : Alternar si WaSR-T detectó obstáculo en este cuadro")
     print("  -------------------------------------------------------------")
     print("  [NAVEGACIÓN Y EDICIÓN]:")
     print("    'c'             : Limpiar / Borrar etiqueta del frame actual")
     print("    [ESPACIO] o 'd' : Siguiente frame")
     print("    'a'             : Frame anterior")
     print("    '+' / '-'       : Aumentar / Disminuir salto de frames (actual: {})".format(step))
-    print("    's'             : Guardar checkpoint y mostrar tabla LaTeX")
+    print("    's'             : Guardar checkpoint, CSV, JSON y tablas LaTeX/MD")
     print("    [ESC] o 'x'     : Guardar y salir")
     print("  -------------------------------------------------------------\n")
     
@@ -308,23 +319,66 @@ def main():
             if o_det is None:
                 o_det = bool(ann.get("ours") in ["tp", "fp"])
                 ann["ours_detected"] = o_det
-            tag_o = "tp" if (gt and o_det) else "fp" if (not gt and o_det) else "fn" if (gt and not o_det) else "tn"
-            ann["ours"] = tag_o
-            state["eval_ours"][tag_o] += 1
 
             w_det = ann.get("wasrt_detected")
             if w_det is None:
                 w_det = bool(ann.get("wasrt") in ["tp", "fp"])
                 ann["wasrt_detected"] = w_det
-            tag_w = "tp" if (gt and w_det) else "fp" if (not gt and w_det) else "fn" if (gt and not w_det) else "tn"
-            ann["wasrt"] = tag_w
-            state["eval_wasrt"][tag_w] += 1
+
+            tag_o = ann.get("ours")
+            if not tag_o:
+                tag_o = "tp" if (gt and o_det) else "fp" if (not gt and o_det) else "fn" if (gt and not o_det) else "tn"
+                ann["ours"] = tag_o
+            if tag_o in state["eval_ours"]:
+                state["eval_ours"][tag_o] += 1
+
+            tag_w = ann.get("wasrt")
+            if not tag_w:
+                tag_w = "tp" if (gt and w_det) else "fp" if (not gt and w_det) else "fn" if (gt and not w_det) else "tn"
+                ann["wasrt"] = tag_w
+            if tag_w in state["eval_wasrt"]:
+                state["eval_wasrt"][tag_w] += 1
 
     def set_frame_tag(f_idx, method, tag):
         k = str(f_idx)
         if k not in state["frame_annotations"]:
-            state["frame_annotations"][k] = {"ours": None, "wasrt": None}
-        state["frame_annotations"][k][method] = tag
+            state["frame_annotations"][k] = {}
+        ann = state["frame_annotations"][k]
+
+        gt = ann.get("gt_has_obstacle", True)
+        o_det = ann.get("ours_detected", False)
+        w_det = ann.get("wasrt_detected", False)
+
+        if method == "ours":
+            if tag == "tp":
+                gt, o_det = True, True
+            elif tag == "fp":
+                gt, o_det = False, True
+            elif tag == "fn":
+                gt, o_det = True, False
+            elif tag == "tn":
+                gt, o_det = False, False
+            ann["ours_detected"] = o_det
+            ann["gt_has_obstacle"] = gt
+            ann["ours"] = tag
+            ann["wasrt"] = "tp" if (gt and w_det) else "fp" if (not gt and w_det) else "fn" if (gt and not w_det) else "tn"
+            print(f"[i] Frame {f_idx}: Ours -> {tag.upper()} | GT={'OBSTACULO' if gt else 'AGUA LIMPIA'} | WaSR-T -> {ann['wasrt'].upper()}")
+
+        elif method == "wasrt":
+            if tag == "tp":
+                gt, w_det = True, True
+            elif tag == "fp":
+                gt, w_det = False, True
+            elif tag == "fn":
+                gt, w_det = True, False
+            elif tag == "tn":
+                gt, w_det = False, False
+            ann["wasrt_detected"] = w_det
+            ann["gt_has_obstacle"] = gt
+            ann["wasrt"] = tag
+            ann["ours"] = "tp" if (gt and o_det) else "fp" if (not gt and o_det) else "fn" if (gt and not o_det) else "tn"
+            print(f"[i] Frame {f_idx}: WaSR-T -> {tag.upper()} | GT={'OBSTACULO' if gt else 'AGUA LIMPIA'} | Ours -> {ann['ours'].upper()}")
+
         update_metrics_from_annotations()
 
     update_metrics_from_annotations()
@@ -352,26 +406,38 @@ def main():
             v_ours[m_o > 0] = [0, 0, 255]
             cv2.putText(v_ours, "FCM Pixel Mask ON", (15, 135), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 255), 1, cv2.LINE_AA)
 
-        v_wasrt = cv2.resize(f_wasrt, (target_w, target_h))
-        
-        # Label each panel (in English)
-        cv2.putText(v_orig, f"Original (Frame {current_frame}/{total_frames})", (15, 30), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(v_ours, "Ours (Fuzzy Logic)", (15, 30), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2, cv2.LINE_AA)
-        cv2.putText(v_wasrt, "WaSR-T (Temporal CNN)", (15, 30), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 100, 255), 2, cv2.LINE_AA)
-        
+        # Panel 1: Original + Ground Truth
         ann = state["frame_annotations"].get(str(current_frame)) or {}
+        gt = ann.get("gt_has_obstacle")
+        if gt is None:
+            gt = get_unified_ground_truth(current_frame, ann, {})
+            ann["gt_has_obstacle"] = gt
         ours_tag = str(ann.get("ours") or "---").upper()
         wasrt_tag = str(ann.get("wasrt") or "---").upper()
-        
-        cv2.putText(v_ours, f"Status: [{ours_tag}]", (15, 70), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0) if ours_tag in ["TP", "TN"] else (0, 0, 255), 2, cv2.LINE_AA)
-        cv2.putText(v_ours, f"Boxes: {len([b for b in boxes_ours if b])}", (15, 105), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2, cv2.LINE_AA)
-        cv2.putText(v_wasrt, f"Status: [{wasrt_tag}]", (15, 70), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0) if wasrt_tag in ["TP", "TN"] else (0, 0, 255), 2, cv2.LINE_AA)
+        ours_det = ann.get("ours_detected", False)
+        wasrt_det = ann.get("wasrt_detected", False)
+
+        gt_str = "OBSTACULO FISICO" if gt else "AGUA LIMPIA (NO OBS)"
+        gt_color = (0, 255, 0) if gt else (255, 200, 0)
+        cv2.putText(v_orig, f"Original (Frame {current_frame}/{total_frames})", (15, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2, cv2.LINE_AA)
+        cv2.putText(v_orig, f"GT: [{gt_str}]", (15, 65), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, gt_color, 2, cv2.LINE_AA)
+        cv2.putText(v_orig, "[g]=Alternar GT (Realidad)", (15, 95), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.48, (0, 255, 255), 1, cv2.LINE_AA)
+
+        # Panel 2: Ours (Fuzzy Logic)
+        cv2.putText(v_ours, "Ours (Fuzzy Logic)", (15, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(v_ours, f"Status: [{ours_tag}]  Det: {'SI' if ours_det else 'NO'}", (15, 65), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0) if ours_tag in ["TP", "TN"] else (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(v_ours, f"Boxes: {len([b for b in boxes_ours if b])}  [1-4]=Set [o]=Tgl", (15, 95), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.48, (0, 255, 255), 1, cv2.LINE_AA)
+
+        # Panel 3: WaSR-T (Temporal CNN)
+        v_wasrt = cv2.resize(f_wasrt, (target_w, target_h))
+        cv2.putText(v_wasrt, "WaSR-T (Temporal CNN)", (15, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 100, 255), 2, cv2.LINE_AA)
 
         # Real-time framing algorithm on WaSR-T obstacle mask
         hsv_w = cv2.cvtColor(v_wasrt, cv2.COLOR_BGR2HSV)
@@ -381,8 +447,10 @@ def main():
             cv2.rectangle(v_wasrt, (c["x_init"], c["y_init"]), (c["x_end"], c["y_end"]), (0, 0, 255), 2)
             cv2.putText(v_wasrt, f"{c['weight']}px", (c["x_init"], max(15, c["y_init"] - 4)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1, cv2.LINE_AA)
-        cv2.putText(v_wasrt, f"Boxes: {len(cuadros_wasrt)}", (15, 105),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 200, 255), 2, cv2.LINE_AA)
+        cv2.putText(v_wasrt, f"Status: [{wasrt_tag}]  Det: {'SI' if wasrt_det else 'NO'}", (15, 65), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0) if wasrt_tag in ["TP", "TN"] else (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(v_wasrt, f"Boxes: {len(cuadros_wasrt)}  [q,w,e,r]=Set [y]=Tgl", (15, 95),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.48, (0, 255, 255), 1, cv2.LINE_AA)
 
         # Concatenate horizontally
         combined = np.hstack([v_orig, v_ours, v_wasrt])
@@ -396,8 +464,8 @@ def main():
         bar = np.zeros((82, combined.shape[1], 3), dtype=np.uint8)
         hud_text1 = f"OURS:   TP={state['eval_ours']['tp']} FP={state['eval_ours']['fp']} FN={state['eval_ours']['fn']} TN={state['eval_ours']['tn']} | Prec={p_o:.3f} Rec={r_o:.3f} F1={f1_o:.3f}"
         hud_text2 = f"WaSR-T: TP={state['eval_wasrt']['tp']} FP={state['eval_wasrt']['fp']} FN={state['eval_wasrt']['fn']} TN={state['eval_wasrt']['tn']} | Prec={p_w:.3f} Rec={r_w:.3f} F1={f1_w:.3f}"
-        hud_text3 = f"Frame {current_frame}/{total_frames} (Validados: {total_annotated}) | Salto: {step} | [b]=Ambos TP | [0]=Ambos TN | [c]=Borrar"
-        hud_text4 = "[1-4]=Ours | [q,w,e,r]=WaSR-T | [u]=Auto-Ours | [U]=Recalcular Todo | [p]=Mascara | [s]=Guardar | [ESC]=Salir"
+        hud_text3 = f"Frame {current_frame}/{total_frames} (Validados: {total_annotated}) | GT: [{'OBSTACULO' if gt else 'AGUA LIMPIA'}] | [g]=Tgl GT | [b]=Ambos TP | [0]=Ambos TN"
+        hud_text4 = "[1-4]=Ours | [q,w,e,r]=WaSR-T | [o,y]=Tgl Detecc | [s]=Guardar | [ESPACIO/d]=Sig | [a]=Ant | [ESC]=Salir"
         
         cv2.putText(bar, hud_text1, (15, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (0, 255, 255), 1, cv2.LINE_AA)
         cv2.putText(bar, hud_text2, (15, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (255, 150, 255), 1, cv2.LINE_AA)
@@ -444,6 +512,53 @@ def main():
                 print(f"[i] Anotación del frame {current_frame} eliminada.")
             continue
 
+        # Alternar Ground Truth directamente (inspección de la escena original)
+        elif key == ord('g'):
+            k = str(current_frame)
+            if k not in state["frame_annotations"]:
+                state["frame_annotations"][k] = {}
+            ann = state["frame_annotations"][k]
+            cur_gt = ann.get("gt_has_obstacle", False)
+            new_gt = not cur_gt
+            ann["gt_has_obstacle"] = new_gt
+            o_det = ann.get("ours_detected", False)
+            w_det = ann.get("wasrt_detected", False)
+            ann["ours"] = "tp" if (new_gt and o_det) else "fp" if (not new_gt and o_det) else "fn" if (new_gt and not o_det) else "tn"
+            ann["wasrt"] = "tp" if (new_gt and w_det) else "fp" if (not new_gt and w_det) else "fn" if (new_gt and not w_det) else "tn"
+            update_metrics_from_annotations()
+            print(f"[i] Frame {current_frame}: Ground Truth cambiado a {'OBSTÁCULO' if new_gt else 'AGUA LIMPIA'}")
+            continue
+
+        # Alternar si Ours detectó obstáculo
+        elif key == ord('o'):
+            k = str(current_frame)
+            if k not in state["frame_annotations"]:
+                state["frame_annotations"][k] = {}
+            ann = state["frame_annotations"][k]
+            cur_odet = ann.get("ours_detected", False)
+            new_odet = not cur_odet
+            ann["ours_detected"] = new_odet
+            gt = ann.get("gt_has_obstacle", False)
+            ann["ours"] = "tp" if (gt and new_odet) else "fp" if (not gt and new_odet) else "fn" if (gt and not new_odet) else "tn"
+            update_metrics_from_annotations()
+            print(f"[i] Frame {current_frame}: Detección Ours cambiada a {new_odet} -> Status: {ann['ours'].upper()}")
+            continue
+
+        # Alternar si WaSR-T detectó obstáculo
+        elif key == ord('y'):
+            k = str(current_frame)
+            if k not in state["frame_annotations"]:
+                state["frame_annotations"][k] = {}
+            ann = state["frame_annotations"][k]
+            cur_wdet = ann.get("wasrt_detected", False)
+            new_wdet = not cur_wdet
+            ann["wasrt_detected"] = new_wdet
+            gt = ann.get("gt_has_obstacle", False)
+            ann["wasrt"] = "tp" if (gt and new_wdet) else "fp" if (not gt and new_wdet) else "fn" if (gt and not new_wdet) else "tn"
+            update_metrics_from_annotations()
+            print(f"[i] Frame {current_frame}: Detección WaSR-T cambiada a {new_wdet} -> Status: {ann['wasrt'].upper()}")
+            continue
+
         # Alternar máscara FCM de píxeles
         elif key == ord('p'):
             show_masks = not show_masks
@@ -452,13 +567,17 @@ def main():
 
         # Auto-clasificación Ours para el frame actual
         elif key == ord('u'):
-            w = ann.get("wasrt")
-            if w in ["tp", "fn"]: gt = True
-            elif w in ["tn", "fp"]: gt = False
-            else: gt = (len(boxes_ours) > 0)
-            tag = "tp" if (gt and len(boxes_ours) > 0) else "fp" if (not gt and len(boxes_ours) > 0) else "fn" if (gt and len(boxes_ours) == 0) else "tn"
-            set_frame_tag(current_frame, "ours", tag)
-            print(f"[i] Frame {current_frame} clasificado como {tag.upper()} (Cajas Ours: {len(boxes_ours)})")
+            gt = ann.get("gt_has_obstacle", (len(boxes_ours) > 0))
+            has_boxes = (len(boxes_ours) > 0)
+            tag = "tp" if (gt and has_boxes) else "fp" if (not gt and has_boxes) else "fn" if (gt and not has_boxes) else "tn"
+            k = str(current_frame)
+            if k not in state["frame_annotations"]:
+                state["frame_annotations"][k] = {}
+            ann = state["frame_annotations"][k]
+            ann["ours_detected"] = has_boxes
+            ann["ours"] = tag
+            update_metrics_from_annotations()
+            print(f"[i] Frame {current_frame} auto-evaluado Ours: {tag.upper()} (Cajas detectadas: {len(boxes_ours)})")
             continue
 
         # Recalcular todo el video anotado con el algoritmo renovado
@@ -469,12 +588,30 @@ def main():
             
         # Accesos rápidos para ambos
         elif key == ord('b'):  # Ambos detectaron bien
-            set_frame_tag(current_frame, "ours", "tp")
-            set_frame_tag(current_frame, "wasrt", "tp")
+            k = str(current_frame)
+            if k not in state["frame_annotations"]:
+                state["frame_annotations"][k] = {}
+            ann = state["frame_annotations"][k]
+            ann["gt_has_obstacle"] = True
+            ann["ours_detected"] = True
+            ann["wasrt_detected"] = True
+            ann["ours"] = "tp"
+            ann["wasrt"] = "tp"
+            update_metrics_from_annotations()
+            print(f"[i] Frame {current_frame}: Ambos marcados como TP (GT=True)")
             current_frame += step
         elif key == ord('0'):  # Ambos agua limpia sin obstáculos
-            set_frame_tag(current_frame, "ours", "tn")
-            set_frame_tag(current_frame, "wasrt", "tn")
+            k = str(current_frame)
+            if k not in state["frame_annotations"]:
+                state["frame_annotations"][k] = {}
+            ann = state["frame_annotations"][k]
+            ann["gt_has_obstacle"] = False
+            ann["ours_detected"] = False
+            ann["wasrt_detected"] = False
+            ann["ours"] = "tn"
+            ann["wasrt"] = "tn"
+            update_metrics_from_annotations()
+            print(f"[i] Frame {current_frame}: Ambos marcados como TN (Agua Limpia, GT=False)")
             current_frame += step
             
         # Teclas individuales Ours

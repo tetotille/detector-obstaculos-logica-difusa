@@ -37,7 +37,12 @@ def get_unified_ground_truth(f_idx: int, ann_data: Dict[str, Any], wasrt_ref_dat
     """
     Determina la etiqueta física única (gt_has_obstacle) para un cuadro evaluado
     a partir de la realidad de la escena en el Lago Ypacaraí.
+    Respeta la etiqueta manual si ya fue fijada en los datos.
     """
+    # 0. Respetar ground truth fijado manualmente si existe
+    if "gt_has_obstacle" in ann_data and ann_data["gt_has_obstacle"] is not None:
+        return bool(ann_data["gt_has_obstacle"])
+
     f_str = str(f_idx)
     w = ann_data.get("wasrt")
     o = ann_data.get("ours")
@@ -103,8 +108,15 @@ def build_unified_dataset() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, A
         o_tag = ann.get("ours")
 
         # Predicciones binarias de cada método
-        wasrt_det = bool(w_tag in ["tp", "fp"])
-        ours_det = bool(o_tag in ["tp", "fp"])
+        if "wasrt_detected" in ann and ann["wasrt_detected"] is not None:
+            wasrt_det = bool(ann["wasrt_detected"])
+        else:
+            wasrt_det = bool(w_tag in ["tp", "fp"])
+
+        if "ours_detected" in ann and ann["ours_detected"] is not None:
+            ours_det = bool(ann["ours_detected"])
+        else:
+            ours_det = bool(o_tag in ["tp", "fp"])
 
         # Etiqueta única e invariable de Ground Truth
         gt_has_obs = get_unified_ground_truth(f_idx, ann, wasrt_ref)
@@ -220,6 +232,10 @@ def export_unified_files():
         except Exception as e:
             print(f"[!] Error leyendo benchmark_jetson_results.json: {e}")
 
+    # Determinar negrita según el valor mayor
+    p_w_str = f"\\textbf{{{m_wasrt['precision']:.3f}}}" if m_wasrt['precision'] > m_ours['precision'] else f"{m_wasrt['precision']:.3f}"
+    p_o_str = f"\\textbf{{{m_ours['precision']:.3f}}}" if m_ours['precision'] >= m_wasrt['precision'] else f"{m_ours['precision']:.3f}"
+
     # 4. Generar Tablas LaTeX consistentes para el artículo
     # Tabla 1: Principal (Rendimiento, Calidad y Latencia)
     latex_table1 = f"""\\begin{{table}}[htbp]
@@ -231,8 +247,8 @@ def export_unified_files():
 \\toprule
 Method & Resolution & Precision & Recall & F1-Score & Latency (ms) & Throughput (FPS) \\\\
 \\midrule
-WaSR-T (Temporal CNN) & 512$\\times$384 & \\textbf{{{m_wasrt['precision']:.3f}}} & \\textbf{{{m_wasrt['recall']:.3f}}} & \\textbf{{{m_wasrt['f1']:.3f}}} & {lat_wasrt_gpu:.1f} & {fps_wasrt_gpu:.2f} \\\\
-\\textbf{{Ours (Fuzzy Logic)}}  & 256$\\times$192 & {m_ours['precision']:.3f} & {m_ours['recall']:.3f} & {m_ours['f1']:.3f} & \\textbf{{{lat_ours_gpu:.1f}}} & \\textbf{{{fps_ours_gpu:.2f}}} \\\\
+WaSR-T (Temporal CNN) & 512$\\times$384 & {p_w_str} & \\textbf{{{m_wasrt['recall']:.3f}}} & \\textbf{{{m_wasrt['f1']:.3f}}} & {lat_wasrt_gpu:.1f} & {fps_wasrt_gpu:.2f} \\\\
+\\textbf{{Ours (Fuzzy Logic)}}  & 256$\\times$192 & {p_o_str} & {m_ours['recall']:.3f} & {m_ours['f1']:.3f} & \\textbf{{{lat_ours_gpu:.1f}}} & \\textbf{{{fps_ours_gpu:.2f}}} \\\\
 \\bottomrule
 \\end{{tabular}}%
 }}

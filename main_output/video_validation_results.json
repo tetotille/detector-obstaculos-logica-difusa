@@ -1,738 +1,1278 @@
 {
-  "last_frame": 1799,
+  "last_frame": 0,
   "step": 10,
   "eval_ours": {
-    "tp": 58,
-    "fp": 23,
-    "fn": 67,
-    "tn": 32
+    "tp": 75,
+    "fp": 6,
+    "fn": 64,
+    "tn": 35
   },
   "eval_wasrt": {
-    "tp": 97,
-    "fp": 15,
+    "tp": 103,
+    "fp": 9,
     "fn": 36,
     "tn": 32
   },
   "frame_annotations": {
     "0": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "10": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "20": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "30": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "40": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "50": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "60": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "70": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "80": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "90": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "100": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "110": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "120": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "130": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "140": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "150": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "160": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "170": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "180": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "190": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "200": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "210": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "220": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "230": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "240": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "250": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "260": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "270": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "280": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "290": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "300": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "310": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "320": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "330": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "340": {
       "ours": "tn",
-      "wasrt": "fp"
+      "wasrt": "fp",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "350": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "360": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "370": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "380": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "390": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "400": {
       "ours": "fp",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "410": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "420": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "430": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "440": {
       "ours": "tn",
-      "wasrt": "fp"
+      "wasrt": "fp",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "450": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "460": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "470": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "480": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "490": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "500": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "510": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "520": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "530": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "540": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "550": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "560": {
       "ours": "tn",
-      "wasrt": "fp"
+      "wasrt": "fp",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "570": {
-      "ours": "fp",
-      "wasrt": "tp"
+      "ours": "tp",
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "580": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "590": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "600": {
-      "ours": "fp",
-      "wasrt": "tp"
+      "ours": "tp",
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "610": {
-      "ours": "fp",
-      "wasrt": "tp"
+      "ours": "tp",
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "620": {
-      "ours": "fp",
-      "wasrt": "tp"
+      "ours": "tp",
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "630": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "640": {
       "ours": "fn",
-      "wasrt": "fp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "650": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "660": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "670": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "680": {
       "ours": "fn",
-      "wasrt": "fp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "690": {
       "ours": "fn",
-      "wasrt": "fp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "700": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "710": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "720": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "730": {
       "ours": "tp",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "740": {
       "ours": "tp",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "750": {
       "ours": "tp",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "760": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "770": {
       "ours": "tp",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "780": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "790": {
-      "ours": "fp",
-      "wasrt": "tp"
+      "ours": "tp",
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "800": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "810": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "820": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "830": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "840": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "850": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "860": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "870": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "880": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "890": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "900": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "910": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "920": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "930": {
       "ours": "fp",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "940": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "950": {
       "ours": "fp",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "960": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "970": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "980": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "990": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1000": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1010": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1020": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1030": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1040": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1050": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1060": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1070": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1080": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1090": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1100": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1110": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1120": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1130": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1140": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1150": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1160": {
       "ours": "tn",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1170": {
       "ours": "fp",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1180": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1190": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1200": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1210": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1220": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1230": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1240": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1250": {
-      "ours": "fn",
-      "wasrt": "fp"
+      "ours": "tn",
+      "wasrt": "fp",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1260": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1270": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1280": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1290": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1300": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1310": {
       "ours": "fp",
-      "wasrt": "fp"
+      "wasrt": "fp",
+      "gt_has_obstacle": false,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1320": {
       "ours": "fn",
-      "wasrt": "fp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1330": {
       "ours": "fn",
-      "wasrt": "fp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1340": {
-      "ours": "fn",
-      "wasrt": "fp"
+      "ours": "tn",
+      "wasrt": "fp",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1350": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1360": {
-      "ours": "fn",
-      "wasrt": "fp"
+      "ours": "tn",
+      "wasrt": "fp",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1370": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1380": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1390": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1400": {
-      "ours": "fp",
-      "wasrt": "tp"
+      "ours": "tp",
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1410": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1420": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1430": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1440": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1450": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1460": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1470": {
-      "ours": "fp",
-      "wasrt": "tp"
+      "ours": "tp",
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1480": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1490": {
       "ours": "tp",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1500": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1510": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1520": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1530": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1540": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1550": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1560": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1570": {
-      "ours": "fp",
-      "wasrt": "fn"
+      "ours": "tp",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1580": {
       "ours": "fn",
-      "wasrt": "fn"
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": false
     },
     "1590": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1600": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1610": {
       "ours": "fn",
-      "wasrt": "fp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1620": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1630": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1640": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1650": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1660": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1670": {
       "ours": "fn",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1680": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1690": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1700": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1710": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1720": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1730": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1740": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1750": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1760": {
       "ours": "tp",
-      "wasrt": "tp"
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
+      "ours_detected": true,
+      "wasrt_detected": true
     },
     "1770": {
       "ours": "fp",
-      "wasrt": "tn"
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
+      "ours_detected": true,
+      "wasrt_detected": false
     },
     "1780": {
       "ours": "tn",
-      "wasrt": "fp"
+      "wasrt": "fp",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": true
     },
     "1790": {
       "ours": "tn",
-      "wasrt": "fp"
+      "wasrt": "fp",
+      "gt_has_obstacle": false,
+      "ours_detected": false,
+      "wasrt_detected": true
     }
   }
 }

@@ -9,10 +9,10 @@
       "resolution": "256x192",
       "total_frames_evaluated": 50,
       "warmup_frames_excluded": 10,
-      "mean_time_ms": 282.34548308002104,
-      "std_time_ms": 15.4195230742919,
-      "fps": 3.5417602190454898,
-      "peak_ram_mb": 1052.171875
+      "mean_time_ms": 282.41101109998453,
+      "std_time_ms": 15.989249273123889,
+      "fps": 3.5409384220006954,
+      "peak_ram_mb": 1007.89453125
     },
     {
       "method": "Ours (Fuzzy Logic)",
@@ -20,21 +20,10 @@
       "resolution": "256x192",
       "total_frames_evaluated": 50,
       "warmup_frames_excluded": 10,
-      "mean_time_ms": 43.88974966001115,
-      "std_time_ms": 1.0897901336124745,
-      "fps": 22.78436326810769,
-      "peak_ram_mb": 1543.59375
-    },
-    {
-      "method": "WaSR-T",
-      "backend": "CPU (ARM Cortex-A78AE)",
-      "resolution": "512x384",
-      "total_frames_evaluated": 8,
-      "warmup_frames_excluded": 2,
-      "mean_time_ms": 16419.06265,
-      "std_time_ms": 106.93550931880056,
-      "fps": 0.060904816633975144,
-      "peak_ram_mb": 3785.109375
+      "mean_time_ms": 43.736683619999894,
+      "std_time_ms": 1.1359688717218368,
+      "fps": 22.864102104502507,
+      "peak_ram_mb": 1493.84765625
     },
     {
       "method": "WaSR-T",
@@ -42,29 +31,31 @@
       "resolution": "512x384",
       "total_frames_evaluated": 50,
       "warmup_frames_excluded": 10,
-      "mean_time_ms": 831.9950013200196,
-      "std_time_ms": 13.503334646987975,
-      "fps": 1.2019302981549511,
-      "peak_ram_mb": 4241.56640625
+      "mean_time_ms": 830.9565085799977,
+      "std_time_ms": 10.752340166900971,
+      "fps": 1.2034324175508015,
+      "peak_ram_mb": 4326.0625
     }
   ],
   "detection_metrics": {
     "total_annotated": 180,
     "ours": {
-      "precision": 0.7160493827160493,
-      "recall": 0.464,
-      "f1": 0.5631067961165048,
-      "tp": 58,
-      "fp": 23,
-      "fn": 67,
-      "tn": 32
+      "precision": 0.9259259259259259,
+      "recall": 0.539568345323741,
+      "f1": 0.6818181818181819,
+      "accuracy": 0.6111111111111112,
+      "tp": 75,
+      "fp": 6,
+      "fn": 64,
+      "tn": 35
     },
     "wasrt": {
-      "precision": 0.8660714285714286,
-      "recall": 0.7293233082706767,
-      "f1": 0.7918367346938776,
-      "tp": 97,
-      "fp": 15,
+      "precision": 0.9196428571428571,
+      "recall": 0.7410071942446043,
+      "f1": 0.8207171314741035,
+      "accuracy": 0.75,
+      "tp": 103,
+      "fp": 9,
       "fn": 36,
       "tn": 32
     }

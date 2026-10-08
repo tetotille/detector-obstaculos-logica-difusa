@@ -27,7 +27,7 @@ from src.utils.utils import read_image
 from src.detector_horizonte.pixel_detector import separate_pixels, find_largest_fuzzy_jump
 from src.detector_hsv.rgb_detection import process_image_cpu as detector_rgb_cpu
 from src.cmeans.c_means_main import fcm, segment_fcm_pixel_level, extract_boxes_from_mask
-from src.fuzzy_union.fuzzy_union import fuzzy_union, intersect_fuzzy_detections
+from src.fuzzy_union.fuzzy_union import fuzzy_union, intersect_fuzzy_detections, confirm_fuzzy_consensus
 
 
 
@@ -138,14 +138,9 @@ def detect_obstacles(
     # Evalúa reglas difusas y asigna puntuaciones según distancias espaciales y masas
     fused_boxes = fuzzy_union([cuadros_color, cuadros_fcm])
 
-    # 5. Confirmación por INTERSECCIÓN espacial estricta entre FCM y detector cromático
-    # Un obstáculo solo se confirma si es validado simultáneamente por ambos detectores
-    # y posee propiedades físicas reales de obstáculo (evitando sombras planas de olas)
-    confirmed_candidates = intersect_fuzzy_detections(
-        cuadros_fcm=cuadros_fcm,
-        cuadros_union=cuadros_color,
-        tol=0
-    )
+    # 5. Confirmación por CONSENSO DE FUSIÓN DIFUSA
+    # Exige acuerdo entre ramas diferentes (color y FCM), con puntuación > 0 y solapamiento 2D
+    confirmed_candidates = confirm_fuzzy_consensus(fused_boxes, tol=0)
 
     confirmed_boxes = []
     for box in confirmed_candidates:

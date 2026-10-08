@@ -1,16 +1,29 @@
 \begin{table}[htbp]
 \centering
-\caption{Benchmark Comparison on NVIDIA Jetson Orin Nano (25W Power Mode)}
-\label{tab:jetson_benchmark}
+\caption{Performance and Latency Benchmark on NVIDIA Jetson Orin Nano (25W Power Mode)}
+\label{tab:main_benchmark_comparison}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
-Method & Precision & Recall & F1-Score & Throughput (FPS) & Peak RAM (MB) \\
+Method & Resolution & Precision & Recall & F1-Score & Latency (ms) & Throughput (FPS) \\
 \midrule
-WaSR-T (GPU)       & \textbf{0.866} & \textbf{0.729} & \textbf{0.792} & 1.20 & 4242 \\
-Ours (CPU)         & 0.716 & 0.464 & 0.563 & 3.54 & \textbf{1052} \\
-\textbf{Ours (GPU)} & 0.716 & 0.464 & 0.563 & \textbf{22.78} & \textbf{1052} \\
+WaSR-T (Temporal CNN) & 512$\times$384 & \textbf{0.920} & \textbf{0.741} & \textbf{0.821} & 831.0 & 1.20 \\
+\textbf{Ours (Fuzzy Logic)}  & 256$\times$192 & 0.926 & 0.540 & 0.682 & \textbf{43.7} & \textbf{22.86} \\
 \bottomrule
 \end{tabular}%
 }
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Detection Confusion Matrix on 180 Unified Video Frames}
+\label{tab:confusion_matrix}
+\begin{tabular}{lccccc}
+\toprule
+Method & TP & FP & FN & TN & Total Frames \\
+\midrule
+WaSR-T (Temporal CNN) & 103 & 9 & 36 & 32 & 180 \\
+\textbf{Ours (Fuzzy Logic)}  & 75 & 6 & 64 & 35 & 180 \\
+\bottomrule
+\end{tabular}
 \end{table}

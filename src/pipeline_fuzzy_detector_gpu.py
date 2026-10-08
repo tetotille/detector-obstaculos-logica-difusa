@@ -26,7 +26,7 @@ if str(project_root) not in sys.path:
 from src.utils.utils import read_image, mask_to_bounding_boxes
 from src.detector_horizonte.pixel_detector import separate_pixels, find_largest_fuzzy_jump
 from src.detector_hsv.rgb_detection import process_image_cpu as detector_rgb_cpu
-from src.fuzzy_union.fuzzy_union import fuzzy_union, intersect_fuzzy_detections
+from src.fuzzy_union.fuzzy_union import fuzzy_union, intersect_fuzzy_detections, confirm_fuzzy_consensus
 
 
 def normalize_power_columns_torch(matrix: torch.Tensor, power: float) -> torch.Tensor:
@@ -244,15 +244,11 @@ def detect_obstacles_gpu(
             c_box["_compensated"] = True
             cuadros_color.append(c_box)
 
-    # 4. Fusión Difusa
+    # 4. Fusión Difusa (Puntuación y selección de candidatos por rama)
     fused_boxes = fuzzy_union([cuadros_color, cuadros_fcm])
 
-    # 5. Confirmación por INTERSECCIÓN
-    confirmed_candidates = intersect_fuzzy_detections(
-        cuadros_fcm=cuadros_fcm,
-        cuadros_union=cuadros_color,
-        tol=0
-    )
+    # 5. Confirmación por CONSENSO DE FUSIÓN DIFUSA (ramas distintas + puntuación > 0 + solapamiento)
+    confirmed_candidates = confirm_fuzzy_consensus(fused_boxes, tol=0)
 
     confirmed_boxes = []
     for box in confirmed_candidates:

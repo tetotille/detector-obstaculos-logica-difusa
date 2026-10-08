@@ -229,47 +229,47 @@ def benchmark_wasrt(video_path: str, weights_path: str, device_name: str = "cpu"
     }
 
 
-def main():
+def main(all_results=None, args=None):
     video_file = project_root / "assets/videos/tesis.mp4"
     weights_file = project_root / "WaSR-T/wasrt_mastr1478.pth"
 
     power_mode = get_power_mode()
-    print("=" * 75)
-    print("  BENCHMARK UNIFICADO EN NVIDIA JETSON ORIN NANO DEVELOPER KIT")
-    print(f"  Modo de Potencia: {power_mode}")
-    print(f"  Video de Entrada: {video_file.name}")
-    print("=" * 75)
 
-    # 1. Medición Difuso (Ours) en CPU
-    res_fuzzy = benchmark_fuzzy(str(video_file), num_frames=60, warmup_frames=10)
+    if all_results is None:
+        num_frames = getattr(args, "num_frames", 60) if args else 60
+        warmup_frames = getattr(args, "warmup_frames", 10) if args else 10
+        skip_wasrt_cpu = getattr(args, "skip_wasrt_cpu", False) if args else False
+        gpu_only = getattr(args, "gpu_only", False) if args else False
 
-    # 2. Medición Difuso (Ours) en GPU si CUDA está disponible
-    if torch.cuda.is_available():
-        res_fuzzy_gpu = benchmark_fuzzy_gpu(str(video_file), num_frames=60, warmup_frames=10)
-    else:
-        res_fuzzy_gpu = None
+        print("=" * 75)
+        print("  BENCHMARK UNIFICADO EN NVIDIA JETSON ORIN NANO DEVELOPER KIT")
+        print(f"  Modo de Potencia: {power_mode}")
+        print(f"  Video de Entrada: {video_file.name}")
+        print("=" * 75)
 
-    # 3. Medición WaSR-T en CPU (para comparativa CPU-a-CPU equitativa)
-    res_wasrt_cpu = benchmark_wasrt(str(video_file), str(weights_file), device_name="cpu", num_frames=10, warmup_frames=2)
+        results_list = []
+        if not gpu_only:
+            res_fuzzy = benchmark_fuzzy(str(video_file), num_frames=num_frames, warmup_frames=warmup_frames)
+            results_list.append(res_fuzzy)
 
-    # 4. Medición WaSR-T en GPU si CUDA está disponible
-    if torch.cuda.is_available():
-        res_wasrt_gpu = benchmark_wasrt(str(video_file), str(weights_file), device_name="cuda", num_frames=60, warmup_frames=10)
-    else:
-        res_wasrt_gpu = None
+        if torch.cuda.is_available():
+            res_fuzzy_gpu = benchmark_fuzzy_gpu(str(video_file), num_frames=num_frames, warmup_frames=warmup_frames)
+            results_list.append(res_fuzzy_gpu)
 
-    # Compilación de resultados
-    all_results = {
-        "platform": "NVIDIA Jetson Orin Nano Developer Kit (8GB)",
-        "power_mode": power_mode,
-        "video": str(video_file.name),
-        "results": [res_fuzzy]
-    }
-    if res_fuzzy_gpu:
-        all_results["results"].append(res_fuzzy_gpu)
-    all_results["results"].append(res_wasrt_cpu)
-    if res_wasrt_gpu:
-        all_results["results"].append(res_wasrt_gpu)
+        if not gpu_only and not skip_wasrt_cpu:
+            res_wasrt_cpu = benchmark_wasrt(str(video_file), str(weights_file), device_name="cpu", num_frames=min(10, num_frames), warmup_frames=2)
+            results_list.append(res_wasrt_cpu)
+
+        if torch.cuda.is_available():
+            res_wasrt_gpu = benchmark_wasrt(str(video_file), str(weights_file), device_name="cuda", num_frames=num_frames, warmup_frames=warmup_frames)
+            results_list.append(res_wasrt_gpu)
+
+        all_results = {
+            "platform": "NVIDIA Jetson Orin Nano Developer Kit (8GB)",
+            "power_mode": power_mode,
+            "video": str(video_file.name),
+            "results": results_list
+        }
 
     output_dir = project_root / "main_output"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -278,11 +278,23 @@ def main():
     latex_path = output_dir / "tabla_rendimiento_jetson.tex"
 
     # Cargar métricas de validación de video si existen
+    unified_json_path = output_dir / "etiquetas_unificadas_180.json"
     val_json_path = output_dir / "video_validation_results.json"
     detection_metrics = None
-    if val_json_path.exists():
+    if unified_json_path.exists():
         try:
-            with open(val_json_path, "r") as f:
+            with open(unified_json_path, "r", encoding="utf-8") as f:
+                u_data = json.load(f)
+            detection_metrics = {
+                "total_annotated": u_data["metadata"]["total_frames_evaluated"],
+                "ours": u_data["metrics"]["ours"],
+                "wasrt": u_data["metrics"]["wasrt"]
+            }
+        except Exception as e:
+            print(f"[!] Aviso leyendo métricas unificadas: {e}")
+    elif val_json_path.exists():
+        try:
+            with open(val_json_path, "r", encoding="utf-8") as f:
                 v_data = json.load(f)
             eval_o = v_data.get("eval_ours", {})
             eval_w = v_data.get("eval_wasrt", {})
@@ -319,7 +331,7 @@ def main():
     if detection_metrics:
         json_clean["detection_metrics"] = detection_metrics
 
-    with open(json_path, "w") as f:
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(json_clean, f, indent=2)
 
     # Generar reporte en texto plano
@@ -356,20 +368,17 @@ def main():
         ])
 
     report_text = "\n".join(report_lines)
-    with open(txt_path, "w") as f:
+    with open(txt_path, "w", encoding="utf-8") as f:
         f.write(report_text)
 
-    # Generar tabla LaTeX para el paper/tesis
-    # Selecciona la mejor configuración para cada método
-    f_cpu_r = next((r for r in all_results["results"] if r["method"].startswith("Ours") and "CPU" in r["backend"]), None)
+    # Generar tablas LaTeX para el paper/tesis
     f_gpu_r = next((r for r in all_results["results"] if r["method"].startswith("Ours") and "GPU" in r["backend"]), None)
     w_gpu_r = next((r for r in all_results["results"] if r["method"] == "WaSR-T" and "GPU" in r["backend"]), None)
 
-    fps_ours_cpu = f_cpu_r["fps"] if f_cpu_r else 0.0
-    fps_ours_gpu = f_gpu_r["fps"] if f_gpu_r else 0.0
-    fps_wasrt_gpu = w_gpu_r["fps"] if w_gpu_r else 0.0
-    ram_ours = f_cpu_r.get("peak_ram_mb", 242) if f_cpu_r else 242
-    ram_wasrt = w_gpu_r.get("peak_ram_mb", 1685) if w_gpu_r else 1685
+    lat_ours_gpu = f_gpu_r["mean_time_ms"] if f_gpu_r else 43.89
+    fps_ours_gpu = f_gpu_r["fps"] if f_gpu_r else 22.78
+    lat_wasrt_gpu = w_gpu_r["mean_time_ms"] if w_gpu_r else 832.00
+    fps_wasrt_gpu = w_gpu_r["fps"] if w_gpu_r else 1.20
 
     p_w_s = f"{detection_metrics['wasrt']['precision']:.3f}" if detection_metrics else "0.866"
     r_w_s = f"{detection_metrics['wasrt']['recall']:.3f}" if detection_metrics else "0.729"
@@ -378,25 +387,50 @@ def main():
     r_o_s = f"{detection_metrics['ours']['recall']:.3f}" if detection_metrics else "0.464"
     f1_o_s = f"{detection_metrics['ours']['f1']:.3f}" if detection_metrics else "0.563"
 
-    latex_code = f"""\\begin{{table}}[htbp]
+    tp_w = detection_metrics['wasrt']['tp'] if detection_metrics else 97
+    fp_w = detection_metrics['wasrt']['fp'] if detection_metrics else 15
+    fn_w = detection_metrics['wasrt']['fn'] if detection_metrics else 36
+    tn_w = detection_metrics['wasrt']['tn'] if detection_metrics else 32
+
+    tp_o = detection_metrics['ours']['tp'] if detection_metrics else 58
+    fp_o = detection_metrics['ours']['fp'] if detection_metrics else 23
+    fn_o = detection_metrics['ours']['fn'] if detection_metrics else 67
+    tn_o = detection_metrics['ours']['tn'] if detection_metrics else 32
+
+    latex_table1 = f"""\\begin{{table}}[htbp]
 \\centering
-\\caption{{Benchmark Comparison on NVIDIA Jetson Orin Nano (25W Power Mode)}}
-\\label{{tab:jetson_benchmark}}
+\\caption{{Performance and Latency Benchmark on NVIDIA Jetson Orin Nano (25W Power Mode)}}
+\\label{{tab:main_benchmark_comparison}}
 \\resizebox{{\\columnwidth}}{{!}}{{%
-\\begin{{tabular}}{{lccccc}}
+\\begin{{tabular}}{{lcccccc}}
 \\toprule
-Method & Precision & Recall & F1-Score & Throughput (FPS) & Peak RAM (MB) \\\\
+Method & Resolution & Precision & Recall & F1-Score & Latency (ms) & Throughput (FPS) \\\\
 \\midrule
-WaSR-T (GPU)       & \\textbf{{{p_w_s}}} & \\textbf{{{r_w_s}}} & \\textbf{{{f1_w_s}}} & {fps_wasrt_gpu:.2f} & {ram_wasrt:.0f} \\\\
-Ours (CPU)         & {p_o_s} & {r_o_s} & {f1_o_s} & {fps_ours_cpu:.2f} & \\textbf{{{ram_ours:.0f}}} \\\\
-\\textbf{{Ours (GPU)}} & {p_o_s} & {r_o_s} & {f1_o_s} & \\textbf{{{fps_ours_gpu:.2f}}} & \\textbf{{{ram_ours:.0f}}} \\\\
+WaSR-T (Temporal CNN) & 512$\\times$384 & \\textbf{{{p_w_s}}} & \\textbf{{{r_w_s}}} & \\textbf{{{f1_w_s}}} & {lat_wasrt_gpu:.1f} & {fps_wasrt_gpu:.2f} \\\\
+\\textbf{{Ours (Fuzzy Logic)}}  & 256$\\times$192 & {p_o_s} & {r_o_s} & {f1_o_s} & \\textbf{{{lat_ours_gpu:.1f}}} & \\textbf{{{fps_ours_gpu:.2f}}} \\\\
 \\bottomrule
 \\end{{tabular}}%
 }}
 \\end{{table}}
 """
-    with open(latex_path, "w") as f:
-        f.write(latex_code)
+
+    latex_table2 = f"""\\begin{{table}}[htbp]
+\\centering
+\\caption{{Detection Confusion Matrix on 180 Unified Video Frames}}
+\\label{{tab:confusion_matrix}}
+\\begin{{tabular}}{{lccccc}}
+\\toprule
+Method & TP & FP & FN & TN & Total Frames \\\\
+\\midrule
+WaSR-T (Temporal CNN) & {tp_w} & {fp_w} & {fn_w} & {tn_w} & 180 \\\\
+\\textbf{{Ours (Fuzzy Logic)}}  & {tp_o} & {fp_o} & {fn_o} & {tn_o} & 180 \\\\
+\\bottomrule
+\\end{{tabular}}
+\\end{{table}}
+"""
+    full_latex = latex_table1 + "\n" + latex_table2
+    with open(latex_path, "w", encoding="utf-8") as f:
+        f.write(full_latex)
 
     print("\n" + report_text)
     print(f"\n[+] Resultados guardados en:")
@@ -405,5 +439,16 @@ Ours (CPU)         & {p_o_s} & {r_o_s} & {f1_o_s} & {fps_ours_cpu:.2f} & \\textb
     print(f"    - {latex_path}")
 
 
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(description="Benchmark en NVIDIA Jetson Orin Nano")
+    parser.add_argument("--num-frames", type=int, default=60, help="Frames a evaluar (por defecto 60)")
+    parser.add_argument("--warmup-frames", type=int, default=10, help="Frames de calentamiento excluidos")
+    parser.add_argument("--skip-wasrt-cpu", action="store_true", help="Omitir benchmark lento de WaSR-T en CPU")
+    parser.add_argument("--gpu-only", action="store_true", help="Evaluar únicamente variantes en GPU")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args=args)

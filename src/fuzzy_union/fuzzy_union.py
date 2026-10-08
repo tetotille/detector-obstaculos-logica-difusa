@@ -235,39 +235,96 @@ def compute_box_intersection(b1, b2):
     return None
 
 
-def intersect_fuzzy_detections(cuadros_fcm, cuadros_union, tol=0, min_score=0.0):
+def confirm_fuzzy_consensus(fused_boxes, tol=0, min_score=1e-5):
+    """
+    Confirma obstáculos mediante el consenso estricto de la fusión difusa:
+    - Utiliza los candidatos seleccionados y puntuados por fuzzy_union.
+    - Exige candidatos de ramas diferentes: cromática (fused_boxes[0]) y FCM (fused_boxes[1]).
+    - Exige puntuación difusa estrictamente positiva (> 0) en ambas ramas.
+    - Exige solapamiento espacial 2D entre ambas ramas.
+    - Evita auto-comparaciones o aceptar candidatos sin puntuación mediante valores cero.
+
+    Casos de consenso evaluados:
+    1. Solo una rama detecta -> No se confirma ([]).
+    2. Ambas detectan pero sin solapamiento espacial -> No se confirma ([]).
+    3. Ambas detectan, se solapan y tienen puntuación > 0 -> Pasa la etapa de consenso ([confirmed]).
+    """
+    if not fused_boxes or len(fused_boxes) < 2:
+        return []
+
+    cand_color = fused_boxes[0]
+    cand_fcm = fused_boxes[1]
+
+    # Caso 1: Solo una rama detecta (o ninguna)
+    if cand_color is None or cand_fcm is None:
+        return []
+
+    # Evitar auto-comparaciones si por error se pasó el mismo candidato o lista
+    if cand_color is cand_fcm:
+        return []
+
+    score_col = float(cand_color.get("fuzzy_union", 0.0))
+    score_fcm = float(cand_fcm.get("fuzzy_union", 0.0))
+
+    # Exigir puntuación estrictamente positiva (> 0)
+    if score_col <= min_score or score_fcm <= min_score:
+        return []
+
+    # Caso 2: Ambas detectan, pero sus cajas no se solapan espacialmente
+    if not boxes_intersect(cand_fcm, cand_color, tol=tol):
+        return []
+
+    # Caso 3: Ambas detectan, se solapan y tienen puntuación positiva
+    inter_geom = compute_box_intersection(cand_fcm, cand_color)
+    confirmed = dict(cand_fcm)
+    confirmed["fuzzy_union"] = float(max(score_col, score_fcm))
+    confirmed["score_color"] = float(score_col)
+    confirmed["score_fcm"] = float(score_fcm)
+    confirmed["intersected_with"] = {
+        "x_init": cand_color["x_init"],
+        "y_init": cand_color["y_init"],
+        "x_end": cand_color["x_end"],
+        "y_end": cand_color["y_end"],
+        "score": float(score_col)
+    }
+    if inter_geom is not None:
+        confirmed["intersection_box"] = inter_geom
+
+    return [confirmed]
+
+
+def intersect_fuzzy_detections(cuadros_fcm, cuadros_union, tol=0, min_score=1e-5):
     """
     Confirma obstáculos cuadro a cuadro mediante la INTERSECCIÓN espacial entre
-    las regiones candidatas del FCM y las detecciones de la Unión Difusa / detector complementario,
-    eliminando la necesidad de persistencia o memoria temporal inter-frame.
-
-    Parámetros:
-    cuadros_fcm: list of dict
-        Candidatos generados por el detector semántico FCM.
-    cuadros_union: list of dict
-        Candidatos generados por el detector complementario / fusión difusa.
-    tol: int
-        Tolerancia espacial en píxeles (0 = solapamiento físico 2D estricto).
-    min_score: float
-        Puntuación difusa mínima requerida para el candidato de unión.
-
-    Retorna:
-    list of dict:
-        Lista de obstáculos confirmados por consenso e intersección.
+    las regiones candidatas del FCM y las detecciones de la Unión Difusa / detector complementario.
+    Exige puntuación positiva (> 0) y solapamiento entre ramas distintas.
     """
+    if isinstance(cuadros_fcm, list) and len(cuadros_fcm) == 2 and cuadros_union is None:
+        return confirm_fuzzy_consensus(cuadros_fcm, tol=tol, min_score=min_score)
+
+    if cuadros_fcm is cuadros_union:
+        return []
+
     confirmed = []
-    valid_fcm = [b for b in cuadros_fcm if b is not None]
-    valid_union = [
-        b for b in cuadros_union
-        if b is not None and b.get("fuzzy_union", 0.0) >= min_score
+    valid_fcm = [
+        b for b in (cuadros_fcm or [])
+        if b is not None and float(b.get("fuzzy_union", 0.0)) > min_score
     ]
+    valid_union = [
+        b for b in (cuadros_union or [])
+        if b is not None and float(b.get("fuzzy_union", 0.0)) > min_score
+    ]
+
+    if not valid_fcm or not valid_union:
+        return []
 
     for bf in valid_fcm:
         for bu in valid_union:
+            if bf is bu:
+                continue
             if boxes_intersect(bf, bu, tol=tol):
                 inter_geom = compute_box_intersection(bf, bu)
-                score = max(bf.get("fuzzy_union", 0.0), bu.get("fuzzy_union", 0.0))
-
+                score = max(float(bf.get("fuzzy_union", 0.0)), float(bu.get("fuzzy_union", 0.0)))
                 c_conf = dict(bf)
                 c_conf["fuzzy_union"] = float(score)
                 c_conf["intersected_with"] = {
@@ -275,11 +332,10 @@ def intersect_fuzzy_detections(cuadros_fcm, cuadros_union, tol=0, min_score=0.0)
                     "y_init": bu["y_init"],
                     "x_end": bu["x_end"],
                     "y_end": bu["y_end"],
-                    "score": bu.get("fuzzy_union", 0.0)
+                    "score": float(bu.get("fuzzy_union", 0.0))
                 }
                 if inter_geom is not None:
                     c_conf["intersection_box"] = inter_geom
-
                 confirmed.append(c_conf)
                 break
 
@@ -311,12 +367,25 @@ if __name__ == "__main__":
     print("  Puntuación ponderada:", res_solo[0]["fuzzy_union"])
     assert res_solo[0]["distancia_minima"] == 100.0, "La distancia debe ser 100.0 (finita) sin candidatos"
 
-    # 4. Comprobación de intersección de cajas
-    b_fcm_test = {"x_init": 100, "y_init": 50, "x_end": 150, "y_end": 90, "weight": 200, "fuzzy_union": 1.5}
-    b_rgb_test = {"x_init": 120, "y_init": 60, "x_end": 160, "y_end": 95, "weight": 180, "fuzzy_union": 1.2}
-    assert boxes_intersect(b_fcm_test, b_rgb_test), "Deben intersectar"
-    conf = intersect_fuzzy_detections([b_fcm_test], [b_rgb_test])
-    assert len(conf) == 1, "Debe confirmar 1 obstáculo por intersección"
-    print("Test 4 - Intersección exitosa:", conf[0]["intersection_box"])
+    # 4. Comprobaciones de las tres condiciones de consenso de fusión:
+    # Caso 4.1: Solo una rama detecta -> No se confirma con este criterio
+    b_col_only = {"x_init": 100, "y_init": 50, "x_end": 140, "y_end": 80, "fuzzy_union": 1.5}
+    assert confirm_fuzzy_consensus([b_col_only, None]) == [], "Caso 1 falló: Solo una rama detecta no debe confirmar"
+    assert confirm_fuzzy_consensus([None, b_col_only]) == [], "Caso 1 falló: Solo una rama detecta no debe confirmar"
+    print("Test 4.1 - Solo una rama detecta: Correctamente rechazado.")
 
-    print("\nTodos los tests mínimos pasaron exitosamente.")
+    # Caso 4.2: Ambas ramas detectan pero sus cajas no se solapan -> No se confirma
+    b_col_no_ov = {"x_init": 20, "y_init": 30, "x_end": 50, "y_end": 60, "fuzzy_union": 1.2}
+    b_fcm_no_ov = {"x_init": 180, "y_init": 120, "x_end": 220, "y_end": 150, "fuzzy_union": 1.4}
+    assert confirm_fuzzy_consensus([b_col_no_ov, b_fcm_no_ov]) == [], "Caso 2 falló: Sin solapamiento no debe confirmar"
+    print("Test 4.2 - Ambas detectan sin solapamiento: Correctamente rechazado.")
+
+    # Caso 4.3: Ambas detectan, se solapan y tienen puntuación positiva -> Pasa consenso
+    b_col_ov = {"x_init": 100, "y_init": 50, "x_end": 150, "y_end": 90, "fuzzy_union": 1.5}
+    b_fcm_ov = {"x_init": 120, "y_init": 60, "x_end": 160, "y_end": 95, "fuzzy_union": 1.8}
+    res_ov = confirm_fuzzy_consensus([b_col_ov, b_fcm_ov])
+    assert len(res_ov) == 1, "Caso 3 falló: Debe confirmar candidato solapado con puntuación > 0"
+    assert res_ov[0]["fuzzy_union"] == 1.8, "Puntuación debe ser el máximo"
+    print("Test 4.3 - Ambas detectan con solapamiento y score > 0: Confirmado exitosamente.", res_ov[0]["intersection_box"])
+
+    print("\nTodos los tests pasaron exitosamente.")

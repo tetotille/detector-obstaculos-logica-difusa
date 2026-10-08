@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\caption{Benchmark Comparison on NVIDIA Jetson Orin Nano (25W Power Mode)}
+\label{tab:jetson_benchmark}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Method & Precision & Recall & F1-Score & Throughput (FPS) & Peak RAM (MB) \\
+\midrule
+WaSR-T (GPU)       & \textbf{0.866} & \textbf{0.729} & \textbf{0.792} & 1.20 & 4242 \\
+Ours (CPU)         & 0.716 & 0.464 & 0.563 & 3.54 & \textbf{1052} \\
+\textbf{Ours (GPU)} & 0.716 & 0.464 & 0.563 & \textbf{22.78} & \textbf{1052} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

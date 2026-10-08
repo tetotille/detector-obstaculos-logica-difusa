@@ -9,9 +9,10 @@
       "resolution": "256x192",
       "total_frames_evaluated": 50,
       "warmup_frames_excluded": 10,
-      "mean_time_ms": 188.09949386009976,
-      "std_time_ms": 8.769060019077056,
-      "fps": 5.316335411001992
+      "mean_time_ms": 282.34548308002104,
+      "std_time_ms": 15.4195230742919,
+      "fps": 3.5417602190454898,
+      "peak_ram_mb": 1052.171875
     },
     {
       "method": "Ours (Fuzzy Logic)",
@@ -19,9 +20,10 @@
       "resolution": "256x192",
       "total_frames_evaluated": 50,
       "warmup_frames_excluded": 10,
-      "mean_time_ms": 24.855853499939258,
-      "std_time_ms": 1.9776803633852156,
-      "fps": 40.231971917699134
+      "mean_time_ms": 43.88974966001115,
+      "std_time_ms": 1.0897901336124745,
+      "fps": 22.78436326810769,
+      "peak_ram_mb": 1543.59375
     },
     {
       "method": "WaSR-T",
@@ -29,9 +31,10 @@
       "resolution": "512x384",
       "total_frames_evaluated": 8,
       "warmup_frames_excluded": 2,
-      "mean_time_ms": 16721.218642999927,
-      "std_time_ms": 222.26066720862548,
-      "fps": 0.0598042535864235
+      "mean_time_ms": 16419.06265,
+      "std_time_ms": 106.93550931880056,
+      "fps": 0.060904816633975144,
+      "peak_ram_mb": 3785.109375
     },
     {
       "method": "WaSR-T",
@@ -39,9 +42,31 @@
       "resolution": "512x384",
       "total_frames_evaluated": 50,
       "warmup_frames_excluded": 10,
-      "mean_time_ms": 841.9888350199108,
-      "std_time_ms": 18.37315449500474,
-      "fps": 1.1876642045691173
+      "mean_time_ms": 831.9950013200196,
+      "std_time_ms": 13.503334646987975,
+      "fps": 1.2019302981549511,
+      "peak_ram_mb": 4241.56640625
     }
-  ]
+  ],
+  "detection_metrics": {
+    "total_annotated": 180,
+    "ours": {
+      "precision": 0.7160493827160493,
+      "recall": 0.464,
+      "f1": 0.5631067961165048,
+      "tp": 58,
+      "fp": 23,
+      "fn": 67,
+      "tn": 32
+    },
+    "wasrt": {
+      "precision": 0.8660714285714286,
+      "recall": 0.7293233082706767,
+      "f1": 0.7918367346938776,
+      "tp": 97,
+      "fp": 15,
+      "fn": 36,
+      "tn": 32
+    }
+  }
 }

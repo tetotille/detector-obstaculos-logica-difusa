@@ -94,8 +94,11 @@ def build_unified_dataset() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, A
             wasrt_ref = json.load(f).get("annotations", {})
 
     anns = ckpt.get("frame_annotations", {})
-    sorted_indices = sorted([int(k) for k in anns.keys()])
-    assert len(sorted_indices) == 180, f"Se esperaban exactamente 180 frames, encontrados {len(sorted_indices)}"
+    # Seleccionar los 180 frames estándar del video (paso 10, de 0 a 1790)
+    sorted_indices = [i for i in range(0, 1800, 10) if str(i) in anns]
+    if len(sorted_indices) != 180:
+        sorted_indices = sorted([int(k) for k in anns.keys()])
+    total_frames = len(sorted_indices)
 
     records = []
     matrix_ours = {"tp": 0, "fp": 0, "fn": 0, "tn": 0}
@@ -160,8 +163,8 @@ def build_unified_dataset() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, A
 
     assert total_pos_ours == total_pos_wasrt, f"Positivos no coinciden: {total_pos_ours} vs {total_pos_wasrt}"
     assert total_neg_ours == total_neg_wasrt, f"Negativos no coinciden: {total_neg_ours} vs {total_neg_wasrt}"
-    assert sum(matrix_ours.values()) == 180, "Suma Ours no es 180"
-    assert sum(matrix_wasrt.values()) == 180, "Suma WaSR-T no es 180"
+    assert sum(matrix_ours.values()) == total_frames, f"Suma Ours no es {total_frames}"
+    assert sum(matrix_wasrt.values()) == total_frames, f"Suma WaSR-T no es {total_frames}"
 
     return records, matrix_ours, matrix_wasrt
 

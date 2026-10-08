@@ -3,29 +3,29 @@
     "dataset": "assets/videos/tesis.mp4",
     "total_frames_evaluated": 180,
     "step": 10,
-    "ground_truth_positives": 139,
-    "ground_truth_negatives": 41
+    "ground_truth_positives": 141,
+    "ground_truth_negatives": 39
   },
   "metrics": {
     "ours": {
-      "precision": 0.9259259259259259,
-      "recall": 0.539568345323741,
-      "f1": 0.6818181818181819,
-      "accuracy": 0.6111111111111112,
-      "tp": 75,
-      "fp": 6,
-      "fn": 64,
-      "tn": 35
+      "precision": 0.8363636363636363,
+      "recall": 0.3262411347517731,
+      "f1": 0.46938775510204084,
+      "accuracy": 0.4222222222222222,
+      "tp": 46,
+      "fp": 9,
+      "fn": 95,
+      "tn": 30
     },
     "wasrt": {
-      "precision": 0.9196428571428571,
-      "recall": 0.7410071942446043,
-      "f1": 0.8207171314741035,
-      "accuracy": 0.75,
-      "tp": 103,
-      "fp": 9,
-      "fn": 36,
-      "tn": 32
+      "precision": 0.9607843137254902,
+      "recall": 0.6950354609929078,
+      "f1": 0.8065843621399177,
+      "accuracy": 0.7388888888888889,
+      "tp": 98,
+      "fp": 4,
+      "fn": 43,
+      "tn": 35
     }
   },
   "frames": [
@@ -64,9 +64,9 @@
     {
       "frame_idx": 40,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -96,9 +96,9 @@
     {
       "frame_idx": 80,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -112,9 +112,9 @@
     {
       "frame_idx": 100,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -136,9 +136,9 @@
     {
       "frame_idx": 130,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -256,9 +256,9 @@
     {
       "frame_idx": 280,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -280,9 +280,9 @@
     {
       "frame_idx": 310,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -303,27 +303,27 @@
     },
     {
       "frame_idx": 340,
-      "gt_has_obstacle": false,
+      "gt_has_obstacle": true,
       "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TN",
-      "wasrt_classification": "FP"
+      "ours_classification": "FN",
+      "wasrt_classification": "TP"
     },
     {
       "frame_idx": 350,
-      "gt_has_obstacle": false,
+      "gt_has_obstacle": true,
       "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TN",
-      "wasrt_classification": "TN"
+      "ours_classification": "FN",
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 360,
-      "gt_has_obstacle": false,
+      "gt_has_obstacle": true,
       "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TN",
-      "wasrt_classification": "TN"
+      "ours_classification": "FN",
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 370,
@@ -351,11 +351,11 @@
     },
     {
       "frame_idx": 400,
-      "gt_has_obstacle": false,
-      "ours_detected": true,
+      "gt_has_obstacle": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "FP",
-      "wasrt_classification": "TN"
+      "ours_classification": "FN",
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 410,
@@ -367,11 +367,11 @@
     },
     {
       "frame_idx": 420,
-      "gt_has_obstacle": false,
+      "gt_has_obstacle": true,
       "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TN",
-      "wasrt_classification": "TN"
+      "ours_classification": "FN",
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 430,
@@ -383,11 +383,11 @@
     },
     {
       "frame_idx": 440,
-      "gt_has_obstacle": false,
+      "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
-      "ours_classification": "TN",
-      "wasrt_classification": "FP"
+      "wasrt_detected": false,
+      "ours_classification": "FN",
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 450,
@@ -432,9 +432,9 @@
     {
       "frame_idx": 500,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "FN"
     },
     {
@@ -479,18 +479,18 @@
     },
     {
       "frame_idx": 560,
-      "gt_has_obstacle": false,
+      "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
-      "ours_classification": "TN",
-      "wasrt_classification": "FP"
+      "wasrt_detected": false,
+      "ours_classification": "FN",
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 570,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -520,17 +520,17 @@
     {
       "frame_idx": 610,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
       "frame_idx": 620,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -545,9 +545,9 @@
       "frame_idx": 640,
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
+      "wasrt_detected": false,
       "ours_classification": "FN",
-      "wasrt_classification": "TP"
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 650,
@@ -577,17 +577,17 @@
       "frame_idx": 680,
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
+      "wasrt_detected": false,
       "ours_classification": "FN",
-      "wasrt_classification": "TP"
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 690,
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
+      "wasrt_detected": false,
       "ours_classification": "FN",
-      "wasrt_classification": "TP"
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 700,
@@ -624,17 +624,17 @@
     {
       "frame_idx": 740,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "FN"
     },
     {
       "frame_idx": 750,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "FN"
     },
     {
@@ -664,9 +664,9 @@
     {
       "frame_idx": 790,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -704,17 +704,17 @@
     {
       "frame_idx": 840,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
       "frame_idx": 850,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -744,17 +744,17 @@
     {
       "frame_idx": 890,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
       "frame_idx": 900,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -975,59 +975,59 @@
     },
     {
       "frame_idx": 1180,
-      "gt_has_obstacle": true,
+      "gt_has_obstacle": false,
       "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "FN",
-      "wasrt_classification": "FN"
+      "ours_classification": "TN",
+      "wasrt_classification": "TN"
     },
     {
       "frame_idx": 1190,
-      "gt_has_obstacle": true,
+      "gt_has_obstacle": false,
       "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "FN",
-      "wasrt_classification": "FN"
+      "ours_classification": "TN",
+      "wasrt_classification": "TN"
     },
     {
       "frame_idx": 1200,
-      "gt_has_obstacle": true,
+      "gt_has_obstacle": false,
       "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "FN",
-      "wasrt_classification": "FN"
+      "ours_classification": "TN",
+      "wasrt_classification": "TN"
     },
     {
       "frame_idx": 1210,
-      "gt_has_obstacle": true,
+      "gt_has_obstacle": false,
       "ours_detected": true,
       "wasrt_detected": false,
-      "ours_classification": "TP",
-      "wasrt_classification": "FN"
+      "ours_classification": "FP",
+      "wasrt_classification": "TN"
     },
     {
       "frame_idx": 1220,
-      "gt_has_obstacle": true,
+      "gt_has_obstacle": false,
       "ours_detected": true,
       "wasrt_detected": false,
-      "ours_classification": "TP",
-      "wasrt_classification": "FN"
+      "ours_classification": "FP",
+      "wasrt_classification": "TN"
     },
     {
       "frame_idx": 1230,
-      "gt_has_obstacle": true,
+      "gt_has_obstacle": false,
       "ours_detected": true,
       "wasrt_detected": false,
-      "ours_classification": "TP",
-      "wasrt_classification": "FN"
+      "ours_classification": "FP",
+      "wasrt_classification": "TN"
     },
     {
       "frame_idx": 1240,
-      "gt_has_obstacle": true,
+      "gt_has_obstacle": false,
       "ours_detected": true,
       "wasrt_detected": false,
-      "ours_classification": "TP",
-      "wasrt_classification": "FN"
+      "ours_classification": "FP",
+      "wasrt_classification": "TN"
     },
     {
       "frame_idx": 1250,
@@ -1041,9 +1041,9 @@
       "frame_idx": 1260,
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
+      "wasrt_detected": false,
       "ours_classification": "FN",
-      "wasrt_classification": "TP"
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 1270,
@@ -1089,25 +1089,25 @@
       "frame_idx": 1320,
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
+      "wasrt_detected": false,
       "ours_classification": "FN",
-      "wasrt_classification": "TP"
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 1330,
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
+      "wasrt_detected": false,
       "ours_classification": "FN",
-      "wasrt_classification": "TP"
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 1340,
-      "gt_has_obstacle": false,
+      "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
-      "ours_classification": "TN",
-      "wasrt_classification": "FP"
+      "wasrt_detected": false,
+      "ours_classification": "FN",
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 1350,
@@ -1119,11 +1119,11 @@
     },
     {
       "frame_idx": 1360,
-      "gt_has_obstacle": false,
+      "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true,
-      "ours_classification": "TN",
-      "wasrt_classification": "FP"
+      "wasrt_detected": false,
+      "ours_classification": "FN",
+      "wasrt_classification": "FN"
     },
     {
       "frame_idx": 1370,
@@ -1152,25 +1152,25 @@
     {
       "frame_idx": 1400,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
       "frame_idx": 1410,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "FN"
     },
     {
       "frame_idx": 1420,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "FN"
     },
     {
@@ -1184,17 +1184,17 @@
     {
       "frame_idx": 1440,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "FN"
     },
     {
       "frame_idx": 1450,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "FN"
     },
     {
@@ -1208,9 +1208,9 @@
     {
       "frame_idx": 1470,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "TP"
     },
     {
@@ -1224,9 +1224,9 @@
     {
       "frame_idx": 1490,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "FN"
     },
     {
@@ -1288,9 +1288,9 @@
     {
       "frame_idx": 1570,
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false,
-      "ours_classification": "TP",
+      "ours_classification": "FN",
       "wasrt_classification": "FN"
     },
     {

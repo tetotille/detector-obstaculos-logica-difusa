@@ -1,17 +1,17 @@
 {
-  "last_frame": 0,
+  "last_frame": 1799,
   "step": 10,
   "eval_ours": {
-    "tp": 75,
-    "fp": 6,
-    "fn": 64,
-    "tn": 35
+    "tp": 46,
+    "fp": 9,
+    "fn": 95,
+    "tn": 31
   },
   "eval_wasrt": {
-    "tp": 103,
-    "fp": 9,
-    "fn": 36,
-    "tn": 32
+    "tp": 98,
+    "fp": 4,
+    "fn": 43,
+    "tn": 36
   },
   "frame_annotations": {
     "0": {
@@ -43,10 +43,10 @@
       "wasrt_detected": true
     },
     "40": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "50": {
@@ -71,10 +71,10 @@
       "wasrt_detected": true
     },
     "80": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "90": {
@@ -85,10 +85,10 @@
       "wasrt_detected": false
     },
     "100": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "110": {
@@ -106,10 +106,10 @@
       "wasrt_detected": true
     },
     "130": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "140": {
@@ -211,10 +211,10 @@
       "wasrt_detected": true
     },
     "280": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "290": {
@@ -232,10 +232,10 @@
       "wasrt_detected": true
     },
     "310": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "320": {
@@ -253,23 +253,23 @@
       "wasrt_detected": true
     },
     "340": {
-      "ours": "tn",
-      "wasrt": "fp",
-      "gt_has_obstacle": false,
+      "ours": "fn",
+      "wasrt": "tp",
+      "gt_has_obstacle": true,
       "ours_detected": false,
       "wasrt_detected": true
     },
     "350": {
-      "ours": "tn",
-      "wasrt": "tn",
-      "gt_has_obstacle": false,
+      "ours": "fn",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
       "ours_detected": false,
       "wasrt_detected": false
     },
     "360": {
-      "ours": "tn",
-      "wasrt": "tn",
-      "gt_has_obstacle": false,
+      "ours": "fn",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
       "ours_detected": false,
       "wasrt_detected": false
     },
@@ -295,10 +295,10 @@
       "wasrt_detected": true
     },
     "400": {
-      "ours": "fp",
-      "wasrt": "tn",
-      "gt_has_obstacle": false,
-      "ours_detected": true,
+      "ours": "fn",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "410": {
@@ -309,9 +309,9 @@
       "wasrt_detected": true
     },
     "420": {
-      "ours": "tn",
-      "wasrt": "tn",
-      "gt_has_obstacle": false,
+      "ours": "fn",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
       "ours_detected": false,
       "wasrt_detected": false
     },
@@ -323,11 +323,11 @@
       "wasrt_detected": true
     },
     "440": {
-      "ours": "tn",
-      "wasrt": "fp",
-      "gt_has_obstacle": false,
+      "ours": "fn",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "450": {
       "ours": "fn",
@@ -365,10 +365,10 @@
       "wasrt_detected": false
     },
     "500": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "fn",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "510": {
@@ -407,17 +407,17 @@
       "wasrt_detected": true
     },
     "560": {
-      "ours": "tn",
-      "wasrt": "fp",
-      "gt_has_obstacle": false,
+      "ours": "fn",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "570": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "580": {
@@ -442,17 +442,17 @@
       "wasrt_detected": true
     },
     "610": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "620": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "630": {
@@ -464,10 +464,10 @@
     },
     "640": {
       "ours": "fn",
-      "wasrt": "tp",
+      "wasrt": "fn",
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "650": {
       "ours": "fn",
@@ -492,17 +492,17 @@
     },
     "680": {
       "ours": "fn",
-      "wasrt": "tp",
+      "wasrt": "fn",
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "690": {
       "ours": "fn",
-      "wasrt": "tp",
+      "wasrt": "fn",
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "700": {
       "ours": "tp",
@@ -533,17 +533,17 @@
       "wasrt_detected": false
     },
     "740": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "fn",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "750": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "fn",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "760": {
@@ -568,10 +568,10 @@
       "wasrt_detected": true
     },
     "790": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "800": {
@@ -603,17 +603,17 @@
       "wasrt_detected": true
     },
     "840": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "850": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "860": {
@@ -638,17 +638,17 @@
       "wasrt_detected": true
     },
     "890": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "900": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "910": {
@@ -841,51 +841,51 @@
       "wasrt_detected": false
     },
     "1180": {
-      "ours": "fn",
-      "wasrt": "fn",
-      "gt_has_obstacle": true,
+      "ours": "tn",
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
       "ours_detected": false,
       "wasrt_detected": false
     },
     "1190": {
-      "ours": "fn",
-      "wasrt": "fn",
-      "gt_has_obstacle": true,
+      "ours": "tn",
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
       "ours_detected": false,
       "wasrt_detected": false
     },
     "1200": {
-      "ours": "fn",
-      "wasrt": "fn",
-      "gt_has_obstacle": true,
+      "ours": "tn",
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
       "ours_detected": false,
       "wasrt_detected": false
     },
     "1210": {
-      "ours": "tp",
-      "wasrt": "fn",
-      "gt_has_obstacle": true,
+      "ours": "fp",
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
       "ours_detected": true,
       "wasrt_detected": false
     },
     "1220": {
-      "ours": "tp",
-      "wasrt": "fn",
-      "gt_has_obstacle": true,
+      "ours": "fp",
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
       "ours_detected": true,
       "wasrt_detected": false
     },
     "1230": {
-      "ours": "tp",
-      "wasrt": "fn",
-      "gt_has_obstacle": true,
+      "ours": "fp",
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
       "ours_detected": true,
       "wasrt_detected": false
     },
     "1240": {
-      "ours": "tp",
-      "wasrt": "fn",
-      "gt_has_obstacle": true,
+      "ours": "fp",
+      "wasrt": "tn",
+      "gt_has_obstacle": false,
       "ours_detected": true,
       "wasrt_detected": false
     },
@@ -898,10 +898,10 @@
     },
     "1260": {
       "ours": "fn",
-      "wasrt": "tp",
+      "wasrt": "fn",
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "1270": {
       "ours": "fn",
@@ -940,24 +940,24 @@
     },
     "1320": {
       "ours": "fn",
-      "wasrt": "tp",
+      "wasrt": "fn",
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "1330": {
       "ours": "fn",
-      "wasrt": "tp",
+      "wasrt": "fn",
       "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "1340": {
-      "ours": "tn",
-      "wasrt": "fp",
-      "gt_has_obstacle": false,
+      "ours": "fn",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "1350": {
       "ours": "fn",
@@ -967,11 +967,11 @@
       "wasrt_detected": false
     },
     "1360": {
-      "ours": "tn",
-      "wasrt": "fp",
-      "gt_has_obstacle": false,
+      "ours": "fn",
+      "wasrt": "fn",
+      "gt_has_obstacle": true,
       "ours_detected": false,
-      "wasrt_detected": true
+      "wasrt_detected": false
     },
     "1370": {
       "ours": "fn",
@@ -995,24 +995,24 @@
       "wasrt_detected": false
     },
     "1400": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "1410": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "fn",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "1420": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "fn",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "1430": {
@@ -1023,17 +1023,17 @@
       "wasrt_detected": true
     },
     "1440": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "fn",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "1450": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "fn",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "1460": {
@@ -1044,10 +1044,10 @@
       "wasrt_detected": true
     },
     "1470": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "tp",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": true
     },
     "1480": {
@@ -1058,10 +1058,10 @@
       "wasrt_detected": false
     },
     "1490": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "fn",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "1500": {
@@ -1114,10 +1114,10 @@
       "wasrt_detected": false
     },
     "1570": {
-      "ours": "tp",
+      "ours": "fn",
       "wasrt": "fn",
       "gt_has_obstacle": true,
-      "ours_detected": true,
+      "ours_detected": false,
       "wasrt_detected": false
     },
     "1580": {
@@ -1273,6 +1273,13 @@
       "gt_has_obstacle": false,
       "ours_detected": false,
       "wasrt_detected": true
+    },
+    "1799": {
+      "ours_detected": false,
+      "gt_has_obstacle": false,
+      "ours": "tn",
+      "wasrt": "tn",
+      "wasrt_detected": false
     }
   }
 }
